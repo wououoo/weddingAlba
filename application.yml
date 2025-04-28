@@ -1,0 +1,110 @@
+spring:
+  application:
+    name: wedding-service
+
+  # PostgreSQL 데이터베이스 설정
+  datasource:
+    url: jdbc:postgresql://localhost:5432/wedding_db
+    username: postgres
+    password: password
+    driver-class-name: org.postgresql.Driver
+
+  # JPA/Hibernate 설정
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update  # 개발시에는 update, 운영시에는 validate 권장
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  # MongoDB 설정 (채팅 데이터용)
+  data:
+    mongodb:
+      host: localhost
+      port: 27017
+      database: wedding_chat_db
+
+    # Elasticsearch 설정 (검색 엔진용)
+    elasticsearch:
+      repositories:
+        enabled: true
+      client:
+        reactive:
+          endpoints: localhost:9200
+
+  # Redis 설정 (JWT 블랙리스트용)
+  redis:
+    host: localhost
+    port: 6379
+    password:
+    timeout: 60000
+
+  # 웹소켓 STOMP 설정 (채팅용)
+  websocket:
+    topics:
+      chat: /topic/chat
+      notification: /topic/notification
+
+  # OAuth2 설정
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            client-id: e74c96df204c836ad89c9edd38c8dd80
+            client-secret: SZsrQGv7QrJgPx4HMKbbJ30jt7Bbi1LY
+            redirect-uri: "{baseUrl}/login/oauth2/code/kakao"
+            authorization-grant-type: authorization_code
+            client-authentication-method: client_secret_post
+            client-name: Kakao
+            scope:
+              - profile_nickname
+              - account_email
+        provider:
+          kakao:
+            authorization-uri: https://kauth.kakao.com/oauth/authorize
+            token-uri: https://kauth.kakao.com/oauth/token
+            user-info-uri: https://kapi.kakao.com/v2/user/me
+            user-name-attribute: id
+
+# JWT 설정
+jwt:
+  secret: ${JWT_SECRET:wedding-service-jwt-secret-key-which-needs-to-be-at-least-32-bytes-long}
+  token-validity-in-seconds: 86400 # 24시간
+  refresh-token-validity-in-seconds: 604800 # 7일
+
+# 애플리케이션 커스텀 설정
+app:
+  cors:
+    allowed-origins: "http://localhost:3000"  # React 프론트엔드 URL
+    allowed-methods: GET,POST,PUT,DELETE,OPTIONS
+    allowed-headers: "*"
+    max-age: 3600
+
+  upload:
+    path: ${FILE_UPLOAD_PATH:uploads}
+    allowed-types: image/jpeg,image/png,application/pdf
+    max-file-size: 5MB
+
+  oauth2:
+    redirect-uri: "http://localhost:3000/oauth2/redirect"
+
+# 서버 설정
+server:
+  port: 8080
+  servlet:
+    context-path: /api  # RESTful API 경로 접두사
+  error:
+    include-message: always
+    include-binding-errors: always
+
+# 로깅 설정
+logging:
+  level:
+    root: INFO
+    wedding: DEBUG
+    org.springframework.web: INFO
+    org.springframework.data: INFO
+    org.hibernate.SQL: DEBUG

@@ -1,0 +1,70 @@
+# PostgreSQL 데이터베이스 설정
+spring.datasource.url=jdbc:postgresql://localhost:5432/postgres?currentSchema=public
+spring.datasource.username=postgres
+spring.datasource.password=asd25825@@
+spring.datasource.driver-class-name=org.postgresql.Driver
+
+# Hikari 설정
+spring.datasource.hikari.connectionTimeout=20000
+spring.datasource.hikari.maximumPoolSize=5
+spring.datasource.hikari.poolName=HikariPoolWedding
+spring.datasource.hikari.connection-test-query=SELECT 1
+
+# JPA 설정
+spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
+spring.jpa.hibernate.ddl-auto=create
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+
+# 콘솔 로그 레벨 설정
+logging.level.org.hibernate.SQL=DEBUG
+logging.level.org.hibernate.type.descriptor.sql.BasicBinder=TRACE
+logging.level.com.zaxxer.hikari=DEBUG
+logging.level.org.postgresql=DEBUG
+
+# Redis 설정 (비활성화)
+# spring.redis.host=localhost
+# spring.redis.port=6379
+# spring.redis.password=
+# spring.redis.timeout=60000
+
+# Redis, MongoDB, Elasticsearch 기능 가능할 때까지 비활성화
+# spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration,org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration,org.springframework.boot.autoconfigure.data.mongo.MongoAutoConfiguration,org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchDataAutoConfiguration,org.springframework.boot.autoconfigure.data.elasticsearch.ReactiveElasticsearchRepositoriesAutoConfiguration,org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchRepositoriesAutoConfiguration
+
+# JWT 설정
+jwt.secret=wedding-service-jwt-secret-key-which-needs-to-be-at-least-32-bytes-long
+jwt.token-validity-in-seconds=86400
+jwt.refresh-token-validity-in-seconds=604800
+
+# Spring Security OAuth2 설정
+spring.security.oauth2.client.registration.kakao.client-id=e74c96df204c836ad89c9edd38c8dd80
+spring.security.oauth2.client.registration.kakao.client-secret=SZsrQGv7QrJgPx4HMKbbJ30jt7Bbi1LY
+spring.security.oauth2.client.registration.kakao.redirect-uri={baseUrl}/login/oauth2/code/kakao
+spring.security.oauth2.client.registration.kakao.client-name=Kakao
+spring.security.oauth2.client.registration.kakao.authorization-grant-type=authorization_code
+spring.security.oauth2.client.registration.kakao.client-authentication-method=client_secret_post
+spring.security.oauth2.client.registration.kakao.scope=profile_nickname,account_email
+
+# Kakao Provider 설정
+spring.security.oauth2.client.provider.kakao.authorization-uri=https://kauth.kakao.com/oauth/authorize
+spring.security.oauth2.client.provider.kakao.token-uri=https://kauth.kakao.com/oauth/token
+spring.security.oauth2.client.provider.kakao.user-info-uri=https://kapi.kakao.com/v2/user/me
+spring.security.oauth2.client.provider.kakao.user-name-attribute=id
+
+# OAuth2 설정 (앱 리다이렉트)
+app.oauth2.redirect-uri=http://localhost:3000/oauth2/redirect
+
+# CORS 설정
+app.cors.allowed-origins=http://localhost:3000
+app.cors.allowed-methods=GET,POST,PUT,DELETE,OPTIONS
+app.cors.allowed-headers=*
+app.cors.max-age=3600
+
+# MongoDB 설정 (비활성화)
+# spring.data.mongodb.host=localhost
+# spring.data.mongodb.port=27017
+# spring.data.mongodb.database=wedding_chat_db
+
+# Elasticsearch 설정 (비활성화)
+# spring.data.elasticsearch.repositories.enabled=true
+# spring.elasticsearch.uris=http://localhost:9200

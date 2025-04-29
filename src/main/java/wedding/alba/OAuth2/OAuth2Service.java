@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import wedding.alba.config.JwtConfig;
+import wedding.alba.entity.User;
 
 import java.util.Map;
 
@@ -12,9 +14,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class OAuth2Service {
 
-    // 사용자 저장소는 나중에 구현할 예정
-    // private final UserRepository userRepository;
-    // private final JwtConfig jwtConfig;
+    private final JwtConfig jwtConfig;
 
     /**
      * OAuth2 제공자별 사용자 정보 객체 생성
@@ -56,9 +56,14 @@ public class OAuth2Service {
     /**
      * JWT 토큰 생성
      */
-    /*
     public String createJwtToken(User user) {
-        return jwtConfig.generateToken(user.getId().toString());
+        return jwtConfig.generateToken(user.getUserId().toString());
     }
-    */
+    
+    /**
+     * 리프레시 토큰 생성
+     */
+    public String createRefreshToken(User user) {
+        return jwtConfig.generateRefreshToken(user.getUserId().toString());
+    }
 }

@@ -9,6 +9,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.filter.CorsFilter;
+import wedding.alba.OAuth2.CustomOAuth2UserService;
 import wedding.alba.OAuth2.OAuth2FailureHandler;
 import wedding.alba.OAuth2.OAuth2SuccessHandler;
 
@@ -20,6 +21,7 @@ public class WebSecurityConfig {
     private final CorsFilter corsFilter;
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
     private final OAuth2FailureHandler oAuth2FailureHandler;
+    private final CustomOAuth2UserService customOAuth2UserService;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -42,15 +44,15 @@ public class WebSecurityConfig {
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         // 나머지 모든 요청은 인증 필요
                         .anyRequest().authenticated())
-
+                
                 // OAuth2 로그인 설정
                 .oauth2Login(oauth2 -> oauth2
                         .authorizationEndpoint(endpoint -> endpoint
-                                .baseUri("/oauth2/authorize"))
+                                .baseUri("/api/oauth2/authorization"))
                         .redirectionEndpoint(endpoint -> endpoint
-                                .baseUri("/login/oauth2/code/*"))
+                                .baseUri("/api/login/oauth2/code/*"))
                         .userInfoEndpoint(endpoint -> endpoint
-                                .userService(null)) // 필요시 커스텀 OAuth2UserService 구현
+                                .userService(customOAuth2UserService))
                         .successHandler(oAuth2SuccessHandler)
                         .failureHandler(oAuth2FailureHandler));
 

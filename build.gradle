@@ -28,8 +28,6 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
-	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 	implementation 'org.springframework.boot:spring-boot-starter-websocket'
 
 	// JWT 토큰 관련 의존성 (세션 대신 사용할 경우)
@@ -46,9 +44,6 @@ dependencies {
 	// 유틸리티 라이브러리
 	implementation 'org.apache.commons:commons-lang3:3.12.0'
 	implementation 'com.google.guava:guava:31.1-jre'
-
-	// 검색 엔진 관련 의존성
-	implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
 
 	// OAuth2 클라이언트 의존성
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'

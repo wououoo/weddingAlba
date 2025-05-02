@@ -37,14 +37,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     // 블랙리스트 사용자 조회
     List<User> findByBlackList(Integer blackListStatus);
     
-    // JPQL을 활용한 네이티브 쿼리 예시
-    @Query("SELECT u FROM User u WHERE u.name LIKE %:keyword% OR u.email LIKE %:keyword%")
-    List<User> searchUsers(@Param("keyword") String keyword);
-    
-    // 네이티브 SQL 쿼리 예시
-    @Query(value = "SELECT * FROM users WHERE DATE(created_at) = CURRENT_DATE", nativeQuery = true)
-    List<User> findUsersRegisteredToday();
-    
     // 이름 또는 이메일로 사용자 검색
     List<User> findByNameContainingOrEmailContaining(String name, String email);
     

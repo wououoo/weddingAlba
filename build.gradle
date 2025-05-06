@@ -30,6 +30,9 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-websocket'
 
+	// Redis 관련 의존성
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
 	// JWT 토큰 관련 의존성 (세션 대신 사용할 경우)
 	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
 	implementation 'io.jsonwebtoken:jjwt-impl:0.11.5'

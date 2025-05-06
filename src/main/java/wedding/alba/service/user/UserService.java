@@ -1,4 +1,4 @@
-package wedding.alba.service;
+package wedding.alba.service.user;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import wedding.alba.entity.User;
 import wedding.alba.repository.UserRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,17 +31,25 @@ public class UserService {
         Optional<User> existingUser = userRepository.findByProviderAndProviderId(provider, providerId);
         
         if (existingUser.isPresent()) {
-            // 기존 사용자 정보 업데이트
+            // 기존 사용자 처리 (로그인)
+            log.info("기존 사용자 로그인: provider={}, providerId={}, email={}", provider, providerId, email);
             User user = existingUser.get();
+            
+            // 최신 정보로 업데이트
             if (email != null && !email.isEmpty()) {
                 user.setEmail(email);
             }
             if (name != null && !name.isEmpty()) {
                 user.setName(name);
             }
+            
+            // 마지막 로그인 시간 업데이트 (필드가 있는 경우)
+            // user.setLastLoginAt(LocalDateTime.now());
+            
             return userRepository.save(user);
         } else {
-            // 새 사용자 생성
+            // 새 사용자 생성 (회원가입)
+            log.info("새 사용자 회원가입: provider={}, providerId={}, email={}", provider, providerId, email);
             User newUser = User.builder()
                     .provider(provider)
                     .providerId(providerId)
@@ -49,6 +58,8 @@ public class UserService {
                     .status(User.UserStatus.ACTIVE)
                     .authLevel(User.AuthLevel.USER)
                     .blackList(0) // 0: 블랙리스트 아님
+                    // .createdAt(LocalDateTime.now()) // 생성 시간 (엔티티에 자동 설정되는 경우 주석 처리)
+                    // .lastLoginAt(LocalDateTime.now()) // 마지막 로그인 시간 (필드가 있는 경우)
                     .build();
             return userRepository.save(newUser);
         }
@@ -98,6 +109,7 @@ public class UserService {
             user.setAddressDetail(updatedUser.getAddressDetail());
         }
         
+        log.debug("사용자 정보 업데이트: userId={}", userId);
         return userRepository.save(user);
     }
 
@@ -113,6 +125,7 @@ public class UserService {
                 .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + userId));
         
         user.setStatus(status);
+        log.info("사용자 상태 변경: userId={}, status={}", userId, status);
         return userRepository.save(user);
     }
 
@@ -128,6 +141,7 @@ public class UserService {
                 .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + userId));
         
         user.setBlackList(blacklistStatus);
+        log.info("사용자 블랙리스트 상태 변경: userId={}, blacklistStatus={}", userId, blacklistStatus);
         return userRepository.save(user);
     }
 
@@ -143,17 +157,8 @@ public class UserService {
                 .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + userId));
         
         user.setAuthLevel(authLevel);
+        log.info("사용자 권한 변경: userId={}, authLevel={}", userId, authLevel);
         return userRepository.save(user);
-    }
-
-    /**
-     * 사용자 검색
-     * @param keyword 검색어
-     * @return 검색 결과 목록
-     */
-    @Transactional(readOnly = true)
-    public List<User> searchUsers(String keyword) {
-        return userRepository.searchUsers(keyword);
     }
 
     /**

@@ -16,18 +16,17 @@ public interface UserSettingRepository extends JpaRepository<UserSetting, Long> 
     Optional<UserSetting> findByUserId(Long userId);
     
     // 푸시 알림이 활성화된 사용자 설정 조회
-    List<UserSetting> findByPushNotificationEnabled(Boolean pushNotificationEnabled);
+    List<UserSetting> findByPushNotificationEnabled(Integer pushNotificationEnabled);
     
     // 이메일 알림이 활성화된 사용자 설정 조회
-    List<UserSetting> findByEmailNotificationEnabled(Boolean emailNotificationEnabled);
+    List<UserSetting> findByEmailNotificationEnabled(Integer emailNotificationEnabled);
     
     // 채팅 알림이 활성화된 사용자 설정 조회
-    List<UserSetting> findByChatNotificationEnabled(Boolean chatNotificationEnabled);
+    List<UserSetting> findByChatNotificationEnabled(Integer chatNotificationEnabled);
     
     // 신청 알림이 활성화된 사용자 설정 조회
-    List<UserSetting> findByApplicationNotificationEnabled(Boolean applicationNotificationEnabled);
+    List<UserSetting> findByApplicationNotificationEnabled(Integer applicationNotificationEnabled);
     
     // 리뷰 알림이 활성화된 사용자 설정 조회
-    List<UserSetting> findByReviewNotificationEnabled(Boolean reviewNotificationEnabled);
-
+    List<UserSetting> findByReviewNotificationEnabled(Integer reviewNotificationEnabled);
 }

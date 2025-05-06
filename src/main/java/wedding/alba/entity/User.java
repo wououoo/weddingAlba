@@ -35,7 +35,6 @@ public class User {
     private String provider;        // OAuth2 제공자 (kakao, google, apple)
     private String providerId;      // OAuth2 제공자에서 제공하는 ID
     private String email;           // 이메일 (신원 확인 및 비밀번호 찾기용)
-    private String refreshToken;    // 리프레시 토큰 (OAuth2 재인증 용도)
 
     // 사용자 기본 정보
     private String name;            // 사용자 이름

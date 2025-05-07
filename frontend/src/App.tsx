@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { LoginPage, OAuth2RedirectHandler, isAuthenticated } from './OAuth2';
 import Main from './components/Main';
 import Layout from './components/common/Layout';
+import { SettingsPage } from './components/settings';
+import { ProfilePage } from './components/profile';
 // import { useAuthStore } from './stores/authStore'; // 주석 처리
 
 // 간단한 인증 확인 함수 (authUtils의 isAuthenticated 사용)
@@ -114,12 +116,13 @@ const App: React.FC = () => {
         
         <Route path="/mypage" element={
           <SimplePrivateRoute>
-            <WithLayout>
-              <div className="p-4">
-                <h1 className="text-xl font-bold mb-4">마이페이지</h1>
-                <p>현재 구현 중입니다.</p>
-              </div>
-            </WithLayout>
+            <ProfilePage />
+          </SimplePrivateRoute>
+        } />
+        
+        <Route path="/settings" element={
+          <SimplePrivateRoute>
+            <SettingsPage />
           </SimplePrivateRoute>
         } />
       </Routes>

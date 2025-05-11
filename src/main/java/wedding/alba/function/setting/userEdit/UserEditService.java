@@ -72,8 +72,7 @@ public class UserEditService {
             user.setAddressDetail(request.getAddressDetail());
         }
         
-        // 보조 저장소 활용 예시 (추가 로직 필요 시)
-        userEditRepository.saveUserEditHistory(userId, request);
+
         
         User updatedUser = userRepository.save(user);
         log.info("사용자 정보가 업데이트되었습니다. ID: {}", userId);

@@ -1,4 +1,4 @@
-package wedding.alba.service.user;
+package wedding.alba.function.user;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -7,7 +7,6 @@ import org.springframework.transaction.annotation.Transactional;
 import wedding.alba.entity.User;
 import wedding.alba.repository.UserRepository;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 

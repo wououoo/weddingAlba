@@ -3,8 +3,9 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { LoginPage, OAuth2RedirectHandler, isAuthenticated } from './OAuth2';
 import Main from './components/Main';
 import Layout from './components/common/Layout';
-import { SettingsPage } from './components/settings';
-import { ProfilePage } from './components/profile';
+import { SettingsPage, NotificationsPage, ReportsPage, ReportPostingPage, ReportUserPage, ReportListPage, ApplicationListPage, RecruitmentListPage, ReviewListPage, UserEditPage } from './components/settings';
+import { ProfilePage, ProfileEditPage } from './components/profile';
+import { ChatListPage, GroupChatRoom, PrivateChatRoom } from './components/chat';
 // import { useAuthStore } from './stores/authStore'; // 주석 처리
 
 // 간단한 인증 확인 함수 (authUtils의 isAuthenticated 사용)
@@ -105,12 +106,19 @@ const App: React.FC = () => {
         
         <Route path="/chat" element={
           <SimplePrivateRoute>
-            <WithLayout>
-              <div className="p-4">
-                <h1 className="text-xl font-bold mb-4">채팅</h1>
-                <p>현재 구현 중입니다.</p>
-              </div>
-            </WithLayout>
+            <ChatListPage />
+          </SimplePrivateRoute>
+        } />
+        
+        <Route path="/chat/group/:roomId" element={
+          <SimplePrivateRoute>
+            <GroupChatRoom />
+          </SimplePrivateRoute>
+        } />
+        
+        <Route path="/chat/private/:roomId" element={
+          <SimplePrivateRoute>
+            <PrivateChatRoom />
           </SimplePrivateRoute>
         } />
         
@@ -120,9 +128,63 @@ const App: React.FC = () => {
           </SimplePrivateRoute>
         } />
         
+        <Route path="/profile/edit" element={
+          <SimplePrivateRoute>
+            <ProfileEditPage />
+          </SimplePrivateRoute>
+        } />
+        
         <Route path="/settings" element={
           <SimplePrivateRoute>
             <SettingsPage />
+          </SimplePrivateRoute>
+        } />
+
+        <Route path="/settings/user/edit" element={
+          <SimplePrivateRoute>
+            <UserEditPage />
+          </SimplePrivateRoute>
+        } />
+
+        <Route path="/settings/notifications" element={
+          <SimplePrivateRoute>
+            <NotificationsPage />
+          </SimplePrivateRoute>
+        } />
+
+        <Route path="/settings/report/posting" element={
+          <SimplePrivateRoute>
+            <ReportPostingPage />
+          </SimplePrivateRoute>
+        } />
+
+        <Route path="/settings/report/user" element={
+          <SimplePrivateRoute>
+            <ReportUserPage />
+          </SimplePrivateRoute>
+        } />
+
+        <Route path="/settings/report/list" element={
+          <SimplePrivateRoute>
+            <ReportListPage />
+          </SimplePrivateRoute>
+        } />
+
+        <Route path="/settings/applications" element={
+          <SimplePrivateRoute>
+            <ApplicationListPage />
+          </SimplePrivateRoute>
+        } />
+
+        <Route path="/settings/recruitments" element={
+          <SimplePrivateRoute>
+            <RecruitmentListPage />
+          </SimplePrivateRoute>
+        } />
+
+        <Route path="/settings/reviews" element={
+          <SimplePrivateRoute>
+            <ReviewListPage />
           </SimplePrivateRoute>
         } />
       </Routes>

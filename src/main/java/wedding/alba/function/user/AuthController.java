@@ -1,4 +1,4 @@
-package wedding.alba.service.user;
+package wedding.alba.function.user;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;

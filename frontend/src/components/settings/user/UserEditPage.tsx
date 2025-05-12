@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { userApi } from './api/userApi';
+import { UserResponseDTO, UserUpdateRequestDTO } from './dto/UserResponseDTO';
+import { isAuthenticated } from '../../../OAuth2/authUtils';
 
 // 날짜 선택기 Props 타입 정의
 interface DatePickerProps {
@@ -15,17 +18,60 @@ const UserEditPage: React.FC = () => {
   const navigate = useNavigate();
   
   // 상태 관리
-  const [name, setName] = useState('우경주');
+  const [name, setName] = useState('');
   const [region, setRegion] = useState('');
   const [city, setCity] = useState('');
   const [detailAddress, setDetailAddress] = useState('');
   const [gender, setGender] = useState('');
   const [phone, setPhone] = useState('');
   const [birthdate, setBirthdate] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // 모달 상태 관리
   const [showGenderModal, setShowGenderModal] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  
+  // 컴포넌트 마운트 시 사용자 정보 불러오기
+  useEffect(() => {
+    const fetchUserData = async () => {
+      // 로그인 여부 확인
+      if (!isAuthenticated()) {
+        setError('로그인이 필요합니다.');
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        const response = await userApi.getUserInfo();
+        
+        if (response.success && response.data) {
+          const userData = response.data;
+          
+          // 사용자 정보 설정
+          setName(userData.name || '');
+          setRegion(userData.region || '');
+          setCity(userData.city || '');
+          setDetailAddress(userData.detailAddress || '');
+          setGender(userData.gender || '');
+          setPhone(userData.phone || '');
+          setBirthdate(userData.birthdate || '');
+          
+          setError(null);
+        } else {
+          setError('사용자 정보를 불러오는데 실패했습니다.');
+        }
+      } catch (err) {
+        setError('사용자 정보를 불러오는 중 오류가 발생했습니다.');
+        console.error('사용자 정보 로딩 오류:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, []);
   
   // 생년월일 파싱
   const parseBirthDate = (birthString: string) => {
@@ -82,21 +128,43 @@ const UserEditPage: React.FC = () => {
     setBirthdate(date);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // 여기서 정보 저장 로직 구현
-    console.log({
-      name,
-      region,
-      city,
-      detailAddress,
-      gender,
-      phone,
-      birthdate
-    });
     
-    alert('내 정보가 수정되었습니다.');
-    navigate('/settings');
+    if (!isAuthenticated()) {
+      setError('로그인이 필요합니다.');
+      return;
+    }
+    
+    try {
+      setIsLoading(true);
+      
+      // 수정할 사용자 정보
+      const userData: UserUpdateRequestDTO = {
+        name,
+        region,
+        city,
+        detailAddress,
+        gender,
+        phone,
+        birthdate
+      };
+      
+      // API 호출
+      const response = await userApi.updateUserInfo(userData);
+      
+      if (response.success) {
+        alert('내 정보가 수정되었습니다.');
+        navigate('/settings');
+      } else {
+        setError(response.message || '정보 수정에 실패했습니다.');
+      }
+    } catch (err) {
+      setError('정보 수정 중 오류가 발생했습니다.');
+      console.error('사용자 정보 수정 오류:', err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // 성별 선택 모달 컴포넌트
@@ -254,6 +322,28 @@ const UserEditPage: React.FC = () => {
     );
   };
 
+  // 로딩 컴포넌트
+  if (isLoading && !error) {
+    return (
+      <div className="flex flex-col min-h-screen bg-gray-50">
+        <div className="flex items-center p-4 border-b border-gray-200 bg-white">
+          <button onClick={() => navigate('/settings', { replace: true })} className="mr-4">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+          </button>
+          <h1 className="text-xl font-bold">내 정보 수정</h1>
+        </div>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-600 mx-auto"></div>
+            <p className="mt-4 text-gray-700">정보를 불러오는 중...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       {/* 헤더 */}
@@ -265,6 +355,13 @@ const UserEditPage: React.FC = () => {
         </button>
         <h1 className="text-xl font-bold">내 정보 수정</h1>
       </div>
+      
+      {/* 오류 메시지 */}
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded m-4" role="alert">
+          <p>{error}</p>
+        </div>
+      )}
       
       {/* 사용자 정보 수정 폼 */}
       <div className="flex-1 overflow-auto p-4 pb-20">
@@ -285,6 +382,7 @@ const UserEditPage: React.FC = () => {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
+                disabled={isLoading}
               />
             </div>
           </div>
@@ -300,7 +398,7 @@ const UserEditPage: React.FC = () => {
               </label>
               <div 
                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline flex justify-between items-center cursor-pointer"
-                onClick={() => setShowGenderModal(true)}
+                onClick={() => !isLoading && setShowGenderModal(true)}
               >
                 <span>
                   {gender === 'M' ? '남자' : gender === 'F' ? '여자' : '선택안함'}
@@ -324,6 +422,7 @@ const UserEditPage: React.FC = () => {
                 onChange={handlePhoneNumberChange}
                 placeholder="010-0000-0000"
                 required
+                disabled={isLoading}
               />
             </div>
             
@@ -334,7 +433,7 @@ const UserEditPage: React.FC = () => {
               </label>
               <div 
                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline flex justify-between items-center cursor-pointer"
-                onClick={() => setShowDatePicker(true)}
+                onClick={() => !isLoading && setShowDatePicker(true)}
               >
                 <span>
                   {birthdate || 'YYYY-MM-DD'}
@@ -360,6 +459,7 @@ const UserEditPage: React.FC = () => {
                 value={region}
                 onChange={(e) => setRegion(e.target.value)}
                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                disabled={isLoading}
               >
                 <option value="">권역을 선택하세요</option>
                 {regionOptions.map((option) => (
@@ -382,6 +482,7 @@ const UserEditPage: React.FC = () => {
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
                 placeholder="시/군/구를 입력하세요"
+                disabled={isLoading}
               />
             </div>
             
@@ -397,6 +498,7 @@ const UserEditPage: React.FC = () => {
                 value={detailAddress}
                 onChange={(e) => setDetailAddress(e.target.value)}
                 placeholder="세부주소를 입력하세요 (선택사항)"
+                disabled={isLoading}
               />
             </div>
           </div>
@@ -408,12 +510,16 @@ const UserEditPage: React.FC = () => {
                 type="button"
                 className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-1/2 mr-2"
                 onClick={() => navigate('/settings', { replace: true })}
+                disabled={isLoading}
               >
                 취소
               </button>
               <button
                 type="submit"
-                className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-1/2 ml-2"
+                className={`bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-1/2 ml-2 ${
+                  isLoading ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
+                disabled={isLoading}
               >
                 저장
               </button>

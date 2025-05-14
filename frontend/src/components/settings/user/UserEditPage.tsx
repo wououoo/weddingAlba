@@ -1,179 +1,34 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { userApi } from './api/userApi';
-import { UserResponseDTO, UserUpdateRequestDTO } from './dto/UserResponseDTO';
-import { isAuthenticated } from '../../../OAuth2/authUtils';
+// UserEditPage.tsx - 사용자 정보 편집 화면 UI 컴포넌트
 
-// 날짜 선택기 Props 타입 정의
-interface DatePickerProps {
-  visible: boolean;
-  onClose: () => void;
-  onSelect: (date: string) => void;
-  initialYear?: number;
-  initialMonth?: number;
-  initialDay?: number;
-}
+import React from 'react';
+import { useUserEdit } from './hooks/useUserEdit';
+import { DatePickerProps } from './types/types';
 
 const UserEditPage: React.FC = () => {
-  const navigate = useNavigate();
-  
-  // 상태 관리
-  const [name, setName] = useState('');
-  const [region, setRegion] = useState('');
-  const [city, setCity] = useState('');
-  const [detailAddress, setDetailAddress] = useState('');
-  const [gender, setGender] = useState('');
-  const [phone, setPhone] = useState('');
-  const [birthdate, setBirthdate] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // 모달 상태 관리
-  const [showGenderModal, setShowGenderModal] = useState(false);
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  
-  // 컴포넌트 마운트 시 사용자 정보 불러오기
-  useEffect(() => {
-    const fetchUserData = async () => {
-      // 로그인 여부 확인
-      if (!isAuthenticated()) {
-        setError('로그인이 필요합니다.');
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        setIsLoading(true);
-        const response = await userApi.getUserInfo();
-        
-        if (response.success && response.data) {
-          const userData = response.data;
-          
-          // 사용자 정보 설정
-          setName(userData.name || '');
-          setRegion(userData.region || '');
-          setCity(userData.city || '');
-          setDetailAddress(userData.detailAddress || '');
-          setGender(userData.gender || '');
-          setPhone(userData.phone || '');
-          setBirthdate(userData.birthdate || '');
-          
-          setError(null);
-        } else {
-          setError('사용자 정보를 불러오는데 실패했습니다.');
-        }
-      } catch (err) {
-        setError('사용자 정보를 불러오는 중 오류가 발생했습니다.');
-        console.error('사용자 정보 로딩 오류:', err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchUserData();
-  }, []);
-  
-  // 생년월일 파싱
-  const parseBirthDate = (birthString: string) => {
-    if (!birthString) return { year: 2000, month: 1, day: 1 };
-    const parts = birthString.split('-');
-    if (parts.length === 3) {
-      return {
-        year: parseInt(parts[0]),
-        month: parseInt(parts[1]),
-        day: parseInt(parts[2])
-      };
-    }
-    return { year: 2000, month: 1, day: 1 };
-  };
-  
-  const birthParts = parseBirthDate(birthdate);
-
-  // 지역 옵션
-  const regionOptions = [
-    '서울/경기/인천',
-    '대전/충청',
-    '대구/경북',
-    '부산/경남',
-    '광주/전라',
-    '강원',
-    '제주',
-  ];
-
-  // 성별 옵션
-  const genderOptions = [
-    { value: 'M', label: '남성' },
-    { value: 'F', label: '여성' },
-  ];
-
-  // 전화번호 입력 포맷팅
-  const handlePhoneNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value.replace(/\D/g, '');
-    
-    if (value.length > 11) {
-      value = value.slice(0, 11);
-    }
-    
-    if (value.length > 7) {
-      value = `${value.slice(0, 3)}-${value.slice(3, 7)}-${value.slice(7)}`;
-    } else if (value.length > 3) {
-      value = `${value.slice(0, 3)}-${value.slice(3)}`;
-    }
-    
-    setPhone(value);
-  };
-
-  // 생년월일 선택 처리
-  const handleBirthdateSelect = (date: string) => {
-    setBirthdate(date);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!isAuthenticated()) {
-      setError('로그인이 필요합니다.');
-      return;
-    }
-    
-    try {
-      setIsLoading(true);
-      
-      // 수정할 사용자 정보
-      const userData: UserUpdateRequestDTO = {
-        name,
-        region,
-        city,
-        detailAddress,
-        gender,
-        phone,
-        birthdate
-      };
-      
-      // API 호출
-      const response = await userApi.updateUserInfo(userData);
-      
-      if (response.success) {
-        alert('내 정보가 수정되었습니다.');
-        navigate('/settings');
-      } else {
-        setError(response.message || '정보 수정에 실패했습니다.');
-      }
-    } catch (err) {
-      setError('정보 수정 중 오류가 발생했습니다.');
-      console.error('사용자 정보 수정 오류:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // 커스텀 훅에서 상태와 핸들러 가져오기
+  const {
+    name, setName,
+    region, setRegion,
+    city, setCity,
+    detailAddress, setDetailAddress,
+    gender,
+    phone,
+    birthdate,
+    isLoading,
+    error,
+    showGenderModal, setShowGenderModal,
+    showDatePicker, setShowDatePicker,
+    birthParts,
+    regionOptions,
+    handlePhoneNumberChange,
+    handleBirthdateSelect,
+    handleSubmit,
+    handleGenderSelect,
+    navigate
+  } = useUserEdit();
 
   // 성별 선택 모달 컴포넌트
   const GenderSelectionModal: React.FC = () => {
-    const handleGenderSelect = (selectedGender: string) => {
-      setGender(selectedGender);
-      setShowGenderModal(false);
-    };
-    
     if (!showGenderModal) return null;
     
     return (
@@ -185,15 +40,15 @@ const UserEditPage: React.FC = () => {
           <div>
             <div 
               className="p-4 text-center hover:bg-gray-100 active:bg-gray-200 border-b"
-              onClick={() => handleGenderSelect('M')}
+              onClick={() => handleGenderSelect('MALE')}
             >
-              남자 {gender === 'M' && <span className="text-purple-600 ml-2">✓</span>}
+              남자 {gender === 'MALE' && <span className="text-purple-600 ml-2">✓</span>}
             </div>
             <div 
               className="p-4 text-center hover:bg-gray-100 active:bg-gray-200 border-b"
-              onClick={() => handleGenderSelect('F')}
+              onClick={() => handleGenderSelect('FEMALE')}
             >
-              여자 {gender === 'F' && <span className="text-purple-600 ml-2">✓</span>}
+              여자 {gender === 'FEMALE' && <span className="text-purple-600 ml-2">✓</span>}
             </div>
             <div 
               className="p-4 text-center hover:bg-gray-100 active:bg-gray-200 border-b"
@@ -230,9 +85,9 @@ const UserEditPage: React.FC = () => {
       return new Date(year, month, 0).getDate();
     };
     
-    const [selectedYear, setSelectedYear] = useState(initialYear);
-    const [selectedMonth, setSelectedMonth] = useState(initialMonth);
-    const [selectedDay, setSelectedDay] = useState(initialDay);
+    const [selectedYear, setSelectedYear] = React.useState(initialYear);
+    const [selectedMonth, setSelectedMonth] = React.useState(initialMonth);
+    const [selectedDay, setSelectedDay] = React.useState(initialDay);
     
     const days = Array.from(
       { length: getDaysInMonth(selectedYear, selectedMonth) }, 
@@ -344,6 +199,7 @@ const UserEditPage: React.FC = () => {
     );
   }
 
+  // 메인 UI 렌더링
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       {/* 헤더 */}
@@ -401,7 +257,7 @@ const UserEditPage: React.FC = () => {
                 onClick={() => !isLoading && setShowGenderModal(true)}
               >
                 <span>
-                  {gender === 'M' ? '남자' : gender === 'F' ? '여자' : '선택안함'}
+                  {gender === 'MALE' ? '남자' : gender === 'FEMALE' ? '여자' : '선택안함'}
                 </span>
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />

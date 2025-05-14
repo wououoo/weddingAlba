@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import wedding.alba.dto.ApiResponse;
 import wedding.alba.entity.User;
 import wedding.alba.repository.UserRepository;
 
@@ -31,11 +32,12 @@ public class UserEditService {
      * @throws NoSuchElementException 사용자가 존재하지 않을 경우
      */
     @Transactional(readOnly = true)
-    public UserEditDto.Response getUserInfo(Long userId) {
+    public ApiResponse<UserEditResponseDto> getUserInfo(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NoSuchElementException("사용자를 찾을 수 없습니다. ID: " + userId));
         
-        return UserEditDto.Response.fromEntity(user);
+        UserEditResponseDto responseDto = UserEditResponseDto.fromEntity(user);
+        return ApiResponse.success(responseDto);
     }
     
     /**
@@ -47,7 +49,7 @@ public class UserEditService {
      * @throws NoSuchElementException 사용자가 존재하지 않을 경우
      */
     @Transactional
-    public UserEditDto.Response updateUserInfo(Long userId, UserEditDto.Request request) {
+    public ApiResponse<UserEditResponseDto> updateUserInfo(Long userId, UserEditRequestDto request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NoSuchElementException("사용자를 찾을 수 없습니다. ID: " + userId));
         
@@ -71,12 +73,11 @@ public class UserEditService {
         if (request.getAddressDetail() != null) {
             user.setAddressDetail(request.getAddressDetail());
         }
-        
 
-        
         User updatedUser = userRepository.save(user);
         log.info("사용자 정보가 업데이트되었습니다. ID: {}", userId);
         
-        return UserEditDto.Response.fromEntity(updatedUser);
+        UserEditResponseDto responseDto = UserEditResponseDto.fromEntity(updatedUser);
+        return ApiResponse.success(responseDto);
     }
 }

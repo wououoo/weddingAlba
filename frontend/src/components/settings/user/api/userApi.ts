@@ -1,7 +1,8 @@
 // userApi.ts - 사용자 정보 API 호출 함수
 
 import { get, put } from '../../../../utils/httpClient';
-import { UserResponseDTO, UserUpdateRequestDTO, ApiResponse } from '../dto/UserResponseDTO';
+import { UserResponseDTO, ApiResponse } from '../dto/UserResponseDTO';
+import { UserUpdateRequestDTO } from '../dto/UserRequestDTO';
 
 // API 기본 URL
 const API_BASE_URL = '';

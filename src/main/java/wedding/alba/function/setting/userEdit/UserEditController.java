@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import wedding.alba.dto.ApiResponse;
 
 import java.util.NoSuchElementException;
 
@@ -14,7 +15,7 @@ import java.util.NoSuchElementException;
  * 사용자 정보 조회 및 수정 API를 제공
  */
 @RestController
-@RequestMapping("/api/setting/useredit")
+@RequestMapping("/user/profile")
 @Slf4j
 public class UserEditController {
 
@@ -28,13 +29,13 @@ public class UserEditController {
      * @return 사용자 정보 응답
      */
     @GetMapping
-    public ResponseEntity<UserEditDto.Response> getUserInfo(@AuthenticationPrincipal Long userId) {
+    public ResponseEntity<ApiResponse<UserEditResponseDto>> getUserInfo(@AuthenticationPrincipal Long userId) {
         try {
-            UserEditDto.Response response = userEditService.getUserInfo(userId);
+            ApiResponse<UserEditResponseDto> response = userEditService.getUserInfo(userId);
             return ResponseEntity.ok(response);
         } catch (NoSuchElementException e) {
             log.error("사용자 정보 조회 실패", e);
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.ok(ApiResponse.error("사용자를 찾을 수 없습니다."));
         }
     }
     
@@ -46,15 +47,15 @@ public class UserEditController {
      * @return 수정된 사용자 정보 응답
      */
     @PutMapping
-    public ResponseEntity<UserEditDto.Response> updateUserInfo(
+    public ResponseEntity<ApiResponse<UserEditResponseDto>> updateUserInfo(
             @AuthenticationPrincipal Long userId,
-            @Valid @RequestBody UserEditDto.Request request) {
+            @Valid @RequestBody UserEditRequestDto request) {
         try {
-            UserEditDto.Response response = userEditService.updateUserInfo(userId, request);
+            ApiResponse<UserEditResponseDto> response = userEditService.updateUserInfo(userId, request);
             return ResponseEntity.ok(response);
         } catch (NoSuchElementException e) {
             log.error("사용자 정보 수정 실패", e);
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.ok(ApiResponse.error("사용자를 찾을 수 없습니다."));
         }
     }
 }

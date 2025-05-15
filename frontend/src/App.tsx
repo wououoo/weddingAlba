@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { LoginPage, OAuth2RedirectHandler, isAuthenticated } from './OAuth2';
-import Main from './components/Main';
+import MainPage from './components/main/MainPage';
 import Layout from './components/common/Layout';
 // import { useAuthStore } from './stores/authStore'; // 주석 처리
 
@@ -33,11 +33,11 @@ const App: React.FC = () => {
         <Route path="/" element={
           <SimplePrivateRoute>
             <WithLayout>
-              <Main />
+              <MainPage />
             </WithLayout>
           </SimplePrivateRoute>
         } />
-        
+
         <Route path="/posting/:id" element={
           <SimplePrivateRoute>
             <WithLayout>

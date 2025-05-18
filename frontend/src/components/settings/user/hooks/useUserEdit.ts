@@ -6,6 +6,7 @@ import { userApi } from '../api/userApi';
 import { UserUpdateRequestDTO } from '../dto/UserRequestDTO';
 import { isAuthenticated } from '../../../../OAuth2/authUtils';
 import { BirthDateParts, GenderOption } from '../types/types';
+import { DaumPostcodeData } from '../../../../types/daum-postcode';
 
 export function useUserEdit() {
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ export function useUserEdit() {
   const [birthdate, setBirthdate] = useState(''); // birth에 매핑
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showAddressSearch, setShowAddressSearch] = useState(false);
 
   // 모달 상태 관리
   const [showGenderModal, setShowGenderModal] = useState(false);
@@ -127,6 +129,54 @@ export function useUserEdit() {
     setShowGenderModal(false);
   };
 
+  // 주소 검색 완료 처리
+  const handleAddressComplete = (data: DaumPostcodeData) => {
+    console.log("주소 검색 결과:", data); // 디버깅용
+    
+    // 시/도를 권역으로 매핑
+    let mappedRegion = '';
+    const sido = data.sido;
+    
+    if (sido === '서울' || sido === '경기' || sido === '인천') {
+      mappedRegion = '서울/경기/인천';
+    } else if (sido === '대전' || sido === '충청북도' || sido === '충청남도' || sido === '세종') {
+      mappedRegion = '대전/충청';
+    } else if (sido === '대구' || sido === '경상북도') {
+      mappedRegion = '대구/경북';
+    } else if (sido === '부산' || sido === '경상남도' || sido === '울산') {
+      mappedRegion = '부산/경남';
+    } else if (sido === '광주' || sido === '전라북도' || sido === '전라남도') {
+      mappedRegion = '광주/전라';
+    } else if (sido === '강원' || sido === '강원도') {
+      mappedRegion = '강원';
+    } else if (sido === '제주' || sido === '제주도' || sido === '제주특별자치도') {
+      mappedRegion = '제주';
+    }
+    
+    setRegion(mappedRegion);
+    setCity(data.sigungu || data.bname); // 시군구 정보가 없으면 법정동 이름 사용
+    
+    // 주소 정보 처리 (도로명 주소나 지번 주소 중 선택)
+    let fullAddress = '';
+    if (data.userSelectedType === 'R') {
+      // 도로명 주소
+      fullAddress = data.roadAddress;
+    } else {
+      // 지번 주소
+      fullAddress = data.jibunAddress;
+    }
+    
+    // 건물명이 있으면 추가 (상세 주소용)
+    if (data.buildingName) {
+      setDetailAddress(data.buildingName);
+    } else {
+      // 상세 주소 필드는 사용자가 직접 입력할 수 있도록 비워둠
+      setDetailAddress('');
+    }
+    
+    setShowAddressSearch(false);
+  };
+
   // 폼 제출 처리
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -183,6 +233,7 @@ export function useUserEdit() {
     // 모달 상태
     showGenderModal, setShowGenderModal,
     showDatePicker, setShowDatePicker,
+    showAddressSearch, setShowAddressSearch,
     
     // 옵션 데이터
     birthParts,
@@ -194,6 +245,7 @@ export function useUserEdit() {
     handleBirthdateSelect,
     handleSubmit,
     handleGenderSelect,
+    handleAddressComplete,
     
     // 네비게이션
     navigate

@@ -3,6 +3,7 @@
 import React from 'react';
 import { useUserEdit } from './hooks/useUserEdit';
 import { DatePickerProps } from './types/types';
+import AddressSearch from '../../common/AddressSearch';
 
 const UserEditPage: React.FC = () => {
   // 커스텀 훅에서 상태와 핸들러 가져오기
@@ -18,12 +19,14 @@ const UserEditPage: React.FC = () => {
     error,
     showGenderModal, setShowGenderModal,
     showDatePicker, setShowDatePicker,
+    showAddressSearch, setShowAddressSearch,
     birthParts,
     regionOptions,
     handlePhoneNumberChange,
     handleBirthdateSelect,
     handleSubmit,
     handleGenderSelect,
+    handleAddressComplete,
     navigate
   } = useUserEdit();
 
@@ -305,45 +308,40 @@ const UserEditPage: React.FC = () => {
           <div className="mb-6">
             <h2 className="text-lg font-semibold mb-3 text-gray-700">주소 정보</h2>
             
-            {/* 권역 선택 */}
+            {/* 주소 검색 버튼 */}
+            <div className="mb-4">
+              <button 
+                type="button"
+                className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full"
+                onClick={() => setShowAddressSearch(true)}
+                disabled={isLoading}
+              >
+                주소 검색
+              </button>
+            </div>
+            
+            {/* 권역 표시 (읽기 전용) */}
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="region">
                 권역
               </label>
-              <select
-                id="region"
-                value={region}
-                onChange={(e) => setRegion(e.target.value)}
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                disabled={isLoading}
-              >
-                <option value="">권역을 선택하세요</option>
-                {regionOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
+              <div className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight bg-gray-100">
+                {region || '주소 검색으로 선택해주세요'}
+              </div>
             </div>
             
-            {/* 시/군/구 */}
+            {/* 시/군/구 표시 (읽기 전용) */}
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="city">
                 시/군/구
               </label>
-              <input
-                id="city"
-                type="text"
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                placeholder="시/군/구를 입력하세요"
-                disabled={isLoading}
-              />
+              <div className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight bg-gray-100">
+                {city || '주소 검색으로 선택해주세요'}
+              </div>
             </div>
             
             {/* 세부주소 */}
-            <div className="mb-4">
+            {/* <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="detailAddress">
                 세부주소
               </label>
@@ -356,7 +354,7 @@ const UserEditPage: React.FC = () => {
                 placeholder="세부주소를 입력하세요 (선택사항)"
                 disabled={isLoading}
               />
-            </div>
+            </div> */}
           </div>
           
           {/* 버튼 그룹 */}
@@ -396,6 +394,14 @@ const UserEditPage: React.FC = () => {
         initialMonth={birthParts.month}
         initialDay={birthParts.day}
       />
+      
+      {/* 주소 검색 모달 */}
+      {showAddressSearch && (
+        <AddressSearch 
+          onComplete={handleAddressComplete}
+          onClose={() => setShowAddressSearch(false)}
+        />
+      )}
     </div>
   );
 };

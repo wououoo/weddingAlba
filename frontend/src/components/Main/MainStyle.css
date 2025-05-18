@@ -1,0 +1,160 @@
+.content-wrap {
+    background-color: #fff;
+}
+
+.main-banner-images {
+    border-radius: 8%;
+    height: 200px;
+    width: 100%;
+    padding: 0 1rem;
+    margin-bottom: 3rem;
+    box-shadow: #E1E8EE 1px 1px 1px;
+}
+
+.main-icon-btn-wrap {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 5rem;
+}
+
+.main-icon-btn {
+    display : flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    padding: 1px;
+}
+
+.main-icon-btn-text {
+    text-size-adjust : 20%;
+}
+
+.main-icon-btn .icon-img {
+    width: 2.0rem;
+    height: 2.0rem;
+    margin-bottom: 1rem;
+}
+
+
+/*메인 푸터*/
+.main-content-footer {
+    font-size: 11px;
+    background: #f9f9f9;
+    padding: 35px 0;
+}
+
+.main-footer-menu {
+    margin-top: 20px;
+    font-size: 11px;
+    font-weight: 500;
+    color: #666;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    align-content: center;
+}
+.main-footer-menu .split {
+    margin: 0 4px;
+    color: #aaa;
+    display: block;
+    height: 16px;
+}
+
+
+
+/*테스트용*/
+.posting-list-container .posting-list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+
+}
+
+.posting-list-header .more-btn {
+    color : darkgrey;
+    right: 0;
+    margin-left: auto;
+    align-items: center;
+    cursor: pointer;
+}
+
+.posting-list-header .more-btn::after {
+    content: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" color="darkgrey" width="20" heigth="20" heipreserveAspectRatio="none" viewBox="0 0 16 16" fill="currentColor"><path fillRule="evenodd" d="M6.22 4.22a.75.75 0 0 1 1.06 0l3.25 3.25a.75.75 0 0 1 0 1.06l-3.25 3.25a.75.75 0 0 1-1.06-1.06L8.94 8 6.22 5.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" /></svg>');
+    vertical-align: middle;
+}
+
+.posting-list-container-body .v-scroll {
+    width: 100%;
+    overflow-x: auto;
+    padding: 0 16px;
+}
+
+/* 내부 목록은 flex로 가로 정렬 */
+.posting-list-container-body .v-scroll-inner {
+    display: flex;
+    gap: 16px;
+    width: fit-content; /* 자식 요소 크기만큼만 너비 설정 */
+}
+
+.posting-list-container-body .v-scroll-inner {
+    display: flex;
+    gap: 16px;
+    padding: 0 20px;
+    width: fit-content;
+}
+
+.posting-list {
+    display: flex;
+    flex-wrap: nowrap;
+}
+
+.posting-list .posting-list-item {
+    width: 200px;
+    display: block;
+    flex: 0 0 auto;
+    margin-right: 10px;
+}
+
+.posting-list-item .image-wrap {
+    display: block;
+    border-radius: 10px;
+    border: 1px solid #f4f4f4;
+    overflow: hidden;
+    margin-bottom: 8px;
+    position: relative;
+}
+
+.posting-list-item .image-wrap .img {
+    width: 200px;
+    height: 200px;
+    border-radius: 4px;
+    background: 50% 50% no-repeat;
+    background-size: cover;
+    display: block;
+    position: relative;
+    margin-bottom: 0;
+    background : url(../../../public/images/example-apply-image.jpg);
+}
+
+.posting-list-item .detail {
+    position: relative;
+}
+
+.meta {
+    display: flex;
+    align-items: baseline;
+    line-height: 14px;
+}
+
+.meta .tags {
+    overflow: hidden;
+    display: block;
+    max-width: 135px;
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 16px;
+    color: #666;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}

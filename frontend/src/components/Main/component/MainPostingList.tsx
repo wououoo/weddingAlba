@@ -1,4 +1,4 @@
-import MainPage from "./MainPage";
+import MainPage from "../MainPage";
 
 const postings = [
     { id: 1, title: "모집글 1", tags: "태그 A" },
@@ -10,13 +10,13 @@ const postings = [
     { id: 3, title: "모집글 7", tags: "태그 G" },
     { id: 3, title: "모집글 8", tags: "태그 H" },
 ];
-export const PostingList: React.FC = () => {
+export const MainPostingList: React.FC = () => {
     return (
         <div className="posting-wrapper pb-10">
             <div className="posting-list-container py-5">
                 <div className="posting-list-header px-5">
                     <h3 className="text-lg font-bold">전체 모집글</h3>
-                    <a className="more-btn" href="">더보기</a>
+                    <a className="more-btn" href="/posting/list">더보기</a>
                 </div>
                 <div className="posting-list-container-body">
                     <div className="v-scroll">
@@ -47,4 +47,4 @@ export const PostingList: React.FC = () => {
         </div>
     );
 }
-export default PostingList;
+export default MainPostingList;

@@ -57,4 +57,7 @@ public class Posting {
     
     @Column(name = "has_mobile_invitation")
     private Integer hasMobileInvitation; // 모바일 청첩장 여부 (0: 없음, 1: 있음)
+
+    @Column(name="wages")
+    private String wages;               // 급여
 }

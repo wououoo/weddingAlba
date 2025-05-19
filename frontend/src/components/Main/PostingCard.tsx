@@ -1,7 +1,9 @@
+// PostingCard.tsx - 게시글 카드 컴포넌트
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PostingItem } from './MainTypes';
-import { formatPrice } from './MainUtils';
+import { PostingItem } from './types/types';
+import { formatPrice } from './utils';
 
 interface PostingCardProps {
   posting: PostingItem;
@@ -10,25 +12,24 @@ interface PostingCardProps {
 const PostingCard: React.FC<PostingCardProps> = ({ posting }) => {
   const navigate = useNavigate();
   
-  const handleCardClick = () => {
+  const onCardClick = () => {
     navigate(`/posting/${posting.id}`);
   };
   
-  const handleApplyClick = (e: React.MouseEvent) => {
+  const onApplyClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     navigate(`/apply/${posting.id}`);
   };
   
-  const handleBookmarkClick = (e: React.MouseEvent) => {
+  const onBookmarkClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    // 찜하기 기능 구현
     alert(`${posting.title} 게시글을 찜 목록에 추가했습니다.`);
   };
   
   return (
     <div 
       className="bg-white rounded-lg shadow-md p-4 cursor-pointer posting-card"
-      onClick={handleCardClick}
+      onClick={onCardClick}
     >
       <div className="flex justify-between items-start">
         <div>
@@ -61,13 +62,13 @@ const PostingCard: React.FC<PostingCardProps> = ({ posting }) => {
       <div className="mt-2 flex justify-end">
         <button 
           className="text-white bg-purple-600 px-3 py-1 rounded-md text-sm hover:bg-purple-700" 
-          onClick={handleApplyClick}
+          onClick={onApplyClick}
         >
           신청하기
         </button>
         <button 
           className="ml-2 text-gray-500 border border-gray-300 px-3 py-1 rounded-md text-sm hover:bg-gray-50"
-          onClick={handleBookmarkClick}
+          onClick={onBookmarkClick}
         >
           찜하기
         </button>

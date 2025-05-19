@@ -133,48 +133,48 @@ export function useUserEdit() {
   const handleAddressComplete = (data: DaumPostcodeData) => {
     console.log("주소 검색 결과:", data); // 디버깅용
     
-    // 시/도를 권역으로 매핑
-    let mappedRegion = '';
-    const sido = data.sido;
-    
-    if (sido === '서울' || sido === '경기' || sido === '인천') {
-      mappedRegion = '서울/경기/인천';
-    } else if (sido === '대전' || sido === '충청북도' || sido === '충청남도' || sido === '세종') {
-      mappedRegion = '대전/충청';
-    } else if (sido === '대구' || sido === '경상북도') {
-      mappedRegion = '대구/경북';
-    } else if (sido === '부산' || sido === '경상남도' || sido === '울산') {
-      mappedRegion = '부산/경남';
-    } else if (sido === '광주' || sido === '전라북도' || sido === '전라남도') {
-      mappedRegion = '광주/전라';
-    } else if (sido === '강원' || sido === '강원도') {
-      mappedRegion = '강원';
-    } else if (sido === '제주' || sido === '제주도' || sido === '제주특별자치도') {
-      mappedRegion = '제주';
+    try {
+      // 시/도를 권역으로 맵핑
+      let mappedRegion = '';
+      const sido = data.sido || '';
+      
+      if (sido.includes('서울') || sido.includes('경기') || sido.includes('인천')) {
+        mappedRegion = '서울/경기/인천';
+      } else if (sido.includes('대전') || sido.includes('충청') || sido.includes('세종')) {
+        mappedRegion = '대전/충청';
+      } else if (sido.includes('대구') || sido.includes('경북') || sido.includes('경상북도')) {
+        mappedRegion = '대구/경북';
+      } else if (sido.includes('부산') || sido.includes('경남') || sido.includes('경상남도') || sido.includes('울산')) {
+        mappedRegion = '부산/경남';
+      } else if (sido.includes('광주') || sido.includes('전라') || sido.includes('전라남도') || sido.includes('전라북도')) {
+        mappedRegion = '광주/전라';
+      } else if (sido.includes('강원')) {
+        mappedRegion = '강원';
+      } else if (sido.includes('제주')) {
+        mappedRegion = '제주';
+      } else {
+        // 매칭이 안 되는 경우
+        console.warn('매칭되지 않는 시/도:', sido);
+        // 기본값으로 첫 번째 권역 사용
+        mappedRegion = regionOptions[0];
+      }
+      
+      setRegion(mappedRegion);
+      setCity(data.sigungu || data.bname || ''); // 시군구 정보가 없으면 법정동 이름 사용
+      
+      // 건물명이 있으면 추가 (상세 주소용)
+      if (data.buildingName) {
+        setDetailAddress(data.buildingName);
+      } else {
+        // 상세 주소 필드는 사용자가 직접 입력할 수 있도록 비워둠
+        setDetailAddress('');
+      }
+    } catch (error) {
+      console.error('주소 처리 오류:', error);
+      setError('주소 정보 처리 중 오류가 발생했습니다.');
+    } finally {
+      setShowAddressSearch(false);
     }
-    
-    setRegion(mappedRegion);
-    setCity(data.sigungu || data.bname); // 시군구 정보가 없으면 법정동 이름 사용
-    
-    // 주소 정보 처리 (도로명 주소나 지번 주소 중 선택)
-    let fullAddress = '';
-    if (data.userSelectedType === 'R') {
-      // 도로명 주소
-      fullAddress = data.roadAddress;
-    } else {
-      // 지번 주소
-      fullAddress = data.jibunAddress;
-    }
-    
-    // 건물명이 있으면 추가 (상세 주소용)
-    if (data.buildingName) {
-      setDetailAddress(data.buildingName);
-    } else {
-      // 상세 주소 필드는 사용자가 직접 입력할 수 있도록 비워둠
-      setDetailAddress('');
-    }
-    
-    setShowAddressSearch(false);
   };
 
   // 폼 제출 처리
@@ -228,7 +228,7 @@ export function useUserEdit() {
     phone,
     birthdate,
     isLoading,
-    error,
+    error, setError,
     
     // 모달 상태
     showGenderModal, setShowGenderModal,

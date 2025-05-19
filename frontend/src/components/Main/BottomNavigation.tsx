@@ -1,3 +1,5 @@
+// BottomNavigation.tsx - 하단 네비게이션 바 컴포넌트
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 

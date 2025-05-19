@@ -1,3 +1,5 @@
+// FloatingButton.tsx - 게시글 작성 플로팅 버튼 컴포넌트
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 

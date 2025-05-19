@@ -1,4 +1,4 @@
-// Main 컴포넌트 관련 타입 정의
+// types.ts - 메인 페이지 관련 타입 정의
 
 // 탭 타입
 export type TabType = 'all' | 'recommended' | 'recent' | 'popular';

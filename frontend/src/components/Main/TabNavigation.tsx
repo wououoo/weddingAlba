@@ -1,5 +1,7 @@
+// TabNavigation.tsx - 상단 탭 네비게이션 컴포넌트
+
 import React from 'react';
-import { TabType } from './MainTypes';
+import { TabType } from './types/types';
 
 interface TabNavigationProps {
   activeTab: TabType;

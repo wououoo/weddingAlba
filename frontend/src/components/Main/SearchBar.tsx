@@ -1,15 +1,18 @@
-import React from 'react';
+// SearchBar.tsx - 상단 검색바 컴포넌트
+
+import React, { useState } from 'react';
 
 interface SearchBarProps {
   onSearch?: (keyword: string) => void;
 }
 
 const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
+  const [searchTerm, setSearchTerm] = useState('');
+
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const input = e.currentTarget.querySelector('input') as HTMLInputElement;
-    if (input.value.trim() && onSearch) {
-      onSearch(input.value.trim());
+    if (searchTerm.trim() && onSearch) {
+      onSearch(searchTerm.trim());
     }
   };
 
@@ -23,6 +26,8 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
               type="text"
               placeholder="지역, 날짜, 보수 등으로 검색"
               className="w-full border border-gray-300 rounded-lg py-2 px-4 pr-10 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
             <button type="submit" className="absolute right-3 top-2.5">
               <svg

@@ -1,9 +1,16 @@
 // UserEditPage.tsx - 사용자 정보 편집 화면 UI 컴포넌트
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useUserEdit } from './hooks/useUserEdit';
 import { DatePickerProps } from './types/types';
-import AddressSearch from '../../common/AddressSearch';
+import { DaumPostcodeData } from '../../../types/daum-postcode';
+
+// 전역 타입 선언 (window.daum 접근을 위함)
+declare global {
+  interface Window {
+    daum: any;
+  }
+}
 
 const UserEditPage: React.FC = () => {
   // 커스텀 훅에서 상태와 핸들러 가져오기
@@ -16,7 +23,7 @@ const UserEditPage: React.FC = () => {
     phone,
     birthdate,
     isLoading,
-    error,
+    error, setError,
     showGenderModal, setShowGenderModal,
     showDatePicker, setShowDatePicker,
     showAddressSearch, setShowAddressSearch,
@@ -29,6 +36,74 @@ const UserEditPage: React.FC = () => {
     handleAddressComplete,
     navigate
   } = useUserEdit();
+
+  // daum 우편번호 서비스 초기화
+  useEffect(() => {
+    // 주소 검색 모달이 표시될 때만 실행
+    if (showAddressSearch) {
+      // 약간의 딜레이를 주어 DOM이 완전히 렌더링되도록 함
+      setTimeout(() => {
+        const container = document.getElementById('postcode-container');
+        
+        if (!container) {
+          console.error('Postcode container not found');
+          return;
+        }
+
+        // 이미 스크립트가 로드되어 있는지 확인
+        if (window.daum && window.daum.Postcode) {
+          initPostcode(container);
+        } else {
+          // 스크립트 로드
+          const script = document.createElement('script');
+          script.src = 'https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
+          script.async = true;
+          script.onload = () => {
+            initPostcode(container);
+          };
+          script.onerror = () => {
+            console.error('Failed to load Daum postcode script');
+            setError('주소 검색 서비스를 불러오는데 실패했습니다.');
+          };
+          document.head.appendChild(script);
+        }
+      }, 300);
+    }
+  }, [showAddressSearch]);
+
+  // 우편번호 서비스 초기화 함수
+  const initPostcode = (container: HTMLElement) => {
+    try {
+      new window.daum.Postcode({
+        oncomplete: (data: any) => {
+          console.log('주소 검색 결과:', data);
+          
+          // 필요한 데이터만 추출하여 전달
+          const postcodeData: DaumPostcodeData = {
+            zonecode: data.zonecode || '',
+            address: data.address || '',
+            addressType: (data.addressType as 'R' | 'J') || 'R',
+            roadAddress: data.roadAddress || '',
+            jibunAddress: data.jibunAddress || '',
+            bname: data.bname || '',
+            buildingName: data.buildingName || '',
+            apartment: (data.apartment as 'Y' | 'N') || 'N',
+            userSelectedType: data.userSelectedType,
+            sido: data.sido || '',
+            sigungu: data.sigungu || ''
+          };
+          
+          handleAddressComplete(postcodeData);
+          setShowAddressSearch(false);
+        },
+        width: '100%',
+        height: '100%'
+      }).embed(container);
+    } catch (e) {
+      console.error('Daum postcode error:', e);
+      setError('주소 검색 서비스 초기화에 실패했습니다.');
+    }
+  };
 
   // 성별 선택 모달 컴포넌트
   const GenderSelectionModal: React.FC = () => {
@@ -339,22 +414,6 @@ const UserEditPage: React.FC = () => {
                 {city || '주소 검색으로 선택해주세요'}
               </div>
             </div>
-            
-            {/* 세부주소 */}
-            {/* <div className="mb-4">
-              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="detailAddress">
-                세부주소
-              </label>
-              <input
-                id="detailAddress"
-                type="text"
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                value={detailAddress}
-                onChange={(e) => setDetailAddress(e.target.value)}
-                placeholder="세부주소를 입력하세요 (선택사항)"
-                disabled={isLoading}
-              />
-            </div> */}
           </div>
           
           {/* 버튼 그룹 */}
@@ -397,10 +456,20 @@ const UserEditPage: React.FC = () => {
       
       {/* 주소 검색 모달 */}
       {showAddressSearch && (
-        <AddressSearch 
-          onComplete={handleAddressComplete}
-          onClose={() => setShowAddressSearch(false)}
-        />
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center" id="daum-postcode-modal">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-lg p-4 m-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">주소 검색</h3>
+              <button 
+                onClick={() => setShowAddressSearch(false)}
+                className="text-gray-500 hover:text-gray-800"
+              >
+                ✕
+              </button>
+            </div>
+            <div id="postcode-container" style={{ height: '450px', width: '100%' }}></div>
+          </div>
+        </div>
       )}
     </div>
   );

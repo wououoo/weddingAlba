@@ -22,6 +22,7 @@ public class WebSecurityConfig {
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
     private final OAuth2FailureHandler oAuth2FailureHandler;
     private final CustomOAuth2UserService customOAuth2UserService;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -31,6 +32,9 @@ public class WebSecurityConfig {
 
                 // CORS 설정
                 .addFilterBefore(corsFilter, UsernamePasswordAuthenticationFilter.class)
+                
+                // JWT 인증 필터 추가
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
 
                 // 세션 관리 (JWT를 사용하므로 세션은 STATELESS로 설정)
                 .sessionManagement(session -> session

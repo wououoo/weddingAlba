@@ -1,0 +1,68 @@
+/* PostPage 컴포넌트 스타일 */
+
+.posting-card {
+  transition: transform 0.2s ease-in-out;
+}
+
+.posting-card:hover {
+  transform: translateY(-2px);
+}
+
+.tab-button {
+  position: relative;
+}
+
+.tab-button.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: #8b5cf6;
+}
+
+.search-bar-container {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.floating-button {
+  filter: drop-shadow(0 4px 3px rgb(0 0 0 / 0.07)) drop-shadow(0 2px 2px rgb(0 0 0 / 0.06));
+  transition: all 0.2s ease-in-out;
+}
+
+.floating-button:hover {
+  transform: scale(1.05);
+}
+
+.bottom-nav {
+  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.tag-badge {
+  display: inline-block;
+  background-color: #f3f4f6;
+  color: #374151;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+}
+
+/* 반응형 디자인을 위한 미디어 쿼리 */
+@media (min-width: 768px) {
+  .postings-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .postings-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

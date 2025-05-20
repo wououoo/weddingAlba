@@ -8,7 +8,7 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import wedding.alba.entity.User;
-import wedding.alba.service.user.UserService;
+import wedding.alba.function.user.UserService;
 
 @Slf4j
 @Service

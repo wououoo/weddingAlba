@@ -1,6 +1,6 @@
 package wedding.alba.OAuth2;
 
-import wedding.alba.service.user.TokenService;
+import wedding.alba.function.user.TokenService;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -18,7 +18,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.util.UriComponentsBuilder;
 import wedding.alba.config.JwtConfig;
 import wedding.alba.entity.User;
-import wedding.alba.service.user.UserService;
+import wedding.alba.function.user.UserService;
 
 import java.io.IOException;
 

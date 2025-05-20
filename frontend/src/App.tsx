@@ -2,7 +2,12 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { LoginPage, OAuth2RedirectHandler, isAuthenticated } from './OAuth2';
 import MainPage from './components/main/MainPage';
+import Host from './components/host/Host';
+import Post from './components/post/Post';
 import Layout from './components/common/Layout';
+import { SettingsPage, NotificationsPage, ReportsPage, ReportPostingPage, ReportUserPage, ReportListPage, ApplicationListPage, RecruitmentListPage, ReviewListPage, UserEditPage } from './components/settings';
+import { ProfilePage, ProfileEditPage } from './components/profile';
+import { ChatListPage, GroupChatRoom, PrivateChatRoom } from './components/chat';
 // import { useAuthStore } from './stores/authStore'; // 주석 처리
 
 // 간단한 인증 확인 함수 (authUtils의 isAuthenticated 사용)
@@ -29,7 +34,7 @@ const App: React.FC = () => {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/oauth2/redirect" element={<OAuth2RedirectHandler />} />
         
-        {/* 로그인 후 페이지들에 Layout 적용 */}
+        {/* 메인 페이지를 기본 경로로 설정 */}
         <Route path="/" element={
           <SimplePrivateRoute>
             <WithLayout>
@@ -38,6 +43,24 @@ const App: React.FC = () => {
           </SimplePrivateRoute>
         } />
 
+        {/* Host 컴포넌트 라우트 추가 */}
+        <Route path="/host" element={
+          <SimplePrivateRoute>
+            <WithLayout>
+              <Host />
+            </WithLayout>
+          </SimplePrivateRoute>
+        } />
+
+        {/* 게시글 목록 페이지 라우트 추가 */}
+        <Route path="/posting/list" element={
+          <SimplePrivateRoute>
+            <WithLayout>
+              <Post />
+            </WithLayout>
+          </SimplePrivateRoute>
+        } />
+        
         <Route path="/posting/:id" element={
           <SimplePrivateRoute>
             <WithLayout>
@@ -103,23 +126,85 @@ const App: React.FC = () => {
         
         <Route path="/chat" element={
           <SimplePrivateRoute>
-            <WithLayout>
-              <div className="p-4">
-                <h1 className="text-xl font-bold mb-4">채팅</h1>
-                <p>현재 구현 중입니다.</p>
-              </div>
-            </WithLayout>
+            <ChatListPage />
+          </SimplePrivateRoute>
+        } />
+
+        <Route path="/chat/group/:roomId" element={
+          <SimplePrivateRoute>
+            <GroupChatRoom />
+          </SimplePrivateRoute>
+        } />
+
+        <Route path="/chat/private/:roomId" element={
+          <SimplePrivateRoute>
+            <PrivateChatRoom />
           </SimplePrivateRoute>
         } />
         
         <Route path="/mypage" element={
           <SimplePrivateRoute>
-            <WithLayout>
-              <div className="p-4">
-                <h1 className="text-xl font-bold mb-4">마이페이지</h1>
-                <p>현재 구현 중입니다.</p>
-              </div>
-            </WithLayout>
+            <ProfilePage />
+          </SimplePrivateRoute>
+        } />
+
+        <Route path="/profile/edit" element={
+          <SimplePrivateRoute>
+            <ProfileEditPage />
+          </SimplePrivateRoute>
+        } />
+
+        <Route path="/settings" element={
+          <SimplePrivateRoute>
+            <SettingsPage />
+          </SimplePrivateRoute>
+        } />
+
+        <Route path="/settings/user/edit" element={
+          <SimplePrivateRoute>
+            <UserEditPage />
+          </SimplePrivateRoute>
+        } />
+
+        <Route path="/settings/notifications" element={
+          <SimplePrivateRoute>
+            <NotificationsPage />
+          </SimplePrivateRoute>
+        } />
+
+        <Route path="/settings/report/posting" element={
+          <SimplePrivateRoute>
+            <ReportPostingPage />
+          </SimplePrivateRoute>
+        } />
+
+        <Route path="/settings/report/user" element={
+          <SimplePrivateRoute>
+            <ReportUserPage />
+          </SimplePrivateRoute>
+        } />
+
+        <Route path="/settings/report/list" element={
+          <SimplePrivateRoute>
+            <ReportListPage />
+          </SimplePrivateRoute>
+        } />
+
+        <Route path="/settings/applications" element={
+          <SimplePrivateRoute>
+            <ApplicationListPage />
+          </SimplePrivateRoute>
+        } />
+
+        <Route path="/settings/recruitments" element={
+          <SimplePrivateRoute>
+            <RecruitmentListPage />
+          </SimplePrivateRoute>
+        } />
+
+        <Route path="/settings/reviews" element={
+          <SimplePrivateRoute>
+            <ReviewListPage />
           </SimplePrivateRoute>
         } />
       </Routes>

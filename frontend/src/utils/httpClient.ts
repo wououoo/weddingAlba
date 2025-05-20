@@ -1,103 +1,138 @@
-import { getAccessToken, setAccessToken, refreshAccessToken, removeTokens } from '../OAuth2/authUtils';
+// httpClient.ts - API 응답 타입 및 HTTP 클라이언트 유틸리티
 
-// 토큰 만료 오류가 발생했는지 확인하는 함수
-const isTokenExpiredError = (error: any): boolean => {
-  // 서버 응답에서 토큰 만료 확인 (서버 응답 형식에 맞게 수정 필요)
-  return error?.response?.status === 401 && 
-         error?.response?.data?.message?.includes('만료된 토큰') || 
-         error?.response?.data?.message?.includes('expired token');
-};
+import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 
-// API 요청을 위한 기본 fetch 함수 (토큰 갱신 로직 포함)
-export const fetchWithAuth = async (
-  url: string, 
-  options: RequestInit = {}
-): Promise<Response> => {
-  // 요청에 Authorization 헤더 추가
-  const token = getAccessToken();
-  const headers = {
-    ...options.headers,
-    'Content-Type': 'application/json',
-    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-  };
+// API 응답 인터페이스
+export interface ApiResponse<T = any> {
+  success: boolean;
+  data: T | null;
+  message?: string;
+}
 
-  // 첫 번째 요청 시도
-  try {
-    const response = await fetch(url, {
-      ...options,
-      headers,
-      credentials: 'include', // 쿠키 포함 (리프레시 토큰)
-    });
-
-    // 401 Unauthorized 응답인 경우 (토큰 만료)
-    if (response.status === 401) {
-      const responseData = await response.json().catch(() => ({}));
-      
-      // 토큰 만료 메시지 확인 (서버 응답 형식에 맞게 수정 필요)
-      if (responseData.message?.includes('만료된 토큰') || 
-          responseData.message?.includes('expired token')) {
-        
-        // 토큰 갱신 시도
-        const newToken = await refreshAccessToken();
-        
-        // 토큰 갱신 성공 시 요청 재시도
-        if (newToken) {
-          const newHeaders = {
-            ...options.headers,
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${newToken}`
-          };
-          
-          // 갱신된 토큰으로 요청 재시도
-          return fetch(url, {
-            ...options,
-            headers: newHeaders,
-            credentials: 'include',
-          });
-        } else {
-          // 토큰 갱신 실패 시 로그아웃 처리 (이미 refreshAccessToken 내부에서 처리됨)
-          throw new Error('토큰 갱신 실패');
-        }
+// HTTP 클라이언트 클래스
+class HttpClient {
+  private instance: AxiosInstance;
+  
+  constructor(baseURL: string = '') {
+    this.instance = axios.create({
+      baseURL,
+      timeout: 10000, // 10초
+      headers: {
+        'Content-Type': 'application/json'
       }
-    }
+    });
     
-    return response;
-  } catch (error) {
-    console.error('API 요청 중 오류 발생:', error);
-    throw error;
+    // 요청 인터셉터
+    this.instance.interceptors.request.use(
+      (config) => {
+        // 토큰이 있으면 헤더에 추가
+        const token = localStorage.getItem('accessToken');
+        if (token) {
+          config.headers['Authorization'] = `Bearer ${token}`;
+        }
+        return config;
+      },
+      (error) => {
+        return Promise.reject(error);
+      }
+    );
+    
+    // 응답 인터셉터
+    this.instance.interceptors.response.use(
+      (response) => {
+        return response;
+      },
+      (error) => {
+        // 401 에러 처리 (인증 만료)
+        if (error.response && error.response.status === 401) {
+          // 리프레시 토큰으로 새 액세스 토큰 요청 또는 로그인 페이지로 리다이렉트
+          localStorage.removeItem('accessToken');
+          window.location.href = '/login';
+        }
+        return Promise.reject(error);
+      }
+    );
   }
+  
+  // HTTP GET 요청
+  async get<T>(url: string, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
+    try {
+      const response = await this.instance.get<ApiResponse<T>>(url, config);
+      return response.data;
+    } catch (error) {
+      console.error('GET 요청 오류:', error);
+      return {
+        success: false,
+        data: null,
+        message: '요청 처리 중 오류가 발생했습니다.'
+      };
+    }
+  }
+  
+  // HTTP POST 요청
+  async post<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
+    try {
+      const response = await this.instance.post<ApiResponse<T>>(url, data, config);
+      return response.data;
+    } catch (error) {
+      console.error('POST 요청 오류:', error);
+      return {
+        success: false,
+        data: null,
+        message: '요청 처리 중 오류가 발생했습니다.'
+      };
+    }
+  }
+  
+  // HTTP PUT 요청
+  async put<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
+    try {
+      const response = await this.instance.put<ApiResponse<T>>(url, data, config);
+      return response.data;
+    } catch (error) {
+      console.error('PUT 요청 오류:', error);
+      return {
+        success: false,
+        data: null,
+        message: '요청 처리 중 오류가 발생했습니다.'
+      };
+    }
+  }
+  
+  // HTTP DELETE 요청
+  async delete<T>(url: string, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
+    try {
+      const response = await this.instance.delete<ApiResponse<T>>(url, config);
+      return response.data;
+    } catch (error) {
+      console.error('DELETE 요청 오류:', error);
+      return {
+        success: false,
+        data: null,
+        message: '요청 처리 중 오류가 발생했습니다.'
+      };
+    }
+  }
+}
+
+// 기본 HTTP 클라이언트 인스턴스 생성
+export const httpClient = new HttpClient('/api');
+
+// 개별 함수 내보내기
+export const get = <T>(url: string, config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
+  return httpClient.get<T>(url, config);
 };
 
-// GET 요청
-export const get = (url: string, options: RequestInit = {}): Promise<Response> => {
-  return fetchWithAuth(url, {
-    ...options,
-    method: 'GET',
-  });
+export const post = <T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
+  return httpClient.post<T>(url, data, config);
 };
 
-// POST 요청
-export const post = (url: string, data: any, options: RequestInit = {}): Promise<Response> => {
-  return fetchWithAuth(url, {
-    ...options,
-    method: 'POST',
-    body: JSON.stringify(data),
-  });
+export const put = <T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
+  return httpClient.put<T>(url, data, config);
 };
 
-// PUT 요청
-export const put = (url: string, data: any, options: RequestInit = {}): Promise<Response> => {
-  return fetchWithAuth(url, {
-    ...options,
-    method: 'PUT',
-    body: JSON.stringify(data),
-  });
+export const del = <T>(url: string, config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
+  return httpClient.delete<T>(url, config);
 };
 
-// DELETE 요청
-export const del = (url: string, options: RequestInit = {}): Promise<Response> => {
-  return fetchWithAuth(url, {
-    ...options,
-    method: 'DELETE',
-  });
-};
+export default httpClient;

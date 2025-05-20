@@ -62,6 +62,12 @@ const Main: React.FC = () => {
   }, []);
   
   const handleTabChange = (tab: 'recommended' | 'recent' | 'popular' | 'all') => {
+    if (tab === 'all') {
+      // 전체보기 탭을 클릭하면 host 페이지로 이동
+      navigate('/host');
+      return;
+    }
+    
     setActiveTab(tab);
     // 실제 구현에서는 탭에 따라 다른 API 호출
   };

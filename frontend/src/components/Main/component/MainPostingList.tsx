@@ -1,22 +1,41 @@
+import { useNavigate } from "react-router-dom";
 import MainPage from "../MainPage";
 
 const postings = [
     { id: 1, title: "모집글 1", tags: "태그 A" },
     { id: 2, title: "모집글 2", tags: "태그 B" },
     { id: 3, title: "모집글 3", tags: "태그 C" },
-    { id: 3, title: "모집글 4", tags: "태그 D" },
-    { id: 3, title: "모집글 5", tags: "태그 E" },
-    { id: 3, title: "모집글 6", tags: "태그 F" },
-    { id: 3, title: "모집글 7", tags: "태그 G" },
-    { id: 3, title: "모집글 8", tags: "태그 H" },
+    { id: 4, title: "모집글 4", tags: "태그 D" },
+    { id: 5, title: "모집글 5", tags: "태그 E" },
+    { id: 6, title: "모집글 6", tags: "태그 F" },
+    { id: 7, title: "모집글 7", tags: "태그 G" },
+    { id: 8, title: "모집글 8", tags: "태그 H" },
 ];
+
 export const MainPostingList: React.FC = () => {
+    const navigate = useNavigate();
+
+    const goToHostPage = () => {
+        navigate('/host');
+    };
+
     return (
         <div className="posting-wrapper pb-10">
             <div className="posting-list-container py-5">
                 <div className="posting-list-header px-5">
-                    <h3 className="text-lg font-bold">전체 모집글</h3>
-                    <a className="more-btn" href="/posting/list">더보기</a>
+                    <h3 
+                        className="text-lg font-bold cursor-pointer hover:text-purple-600" 
+                        onClick={goToHostPage}
+                    >
+                        전체 모집글
+                    </h3>
+                    <a 
+                        className="more-btn" 
+                        onClick={goToHostPage}
+                        style={{ cursor: 'pointer' }}
+                    >
+                        더보기
+                    </a>
                 </div>
                 <div className="posting-list-container-body">
                     <div className="v-scroll">

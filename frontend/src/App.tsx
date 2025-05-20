@@ -1,7 +1,9 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { LoginPage, OAuth2RedirectHandler, isAuthenticated } from './OAuth2';
+import MainPage from './components/Main/MainPage';
 import Main from './components/Main';
+import Host from './components/host/Host';
 import Layout from './components/common/Layout';
 import { SettingsPage, NotificationsPage, ReportsPage, ReportPostingPage, ReportUserPage, ReportListPage, ApplicationListPage, RecruitmentListPage, ReviewListPage, UserEditPage } from './components/settings';
 import { ProfilePage, ProfileEditPage } from './components/profile';
@@ -32,11 +34,20 @@ const App: React.FC = () => {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/oauth2/redirect" element={<OAuth2RedirectHandler />} />
         
-        {/* 로그인 후 페이지들에 Layout 적용 */}
+        {/* 메인 페이지를 기본 경로로 설정 */}
         <Route path="/" element={
           <SimplePrivateRoute>
             <WithLayout>
-              <Main />
+              <MainPage />
+            </WithLayout>
+          </SimplePrivateRoute>
+        } />
+        
+        {/* Host 컴포넌트 라우트 추가 */}
+        <Route path="/host" element={
+          <SimplePrivateRoute>
+            <WithLayout>
+              <Host />
             </WithLayout>
           </SimplePrivateRoute>
         } />

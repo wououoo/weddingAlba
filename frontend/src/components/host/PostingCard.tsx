@@ -3,7 +3,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PostingItem } from './types/types';
-import { formatPrice } from './utils';
+import { formatPrice } from './Utils';
 
 interface PostingCardProps {
   posting: PostingItem;

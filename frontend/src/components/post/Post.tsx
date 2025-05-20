@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PostingItem } from './types/types';
-import { formatPrice } from './utils';
+import { formatPrice } from './Utils';
 import SearchBar from './SearchBar';
 import TabNavigation from './TabNavigation';
 import PostingCard from './PostingCard';

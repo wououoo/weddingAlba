@@ -2,13 +2,23 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { LoginPage, OAuth2RedirectHandler, isAuthenticated } from './OAuth2';
 import MainPage from './components/Main/MainPage';
+// 컴포넌트 관련 import 수정
 import Main from './components/Main';
-import Host from './components/host/Host';
-import Post from './components/post/Post';
-import Layout from './components/common/Layout';
-import { SettingsPage, NotificationsPage, ReportsPage, ReportPostingPage, ReportUserPage, ReportListPage, ApplicationListPage, RecruitmentListPage, ReviewListPage, UserEditPage } from './components/settings';
-import { ProfilePage, ProfileEditPage } from './components/profile';
-import { ChatListPage, GroupChatRoom, PrivateChatRoom } from './components/chat';
+import Host from './components/Host/Host';
+import Post from './components/Post/Post';
+import Layout from './components/Common/Layout';
+import SettingsPage from './components/Settings/SettingsPage';
+import NotificationsPage from './components/Settings/notifications/NotificationsPage';
+import { ReportsPage, ReportPostingPage, ReportUserPage, ReportListPage } from './components/Settings/reports';
+import { ApplicationListPage } from './components/Settings/applications';
+import { RecruitmentListPage } from './components/Settings/recruitments';
+import { ReviewListPage } from './components/Settings/reviews';
+import { UserEditPage } from './components/Settings/user';
+import ProfilePage from './components/Profile/ProfilePage';
+import ProfileEditPage from './components/Profile/ProfileEditPage';
+import ChatListPage from './components/Chat/ChatListPage';
+import GroupChatRoom from './components/Chat/GroupChatRoom';
+import PrivateChatRoom from './components/Chat/PrivateChatRoom';
 // import { useAuthStore } from './stores/authStore'; // 주석 처리
 
 // 간단한 인증 확인 함수 (authUtils의 isAuthenticated 사용)

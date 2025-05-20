@@ -64,7 +64,7 @@ export const MainPostingList: React.FC = () => {
                                             <a className="image-wrap">
                                                 <div 
                                                     className="img" 
-                                                    ref={el => imgRefs.current[index] = el}
+                                                    ref={el => { imgRefs.current[index] = el; return undefined; }}
                                                 ></div>
                                             </a>
                                             <div className="detail">

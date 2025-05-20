@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AppFooter } from '../common';
+import { AppFooter } from '../Common';
 
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();

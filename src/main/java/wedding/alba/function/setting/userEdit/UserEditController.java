@@ -15,7 +15,7 @@ import java.util.NoSuchElementException;
  * 사용자 정보 조회 및 수정 API를 제공
  */
 @RestController
-@RequestMapping("/user/profile")
+@RequestMapping("/user/edit")
 @Slf4j
 public class UserEditController {
 

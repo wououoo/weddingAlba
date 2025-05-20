@@ -7,10 +7,10 @@ import TabNavigation from './TabNavigation';
 import PostingCard from './PostingCard';
 import BottomNavigation from './BottomNavigation';
 import FloatingButton from './FloatingButton';
-import { useMain } from './hooks';
-import './MainStyles.css';
+import { useHost } from './hooks';
+import './HostStyles.css';
 
-const Main: React.FC = () => {
+const Host: React.FC = () => {
   // 커스텀 훅에서 상태와 핸들러 가져오기
   const {
     activeTab,
@@ -21,7 +21,7 @@ const Main: React.FC = () => {
     handleTabChange,
     handleSearch,
     handleAddPosting
-  } = useMain();
+  } = useHost();
   
   return (
     <div className="bg-gray-100 min-h-screen pb-16">
@@ -77,4 +77,4 @@ const Main: React.FC = () => {
   );
 };
 
-export default Main;
+export default Host;

@@ -1,11 +1,11 @@
-// mainApi.ts - 메인 페이지 관련 API 호출 담당
+// hostApi.ts - 호스트 페이지 관련 API 호출 담당
 
 import axios from 'axios';
-import { PostingRequestDTO } from '../dto/MainRequestDTO';
-import { PostingResponseDTO } from '../dto/MainResponseDTO';
+import { PostingRequestDTO } from '../dto/HostRequestDTO';
+import { PostingResponseDTO } from '../dto/HostResponseDTO';
 import { ApiResponse } from '../../../utils/httpClient';
 
-export const mainApi = {
+export const hostApi = {
   // 게시글 목록 조회
   getPostings: async (tab: string = 'all'): Promise<ApiResponse<PostingResponseDTO[]>> => {
     try {

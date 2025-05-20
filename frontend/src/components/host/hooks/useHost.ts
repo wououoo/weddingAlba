@@ -1,10 +1,10 @@
-// useMain.ts - 메인 화면에서 사용하는 로직을 담는 커스텀 훅
+// useHost.ts - 호스트 화면에서 사용하는 로직을 담는 커스텀 훅
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { TabType, PostingItem } from '../types/types';
-import { mainApi } from '../api/mainApi';
+import { hostApi } from '../api/hostApi';
 
-export function useMain() {
+export function useHost() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabType>('all');
   const [postings, setPostings] = useState<PostingItem[]>([]);
@@ -17,7 +17,7 @@ export function useMain() {
     const loadPostings = async () => {
       setIsLoading(true);
       try {
-        const response = await mainApi.getPostings(activeTab);
+        const response = await hostApi.getPostings(activeTab);
         
         if (response.success && response.data) {
           setPostings(response.data);
@@ -47,7 +47,7 @@ export function useMain() {
     
     if (!keyword.trim()) {
       // 검색어가 없는 경우 모든 게시글 표시
-      const response = await mainApi.getPostings(activeTab);
+      const response = await hostApi.getPostings(activeTab);
       if (response.success && response.data) {
         setPostings(response.data);
       }
@@ -56,7 +56,7 @@ export function useMain() {
     
     setIsLoading(true);
     try {
-      const response = await mainApi.searchPostings(keyword);
+      const response = await hostApi.searchPostings(keyword);
       
       if (response.success && response.data) {
         setPostings(response.data);
@@ -85,7 +85,7 @@ export function useMain() {
   // 찜하기 버튼 클릭 핸들러
   const handleBookmarkClick = async (id: number) => {
     try {
-      const response = await mainApi.bookmarkPosting(id);
+      const response = await hostApi.bookmarkPosting(id);
       
       if (response.success) {
         alert('게시글을 찜 목록에 추가했습니다.');

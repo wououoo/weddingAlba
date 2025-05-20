@@ -1,4 +1,4 @@
-// MainRequestDTO.ts - 메인 페이지 요청 DTO 정의
+// HostRequestDTO.ts - 호스트 페이지 요청 DTO 정의
 
 export interface PostingRequestDTO {
   tab?: string;

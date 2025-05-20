@@ -1,4 +1,4 @@
-// MainResponseDTO.ts - 메인 페이지 응답 DTO 정의
+// HostResponseDTO.ts - 호스트 페이지 응답 DTO 정의
 
 export interface PostingResponseDTO {
   id: number;

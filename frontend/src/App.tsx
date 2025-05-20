@@ -4,6 +4,7 @@ import { LoginPage, OAuth2RedirectHandler, isAuthenticated } from './OAuth2';
 import MainPage from './components/Main/MainPage';
 import Main from './components/Main';
 import Host from './components/host/Host';
+import Post from './components/post/Post';
 import Layout from './components/common/Layout';
 import { SettingsPage, NotificationsPage, ReportsPage, ReportPostingPage, ReportUserPage, ReportListPage, ApplicationListPage, RecruitmentListPage, ReviewListPage, UserEditPage } from './components/settings';
 import { ProfilePage, ProfileEditPage } from './components/profile';
@@ -48,6 +49,15 @@ const App: React.FC = () => {
           <SimplePrivateRoute>
             <WithLayout>
               <Host />
+            </WithLayout>
+          </SimplePrivateRoute>
+        } />
+        
+        {/* 게시글 목록 페이지 라우트 추가 */}
+        <Route path="/posting/list" element={
+          <SimplePrivateRoute>
+            <WithLayout>
+              <Post />
             </WithLayout>
           </SimplePrivateRoute>
         } />

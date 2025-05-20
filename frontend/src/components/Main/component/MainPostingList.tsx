@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import MainPage from "../MainPage";
+import { useEffect, useRef } from "react";
 
 const postings = [
     { id: 1, title: "모집글 1", tags: "태그 A" },
@@ -14,9 +14,26 @@ const postings = [
 
 export const MainPostingList: React.FC = () => {
     const navigate = useNavigate();
+    const imgRefs = useRef<Array<HTMLDivElement | null>>([]);
 
-    const goToHostPage = () => {
-        navigate('/host');
+    // 이미지 로드 오류 처리 - 백그라운드 이미지를 위한 처리
+    useEffect(() => {
+        // 각 이미지 요소의 로드 오류 처리
+        imgRefs.current.forEach(imgDiv => {
+            if (imgDiv) {
+                // 배경 이미지가 로드되었는지 확인하는 방법이 없으므로
+                // 임시 이미지 요소를 만들어 테스트
+                const tempImage = new Image();
+                tempImage.onerror = () => {
+                    imgDiv.classList.add('no-image');
+                };
+                tempImage.src = "/images/example-apply-image.jpg";
+            }
+        });
+    }, []);
+
+    const goToPostingList = () => {
+        navigate('/posting/list');
     };
 
     return (
@@ -25,13 +42,13 @@ export const MainPostingList: React.FC = () => {
                 <div className="posting-list-header px-5">
                     <h3 
                         className="text-lg font-bold cursor-pointer hover:text-purple-600" 
-                        onClick={goToHostPage}
+                        onClick={goToPostingList}
                     >
                         전체 모집글
                     </h3>
                     <a 
                         className="more-btn" 
-                        onClick={goToHostPage}
+                        onClick={goToPostingList}
                         style={{ cursor: 'pointer' }}
                     >
                         더보기
@@ -41,11 +58,14 @@ export const MainPostingList: React.FC = () => {
                     <div className="v-scroll">
                         <div className="v-scroll-inner">
                             <div className="posting-list">
-                                {postings.map((post) => (
+                                {postings.map((post, index) => (
                                     <div key={post.id}>
                                         <div className="posting-list-item">
                                             <a className="image-wrap">
-                                                <div className="img"></div>
+                                                <div 
+                                                    className="img" 
+                                                    ref={el => imgRefs.current[index] = el}
+                                                ></div>
                                             </a>
                                             <div className="detail">
                                                 <a>

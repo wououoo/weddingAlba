@@ -25,7 +25,8 @@ public class UserEditRequestDto {
     
     private User.Gender gender;
     
-    @Pattern(regexp = "^01[0-9]-\\d{3,4}-\\d{4}$", message = "올바른 전화번호 형식이 아닙니다")
+    // 전화번호 검증 완화 - 비어있어도 됨
+    @Pattern(regexp = "^$|^01[0-9]-\\d{3,4}-\\d{4}$", message = "올바른 전화번호 형식이 아닙니다")
     private String phoneNumber;
     
     @JsonFormat(pattern = "yyyy-MM-dd")

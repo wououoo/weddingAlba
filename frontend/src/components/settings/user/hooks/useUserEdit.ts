@@ -162,11 +162,58 @@ export function useUserEdit() {
       setRegion(mappedRegion);
       setCity(data.sigungu || data.bname || ''); // 시군구 정보가 없으면 법정동 이름 사용
       
-      // 건물명이 있으면 추가 (상세 주소용)
-      if (data.buildingName) {
-        setDetailAddress(data.buildingName);
+      // 상세주소 구성 개선 - 동/번지 등 상세 정보 추출
+      let detailAddressParts = [];
+      
+      // 1. 도로명 주소에서 상세 정보 추출 (roadAddress)
+      if (data.roadAddress) {
+        console.log('도로명 주소:', data.roadAddress);
+        const roadParts = data.roadAddress.split(' ');
+        // 시군구 다음 부분들을 상세주소로 사용
+        const sigunguName = data.sigungu || '';
+        if (sigunguName) {
+          const sigunguIndex = roadParts.findIndex(part => part === sigunguName);
+          if (sigunguIndex >= 0 && sigunguIndex < roadParts.length - 1) {
+            const remainingParts = roadParts.slice(sigunguIndex + 1);
+            detailAddressParts.push(...remainingParts);
+          }
+        }
+      }
+      
+      // 2. 지번 주소에서 상세 정보 추출 (jibunAddress) - 도로명에서 추출하지 못한 경우
+      if (detailAddressParts.length === 0 && data.jibunAddress) {
+        console.log('지번 주소:', data.jibunAddress);
+        const jibunParts = data.jibunAddress.split(' ');
+        const sigunguName = data.sigungu || '';
+        if (sigunguName) {
+          const sigunguIndex = jibunParts.findIndex(part => part === sigunguName);
+          if (sigunguIndex >= 0 && sigunguIndex < jibunParts.length - 1) {
+            const remainingParts = jibunParts.slice(sigunguIndex + 1);
+            detailAddressParts.push(...remainingParts);
+          }
+        }
+      }
+      
+      // 3. 법정동명 추가 (기본 주소에 없는 경우)
+      if (data.bname && !detailAddressParts.some(part => part.includes(data.bname))) {
+        detailAddressParts.unshift(data.bname);
+      }
+      
+      // 4. 건물명 추가
+      if (data.buildingName && !detailAddressParts.some(part => part.includes(data.buildingName))) {
+        detailAddressParts.push(data.buildingName);
+      }
+      
+      // 5. 상세주소 조합
+      const newDetailAddress = detailAddressParts.filter(part => part.trim()).join(' ').trim();
+      
+      console.log('추출된 상세주소 부분들:', detailAddressParts);
+      console.log('최종 상세주소:', newDetailAddress);
+      
+      if (newDetailAddress) {
+        setDetailAddress(newDetailAddress);
       } else {
-        // 상세 주소 필드는 사용자가 직접 입력할 수 있도록 비워둠
+        // 상세주소를 추출할 수 없는 경우 비우기
         setDetailAddress('');
       }
     } catch (error) {
@@ -186,19 +233,29 @@ export function useUserEdit() {
       return;
     }
     
+    // 이름은 필수 입력
+    if (!name.trim()) {
+      setError('이름은 필수 입력 항목입니다.');
+      return;
+    }
+    
     try {
       setIsLoading(true);
       
       // 수정할 사용자 정보 (백엔드 필드명에 맞춤)
-      const userData: UserUpdateRequestDTO = {
-        name,
-        addressCity: region,
-        addressDistrict: city,
-        addressDetail: detailAddress,
-        gender,
-        phoneNumber: phone,
-        birth: birthdate || null
-      };
+      // 빈 값이 아닌 필드만 전송
+      const userData: UserUpdateRequestDTO = {};
+      
+      // 이름은 필수
+      userData.name = name.trim();
+      
+      // 선택적 필드들
+      if (gender) userData.gender = gender;
+      if (phone.trim()) userData.phoneNumber = phone.trim();
+      if (birthdate) userData.birth = birthdate;
+      if (region.trim()) userData.addressCity = region.trim();
+      if (city.trim()) userData.addressDistrict = city.trim();
+      if (detailAddress.trim()) userData.addressDetail = detailAddress.trim();
       
       // API 호출
       const response = await userApi.updateUserInfo(userData);

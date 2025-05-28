@@ -1,10 +1,39 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AppFooter } from '../common';
+import { AppFooter } from '../Common';
+import { useProfile } from './hooks/useProfile';
 
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'wishlist' | 'reviews'>('wishlist');
+  const { profile, isLoading, error } = useProfile();
+
+  // 로딩 상태
+  if (isLoading) {
+    return (
+      <div className="flex flex-col min-h-screen bg-gray-50">
+        <div className="bg-white p-4 flex justify-between items-center">
+          <div className="flex items-center">
+            <button 
+              className="mr-3"
+              onClick={() => navigate('/', { replace: true })}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+            </button>
+            <h1 className="text-xl font-bold">마이페이지</h1>
+          </div>
+        </div>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-600 mx-auto"></div>
+            <p className="mt-4 text-gray-700">프로필 정보를 불러오는 중...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
@@ -41,14 +70,59 @@ const ProfilePage: React.FC = () => {
 
       {/* 사용자 프로필 영역 */}
       <div className="bg-white p-4 flex items-center mb-2">
-        <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mr-4">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-          </svg>
+        <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mr-4 overflow-hidden">
+          {profile?.profileImageUrl ? (
+            <img 
+              src={profile.profileImageUrl} 
+              alt="프로필 이미지" 
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+          )}
         </div>
-        <div>
-          <div className="font-semibold">따뜻한 셀럽_26745</div>
-          <div className="text-sm text-gray-500">일반회원 · 하객력 0</div>
+        <div className="flex-1">
+          <div className="font-semibold">
+            {profile?.nickname || profile?.name || '프로필 없음'}
+          </div>
+          <div className="text-sm text-gray-500">
+            일반회원 · 하객력 {profile?.guestPower || 0}
+          </div>
+          {profile?.activityArea && (
+            <div className="text-sm text-gray-500 mt-1">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              {profile.activityArea}
+            </div>
+          )}
+          {profile?.selfIntroduction && (
+            <div className="text-sm text-gray-600 mt-2">
+              "{profile.selfIntroduction}"
+            </div>
+          )}
+          {!profile?.nickname && (
+            <div className="text-sm text-gray-400 mt-2">
+              프로필을 설정해주세요.
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* 참여 현황 */}
+      <div className="bg-white p-4 mb-2">
+        <div className="grid grid-cols-2 gap-4 text-center">
+          <div>
+            <div className="text-2xl font-bold text-purple-600">{profile?.participationCount || 0}</div>
+            <div className="text-sm text-gray-500">참여한 결혼식</div>
+          </div>
+          <div>
+            <div className="text-2xl font-bold text-purple-600">{profile?.guestPower || 0}</div>
+            <div className="text-sm text-gray-500">하객력 점수</div>
+          </div>
         </div>
       </div>
 
@@ -58,7 +132,7 @@ const ProfilePage: React.FC = () => {
           className="w-full bg-gray-100 py-2 px-4 rounded text-sm"
           onClick={() => navigate('/profile/edit')}
         >
-          프로필 수정
+          {profile?.nickname ? '프로필 수정' : '프로필 설정'}
         </button>
       </div>
 

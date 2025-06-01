@@ -61,6 +61,12 @@ jwt:
   token-validity-in-seconds: 86400 # 24시간
   refresh-token-validity-in-seconds: 604800 # 7일
 
+# 네이버 지도 API 설정
+naver:
+  map:
+    client-id: ${NAVER_MAP_CLIENT_ID:your_naver_client_id_here}
+    client-secret: ${NAVER_MAP_CLIENT_SECRET:your_naver_client_secret_here}
+
 # 애플리케이션 커스텀 설정
 app:
   cors:

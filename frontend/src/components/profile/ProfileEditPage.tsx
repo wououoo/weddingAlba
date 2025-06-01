@@ -1,5 +1,6 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { useProfileEdit } from './hooks/useProfile';
+import LocationSelector from './LocationSelector';
 
 const ProfileEditPage: React.FC = () => {
   const {
@@ -19,6 +20,7 @@ const ProfileEditPage: React.FC = () => {
   } = useProfileEdit();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isLocationSelectorOpen, setIsLocationSelectorOpen] = useState(false);
 
   // 프로필 이미지 변경 핸들러
   const handleEditProfileImage = () => {
@@ -162,17 +164,22 @@ const ProfileEditPage: React.FC = () => {
           <div className="relative">
             <input 
               type="text"
-              className="w-full p-3 bg-gray-100 rounded text-gray-700 pl-10 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full p-3 bg-gray-100 rounded text-gray-700 pl-10 cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-500"
               value={activityArea}
-              onChange={(e) => setActivityArea(e.target.value)}
-              placeholder="활동 지역을 자유롭게 입력해주세요."
+              onClick={() => setIsLocationSelectorOpen(true)}
+              readOnly
+              placeholder="활동 지역을 선택해주세요."
               disabled={isLoading || isSaving}
-              maxLength={50}
             />
             <div className="absolute left-3 top-3 text-gray-400">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
+            <div className="absolute right-3 top-3 text-gray-400">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </div>
           </div>
@@ -228,6 +235,18 @@ const ProfileEditPage: React.FC = () => {
           {isSaving ? '저장 중...' : '저장'}
         </button>
       </div>
+
+      {/* LocationSelector 모달 */}
+      {isLocationSelectorOpen && (
+        <LocationSelector
+          value={activityArea}
+          onChange={(location) => {
+            setActivityArea(location);
+            setIsLocationSelectorOpen(false);
+          }}
+          onClose={() => setIsLocationSelectorOpen(false)}
+        />
+      )}
     </div>
   );
 };

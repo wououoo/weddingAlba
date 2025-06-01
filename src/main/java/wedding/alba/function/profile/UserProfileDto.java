@@ -1,4 +1,4 @@
 package wedding.alba.function.profile;
 
-public class UserProfileDTO {
+public class UserProfileDto {
 }

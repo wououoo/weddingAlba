@@ -17,52 +17,88 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({ value, onChange, on
   const [isLoading, setIsLoading] = useState(false);
   const [currentPosition, setCurrentPosition] = useState<{lat: number, lng: number} | null>(null);
 
-  // 네이버 지도 초기화 (클라이언트 사이드 지도만 사용)
+  // 네이버 지도 초기화 (백엔드 config API 사용)
   useEffect(() => {
-    const initMap = () => {
-      if (!window.naver || !mapRef.current) return;
+    const loadMapConfig = async () => {
+      try {
+        // 백엔드에서 지도 설정 가져오기
+        const response = await fetch('/api/location/config');
+        const config = await response.json();
+        
+        const initMap = () => {
+          if (!window.naver || !mapRef.current) return;
 
-      // 기본 위치 (서울 시청)
-      const defaultLocation = new window.naver.maps.LatLng(37.5666805, 126.9784147);
-      
-      const mapOptions = {
-        center: defaultLocation,
-        zoom: 15,
-        mapTypeControl: true,
-        mapTypeControlOptions: {
-          style: window.naver.maps.MapTypeControlStyle.BUTTON,
-          position: window.naver.maps.Position.TOP_RIGHT
-        },
-        zoomControl: true,
-        zoomControlOptions: {
-          style: window.naver.maps.ZoomControlStyle.SMALL,
-          position: window.naver.maps.Position.RIGHT_CENTER
+          // 기본 위치 (서울 시청)
+          const defaultLocation = new window.naver.maps.LatLng(37.5666805, 126.9784147);
+          
+          const mapOptions = {
+            center: defaultLocation,
+            zoom: 15,
+            mapTypeControl: true,
+            mapTypeControlOptions: {
+              style: window.naver.maps.MapTypeControlStyle.BUTTON,
+              position: window.naver.maps.Position.TOP_RIGHT
+            },
+            zoomControl: true,
+            zoomControlOptions: {
+              style: window.naver.maps.ZoomControlStyle.SMALL,
+              position: window.naver.maps.Position.RIGHT_CENTER
+            }
+          };
+
+          const mapInstance = new window.naver.maps.Map(mapRef.current, mapOptions);
+          setMap(mapInstance);
+
+          // 지도 클릭 이벤트
+          window.naver.maps.Event.addListener(mapInstance, 'click', (e: any) => {
+            const lat = e.coord.lat();
+            const lng = e.coord.lng();
+            handleLocationSelect(lat, lng);
+          });
+
+          // 현재 위치 가져오기
+          getCurrentLocation(mapInstance);
+        };
+
+        // 네이버 지도 API 로드 (백엔드에서 제공하는 URL 사용)
+        if (!window.naver) {
+          const script = document.createElement('script');
+          script.src = config.mapApiUrl;
+          script.onload = initMap;
+          script.onerror = () => {
+            console.error('네이버 지도 API 로드 실패');
+            // fallback으로 공개 API 사용
+            const fallbackScript = document.createElement('script');
+            fallbackScript.src = 'https://openapi.map.naver.com/openapi/v3/maps.js';
+            fallbackScript.onload = initMap;
+            document.head.appendChild(fallbackScript);
+          };
+          document.head.appendChild(script);
+        } else {
+          initMap();
         }
-      };
-
-      const mapInstance = new window.naver.maps.Map(mapRef.current, mapOptions);
-      setMap(mapInstance);
-
-      // 지도 클릭 이벤트
-      window.naver.maps.Event.addListener(mapInstance, 'click', (e: any) => {
-        const lat = e.coord.lat();
-        const lng = e.coord.lng();
-        handleLocationSelect(lat, lng);
-      });
-
-      // 현재 위치 가져오기
-      getCurrentLocation(mapInstance);
+      } catch (error) {
+        console.error('지도 설정 로드 실패:', error);
+        // fallback으로 공개 API 사용
+        const script = document.createElement('script');
+        script.src = 'https://openapi.map.naver.com/openapi/v3/maps.js';
+        script.onload = () => {
+          if (!window.naver || !mapRef.current) return;
+          const defaultLocation = new window.naver.maps.LatLng(37.5666805, 126.9784147);
+          const mapOptions = {
+            center: defaultLocation,
+            zoom: 15,
+            mapTypeControl: true,
+            zoomControl: true
+          };
+          const mapInstance = new window.naver.maps.Map(mapRef.current, mapOptions);
+          setMap(mapInstance);
+        };
+        document.head.appendChild(script);
+      }
     };
 
-    // 네이버 지도 API는 공개 지도만 사용 (API 키 없이)
-    if (!window.naver) {
-      const script = document.createElement('script');
-      script.src = 'https://openapi.map.naver.com/openapi/v3/maps.js';
-      script.onload = initMap;
-      document.head.appendChild(script);
-    } else {
-      initMap();
-    }
+    loadMapConfig();
   }, []);
 
   // 현재 위치 가져오기

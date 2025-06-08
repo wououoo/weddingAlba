@@ -1,12 +1,50 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppFooter } from '../Common';
 import { useProfile } from './hooks/useProfile';
+import { BookmarkList } from './bookmark';
 
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'wishlist' | 'reviews'>('wishlist');
   const { profile, isLoading, error } = useProfile();
+
+  // 토큰 설정 및 디버깅
+  useEffect(() => {
+    // 토큰 디버깅 - 모든 저장 위치 확인
+    const localToken = localStorage.getItem('authToken');
+    const sessionToken = sessionStorage.getItem('authToken');
+    const accessToken = localStorage.getItem('accessToken'); // httpClient가 찾는 키
+    const jwtToken = localStorage.getItem('jwtToken');
+    
+    console.log('localStorage authToken:', localToken ? `${localToken.substring(0, 20)}...` : 'null');
+    console.log('sessionStorage authToken:', sessionToken ? `${sessionToken.substring(0, 20)}...` : 'null');
+    console.log('localStorage accessToken:', accessToken ? `${accessToken.substring(0, 20)}...` : 'null');
+    console.log('localStorage jwtToken:', jwtToken ? `${jwtToken.substring(0, 20)}...` : 'null');
+    
+    // httpClient가 accessToken을 찾으므로 토큰을 accessToken으로 복사
+    const token = localToken || sessionToken || jwtToken;
+    if (token && !accessToken) {
+      localStorage.setItem('accessToken', token);
+      console.log('토큰을 accessToken으로 복사했습니다.');
+    }
+    
+    console.log('최종 사용할 토큰 (accessToken):', localStorage.getItem('accessToken') ? 'EXISTS' : 'null');
+    
+    // 토큰 유효성 간단 검사
+    const finalToken = localStorage.getItem('accessToken');
+    if (finalToken) {
+      try {
+        const payload = JSON.parse(atob(finalToken.split('.')[1]));
+        const currentTime = Date.now() / 1000;
+        console.log('토큰 만료 시간:', new Date(payload.exp * 1000));
+        console.log('현재 시간:', new Date());
+        console.log('토큰 유효한가?', payload.exp > currentTime);
+      } catch (error) {
+        console.error('토큰 디코딩 실패:', error);
+      }
+    }
+  }, []);
 
   // 로딩 상태
   if (isLoading) {
@@ -142,7 +180,7 @@ const ProfilePage: React.FC = () => {
           className={`flex-1 py-3 px-4 text-center ${activeTab === 'wishlist' ? 'text-purple-600 border-b-2 border-purple-600 font-medium' : 'text-gray-500'}`}
           onClick={() => setActiveTab('wishlist')}
         >
-          찜 목록
+          북마크
         </button>
         <button 
           className={`flex-1 py-3 px-4 text-center ${activeTab === 'reviews' ? 'text-purple-600 border-b-2 border-purple-600 font-medium' : 'text-gray-500'}`}
@@ -155,12 +193,16 @@ const ProfilePage: React.FC = () => {
       {/* 탭 컨텐츠 */}
       <div className="flex-1 p-4 pb-20">
         {activeTab === 'wishlist' ? (
-          <div className="text-center text-gray-500 py-10">
-            찜한 내역이 없습니다.
-          </div>
+          <BookmarkList />
         ) : (
           <div className="text-center text-gray-500 py-10">
-            작성한 리뷰가 없습니다.
+            <div className="mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-gray-300 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+              </svg>
+            </div>
+            <p className="text-lg font-medium text-gray-400 mb-2">작성한 리뷰가 없습니다</p>
+            <p className="text-sm text-gray-400">참여한 결혼식에 대한 리뷰를 작성해보세요!</p>
           </div>
         )}
       </div>

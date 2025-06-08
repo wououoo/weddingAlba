@@ -8,7 +8,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import wedding.alba.dto.ApiResponse;
 import wedding.alba.config.JwtConfig;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.NoSuchElementException;
 
 /**
@@ -24,6 +26,31 @@ public class ProfileController {
     
     @Autowired
     private JwtConfig jwtConfig;
+    
+    /**
+     * 프로필 갤러리 메인 이미지 설정
+     * 
+     * @param request HTTP 요청
+     * @param imageId 메인으로 설정할 이미지 ID
+     * @return 설정 결과
+     */
+    @PutMapping("/me/gallery/{imageId}/set-main")
+    public ResponseEntity<ApiResponse<String>> setMainGalleryImage(
+            HttpServletRequest request,
+            @PathVariable Long imageId) {
+        try {
+            Long userId = extractUserIdFromToken(request);
+            log.info("사용자 {}의 갤러리 이미지 {} 메인 설정 요청", userId, imageId);
+            ApiResponse<String> response = profileService.setMainGalleryImage(userId, imageId);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            log.error("갤러리 메인 이미지 설정 실패: {}", e.getMessage());
+            return ResponseEntity.ok(ApiResponse.error(e.getMessage()));
+        } catch (Exception e) {
+            log.error("갤러리 메인 이미지 설정 중 예상치 못한 오류 발생", e);
+            return ResponseEntity.ok(ApiResponse.error("갤러리 메인 이미지 설정 중 오류가 발생했습니다."));
+        }
+    }
     
     /**
      * 내 프로필 조회 (사용자 + 프로필 통합 정보)
@@ -62,6 +89,51 @@ public class ProfileController {
         } catch (Exception e) {
             log.error("프로필 정보 조회 중 오류 발생 - userId: {}", userId, e);
             return ResponseEntity.ok(ApiResponse.error("프로필 정보 조회 중 오류가 발생했습니다."));
+        }
+    }
+    
+    /**
+     * 프로필 수정/생성 (갤러리 포함 - MultipartFile)
+     * 
+     * @param request HTTP 요청
+     * @param nickname 닉네임
+     * @param selfIntroduction 자기소개
+     * @param activityArea 활동지역
+     * @param profileImage 프로필 이미지 파일
+     * @param galleryImages 갤러리 이미지 파일들
+     * @param deleteGalleryImageIds 삭제할 갤러리 이미지 ID들
+     * @return 수정된 프로필 정보
+     */
+    @PostMapping("/me/with-gallery")
+    public ResponseEntity<ApiResponse<ProfileResponseDto>> updateProfileWithGallery(
+            HttpServletRequest request,
+            @RequestParam(value = "nickname", required = false) String nickname,
+            @RequestParam(value = "selfIntroduction", required = false) String selfIntroduction,
+            @RequestParam(value = "activityArea", required = false) String activityArea,
+            @RequestParam(value = "profileImage", required = false) MultipartFile profileImage,
+            @RequestParam(value = "galleryImages", required = false) List<MultipartFile> galleryImages,
+            @RequestParam(value = "deleteGalleryImageIds", required = false) List<Long> deleteGalleryImageIds) {
+        try {
+            Long userId = extractUserIdFromToken(request);
+            log.info("사용자 {}의 프로필 및 갤러리 수정 요청", userId);
+            
+            ProfileUpdateWithGalleryRequest requestDto = ProfileUpdateWithGalleryRequest.builder()
+                    .nickname(nickname)
+                    .selfIntroduction(selfIntroduction)
+                    .activityArea(activityArea)
+                    .profileImage(profileImage)
+                    .galleryImages(galleryImages != null ? galleryImages : List.of())
+                    .deleteGalleryImageIds(deleteGalleryImageIds != null ? deleteGalleryImageIds : List.of())
+                    .build();
+            
+            ApiResponse<ProfileResponseDto> response = profileService.updateProfileWithGallery(userId, requestDto);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            log.error("프로필 및 갤러리 수정 실패: {}", e.getMessage());
+            return ResponseEntity.ok(ApiResponse.error(e.getMessage()));
+        } catch (Exception e) {
+            log.error("프로필 및 갤러리 수정 중 예상치 못한 오류 발생", e);
+            return ResponseEntity.ok(ApiResponse.error("프로필 및 갤러리 수정 중 오류가 발생했습니다."));
         }
     }
     
@@ -174,6 +246,130 @@ public class ProfileController {
         } catch (Exception e) {
             log.error("프로필 존재 여부 확인 중 오류 발생 - userId: {}", userId, e);
             return ResponseEntity.ok(ApiResponse.error("프로필 존재 여부 확인 중 오류가 발생했습니다."));
+        }
+    }
+    
+    // ===== 프로필 갤러리 관련 API =====
+    
+    /**
+     * 프로필 갤러리 이미지 업로드
+     * 
+     * @param request HTTP 요청
+     * @param file 업로드할 이미지 파일
+     * @return 업로드된 이미지 정보
+     */
+    @PostMapping("/me/gallery")
+    public ResponseEntity<ApiResponse<ProfileGalleryDto>> uploadGalleryImage(
+            HttpServletRequest request,
+            @RequestParam("file") MultipartFile file) {
+        try {
+            Long userId = extractUserIdFromToken(request);
+            log.info("사용자 {}의 갤러리 이미지 업로드 요청", userId);
+            ApiResponse<ProfileGalleryDto> response = profileService.uploadGalleryImage(userId, file);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            log.error("갤러리 이미지 업로드 실패: {}", e.getMessage());
+            return ResponseEntity.ok(ApiResponse.error(e.getMessage()));
+        } catch (Exception e) {
+            log.error("갤러리 이미지 업로드 중 예상치 못한 오류 발생", e);
+            return ResponseEntity.ok(ApiResponse.error("갤러리 이미지 업로드 중 오류가 발생했습니다."));
+        }
+    }
+    
+    /**
+     * 프로필 갤러리 이미지 목록 조회
+     * 
+     * @param request HTTP 요청
+     * @return 갤러리 이미지 목록
+     */
+    @GetMapping("/me/gallery")
+    public ResponseEntity<ApiResponse<List<ProfileGalleryDto>>> getMyGalleryImages(HttpServletRequest request) {
+        try {
+            Long userId = extractUserIdFromToken(request);
+            log.info("사용자 {}의 갤러리 이미지 목록 조회 요청", userId);
+            ApiResponse<List<ProfileGalleryDto>> response = profileService.getGalleryImages(userId);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            log.error("갤러리 이미지 목록 조회 실패: {}", e.getMessage());
+            return ResponseEntity.ok(ApiResponse.error(e.getMessage()));
+        } catch (Exception e) {
+            log.error("갤러리 이미지 목록 조회 중 예상치 못한 오류 발생", e);
+            return ResponseEntity.ok(ApiResponse.error("갤러리 이미지 목록 조회 중 오류가 발생했습니다."));
+        }
+    }
+    
+    /**
+     * 프로필 갤러리 이미지 삭제
+     * 
+     * @param request HTTP 요청
+     * @param imageId 삭제할 이미지 ID
+     * @return 삭제 결과
+     */
+    @DeleteMapping("/me/gallery/{imageId}")
+    public ResponseEntity<ApiResponse<String>> deleteGalleryImage(
+            HttpServletRequest request,
+            @PathVariable Long imageId) {
+        try {
+            Long userId = extractUserIdFromToken(request);
+            log.info("사용자 {}의 갤러리 이미지 {} 삭제 요청", userId, imageId);
+            ApiResponse<String> response = profileService.deleteGalleryImage(userId, imageId);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            log.error("갤러리 이미지 삭제 실패: {}", e.getMessage());
+            return ResponseEntity.ok(ApiResponse.error(e.getMessage()));
+        } catch (Exception e) {
+            log.error("갤러리 이미지 삭제 중 예상치 못한 오류 발생", e);
+            return ResponseEntity.ok(ApiResponse.error("갤러리 이미지 삭제 중 오류가 발생했습니다."));
+        }
+    }
+    
+    /**
+     * 프로필 갤러리 이미지 순서 변경
+     * 
+     * @param request HTTP 요청
+     * @param imageIds 새로운 순서의 이미지 ID 배열
+     * @return 순서 변경 결과
+     */
+    @PutMapping("/me/gallery/order")
+    public ResponseEntity<ApiResponse<String>> updateGalleryOrder(
+            HttpServletRequest request,
+            @RequestBody List<Long> imageIds) {
+        try {
+            Long userId = extractUserIdFromToken(request);
+            log.info("사용자 {}의 갤러리 이미지 순서 변경 요청: {}", userId, imageIds);
+            ApiResponse<String> response = profileService.updateGalleryOrder(userId, imageIds);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            log.error("갤러리 이미지 순서 변경 실패: {}", e.getMessage());
+            return ResponseEntity.ok(ApiResponse.error(e.getMessage()));
+        } catch (Exception e) {
+            log.error("갤러리 이미지 순서 변경 중 예상치 못한 오류 발생", e);
+            return ResponseEntity.ok(ApiResponse.error("갤러리 이미지 순서 변경 중 오류가 발생했습니다."));
+        }
+    }
+    
+    /**
+     * 메인 프로필 이미지 업로드 (파일)
+     * 
+     * @param request HTTP 요청
+     * @param file 업로드할 이미지 파일
+     * @return 업로드된 이미지 정보
+     */
+    @PostMapping("/me/image/upload")
+    public ResponseEntity<ApiResponse<ProfileResponseDto>> uploadProfileImage(
+            HttpServletRequest request,
+            @RequestParam("file") MultipartFile file) {
+        try {
+            Long userId = extractUserIdFromToken(request);
+            log.info("사용자 {}의 프로필 이미지 업로드 요청", userId);
+            ApiResponse<ProfileResponseDto> response = profileService.uploadProfileImage(userId, file);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            log.error("프로필 이미지 업로드 실패: {}", e.getMessage());
+            return ResponseEntity.ok(ApiResponse.error(e.getMessage()));
+        } catch (Exception e) {
+            log.error("프로필 이미지 업로드 중 예상치 못한 오류 발생", e);
+            return ResponseEntity.ok(ApiResponse.error("프로필 이미지 업로드 중 오류가 발생했습니다."));
         }
     }
     

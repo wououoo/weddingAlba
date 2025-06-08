@@ -27,7 +27,7 @@ public class LocationController {
         try {
             Map<String, Object> config = new HashMap<>();
             config.put("clientId", naverClientId);
-            config.put("mapApiUrl", "https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=" + naverClientId);
+            config.put("mapApiUrl", "https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=" + naverClientId);
             config.put("defaultCenter", Map.of("lat", 37.5666805, "lng", 126.9784147)); // 서울 시청
             
             return ResponseEntity.ok(config);

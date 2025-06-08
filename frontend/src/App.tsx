@@ -8,6 +8,8 @@ import Layout from './components/common/Layout';
 import { SettingsPage, NotificationsPage, ReportsPage, ReportPostingPage, ReportUserPage, ReportListPage, ApplicationListPage, RecruitmentListPage, ReviewListPage, UserEditPage } from './components/settings';
 import { ProfilePage, ProfileEditPage } from './components/profile';
 import { ChatListPage, GroupChatRoom, PrivateChatRoom } from './components/chat';
+import { PostingListPage, PostingViewPage } from "./components/posting";
+import PostingFormPage from "./components/posting/PostingFormPage";
 // import { useAuthStore } from './stores/authStore'; // 주석 처리
 
 // 간단한 인증 확인 함수 (authUtils의 isAuthenticated 사용)
@@ -56,7 +58,7 @@ const App: React.FC = () => {
         <Route path="/posting/list" element={
           <SimplePrivateRoute>
             <WithLayout>
-              <Post />
+              <PostingListPage />
             </WithLayout>
           </SimplePrivateRoute>
         } />
@@ -64,16 +66,7 @@ const App: React.FC = () => {
         <Route path="/posting/:id" element={
           <SimplePrivateRoute>
             <WithLayout>
-              <div className="p-4">
-                <h1 className="text-xl font-bold mb-4">게시글 상세 페이지</h1>
-                <p>현재 구현 중입니다.</p>
-                <button 
-                  className="mt-4 px-4 py-2 bg-purple-600 text-white rounded"
-                  onClick={() => window.history.back()}
-                >
-                  뒤로가기
-                </button>
-              </div>
+              <PostingViewPage/>
             </WithLayout>
           </SimplePrivateRoute>
         } />
@@ -81,16 +74,7 @@ const App: React.FC = () => {
         <Route path="/posting/create" element={
           <SimplePrivateRoute>
             <WithLayout>
-              <div className="p-4">
-                <h1 className="text-xl font-bold mb-4">게시글 작성</h1>
-                <p>현재 구현 중입니다.</p>
-                <button 
-                  className="mt-4 px-4 py-2 bg-purple-600 text-white rounded"
-                  onClick={() => window.history.back()}
-                >
-                  뒤로가기
-                </button>
-              </div>
+              <PostingFormPage/>
             </WithLayout>
           </SimplePrivateRoute>
         } />

@@ -1,25 +1,20 @@
-type PostingCardProps = {
-    title: string;
-    simplyLocation: string;
-    appointmentDatetime: string;
-    location: string;
-    perPay: string;
-    pay: string;
-    tag: string[];
-    // 필요 시 더 추가
-};
+import {PostingResponseDTO} from "../dto/PostingResponseDTO";
+import {useNavigate} from "react-router-dom";
 
-const PostingCard: React.FC<PostingCardProps> = ({
-                                                     title,
-                                                     simplyLocation,
-                                                     appointmentDatetime,
-                                                     location,
-                                                     perPay,
-                                                     pay,
-                                                     tag,}) => {
-    return (
-    <li className="posting-card-li w-100 p-3 bg-white rounded-lg mb-5">
-        <a href="/posting/view/id">
+
+const PostingCard: React.FC<PostingResponseDTO> = ({
+                                                       postingId,
+                                                       title,
+                                                       simplyLocation,
+                                                       appointmentDatetime,
+                                                       location,
+                                                       perPay,
+                                                       wages,
+                                                       tags
+                                                   }) => {
+    const navigate = useNavigate();
+    return <li className="posting-card-li w-100 p-3 bg-white rounded-lg mb-5">
+        <div onClick={() => navigate(`/posting/${postingId}`)}>
             <div className="posting-component-header flex justify-between px-2 mb-3">
                 <div className="component-header-left">
                     <span className="title">{title}</span>
@@ -68,20 +63,18 @@ const PostingCard: React.FC<PostingCardProps> = ({
                                   d="M15 8A7 7 0 1 1 1 8a7 7 0 0 1 14 0ZM7.25 3.75a.75.75 0 0 1 1.5 0V4h2.5a.75.75 0 0 1 0 1.5h-2.5v1.75h.875a2.375 2.375 0 1 1 0 4.75H8.75v.25a.75.75 0 0 1-1.5 0V12h-2.5a.75.75 0 0 1 0-1.5h2.5V8.75h-.875a2.375 2.375 0 1 1 0-4.75h.875v-.25Z"
                                   clip-rule="evenodd"/>
                         </svg>
-                        <span className="content-text"><span className="highlight-text">{perPay}</span>{pay}</span>
+                        <span className="content-text"><span className="highlight-text">{perPay}</span>{wages}</span>
                     </div>
                 </div>
             </div>
             <div className="posting-component-footer px-2">
                 <div className="tag-wrap">
-                    {tag.map((t, i) => (
+                    {tags?.map((t, i) => (
                         <span key={i} className="posting-tag">{t}</span>
                     ))}
                 </div>
             </div>
-        </a>
-    </li>
-    )
-        ;
+        </div>
+    </li>;
 }
 export default PostingCard;

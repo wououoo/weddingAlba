@@ -38,8 +38,8 @@ export const MainPostingList: React.FC = () => {
 
     return (
         <div className="posting-wrapper pb-10">
-            <div className="posting-list-container py-5">
-                <div className="posting-list-header px-5">
+            <div className="py-5">
+                <div className="flex justify-between items-center mb-4 px-5">
                     <h3 
                         className="text-lg font-bold cursor-pointer hover:text-purple-600" 
                         onClick={goToPostingList}
@@ -47,7 +47,7 @@ export const MainPostingList: React.FC = () => {
                         전체 모집글
                     </h3>
                     <a 
-                        className="more-btn" 
+                        className="more-btn text-gray-600 right-0 ml-auto items-center cursor-pointer"
                         onClick={goToPostingList}
                         style={{ cursor: 'pointer' }}
                     >
@@ -55,9 +55,9 @@ export const MainPostingList: React.FC = () => {
                     </a>
                 </div>
                 <div className="posting-list-container-body">
-                    <div className="v-scroll">
-                        <div className="v-scroll-inner">
-                            <div className="posting-list">
+                    <div className="scroll width-100 overflow-x-auto px-4">
+                        <div className="flex gap-4 w-fit">
+                            <div className="posting-list flex flex-nowrap">
                                 {postings.map((post, index) => (
                                     <div key={post.id}>
                                         <div className="posting-list-item">

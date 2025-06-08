@@ -8,6 +8,8 @@ a {
     color: inherit;
 }
 
+/*모집글 LIST*/
+
 .component-header-left {
     display: inline-flex;
     align-items: center;
@@ -20,13 +22,10 @@ a {
     align-items: center;
 }
 
-.component-header-right .simply-location {
+.simply-location {
     display: inline-flex;
     align-items: center;
     margin-top: 0.5rem;
-}
-
-.component-header-right .simply-location {
     color : #1F364A;
     font-size: 0.7rem;
 }
@@ -60,5 +59,32 @@ a {
     padding: 0.3rem 0.8rem;
     white-space: nowrap;
     margin-right: 0.3rem;
+}
+
+/*모집글 상세페이지*/
+.divide {
+    padding: 0;
+    border:none;
+    margin-bottom: 1rem;
+    height:10px;
+    background-color: #ecf0f1;
+}
+
+.info-detail {
+    display: flex;
+    gap: 0.3rem;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.info-detail .detail-title {
+    font-size: 1rem;
+    white-space: nowrap;
+    margin-right: 0.5rem;
+}
+
+.info-detail .detail-description {
+    white-space: normal;
+    word-break: break-word;
 }
 

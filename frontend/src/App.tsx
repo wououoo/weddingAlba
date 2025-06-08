@@ -191,6 +191,101 @@ const App: React.FC = () => {
             <ReviewListPage />
           </SimplePrivateRoute>
         } />
+
+        <Route path="/posting/list"
+        element={
+          <SimplePrivateRoute>
+            <WithLayout>
+              <PostingListPage/>
+            </WithLayout>
+          </SimplePrivateRoute>
+        }>
+        </Route>
+
+        {/*<Route path="/posting/:id" element={*/}
+        {/*  <SimplePrivateRoute>*/}
+        {/*    <WithLayout>*/}
+        {/*      <div className="p-4">*/}
+        {/*        <h1 className="text-xl font-bold mb-4">게시글 상세 페이지</h1>*/}
+        {/*        <p>현재 구현 중입니다.</p>*/}
+        {/*        <button */}
+        {/*          className="mt-4 px-4 py-2 bg-purple-600 text-white rounded"*/}
+        {/*          onClick={() => window.history.back()}*/}
+        {/*        >*/}
+        {/*          뒤로가기*/}
+        {/*        </button>*/}
+        {/*      </div>*/}
+        {/*    </WithLayout>*/}
+        {/*  </SimplePrivateRoute>*/}
+        {/*} />*/}
+
+        {/*<Route path="/posting/create" element={*/}
+        {/*  <SimplePrivateRoute>*/}
+        {/*    <WithLayout>*/}
+        {/*      <div className="p-4">*/}
+        {/*        <h1 className="text-xl font-bold mb-4">게시글 작성</h1>*/}
+        {/*        <p>현재 구현 중입니다.</p>*/}
+        {/*        <button */}
+        {/*          className="mt-4 px-4 py-2 bg-purple-600 text-white rounded"*/}
+        {/*          onClick={() => window.history.back()}*/}
+        {/*        >*/}
+        {/*          뒤로가기*/}
+        {/*        </button>*/}
+        {/*      </div>*/}
+        {/*    </WithLayout>*/}
+        {/*  </SimplePrivateRoute>*/}
+        {/*} />*/}
+
+        {/*<Route path="/apply/:id" element={*/}
+        {/*  <SimplePrivateRoute>*/}
+        {/*    <WithLayout>*/}
+        {/*      <div className="p-4">*/}
+        {/*        <h1 className="text-xl font-bold mb-4">하객 신청</h1>*/}
+        {/*        <p>현재 구현 중입니다.</p>*/}
+        {/*        <button*/}
+        {/*          className="mt-4 px-4 py-2 bg-purple-600 text-white rounded"*/}
+        {/*          onClick={() => window.history.back()}*/}
+        {/*        >*/}
+        {/*          뒤로가기*/}
+        {/*        </button>*/}
+        {/*      </div>*/}
+        {/*    </WithLayout>*/}
+        {/*  </SimplePrivateRoute>*/}
+        {/*} />*/}
+
+        {/* 추가 페이지들 */}
+        {/*<Route path="/postings" element={*/}
+        {/*  <SimplePrivateRoute>*/}
+        {/*    <WithLayout>*/}
+        {/*      <div className="p-4">*/}
+        {/*        <h1 className="text-xl font-bold mb-4">예정된 공고</h1>*/}
+        {/*        <p>현재 구현 중입니다.</p>*/}
+        {/*      </div>*/}
+        {/*    </WithLayout>*/}
+        {/*  </SimplePrivateRoute>*/}
+        {/*} />*/}
+
+        {/*<Route path="/chat" element={*/}
+        {/*  <SimplePrivateRoute>*/}
+        {/*    <WithLayout>*/}
+        {/*      <div className="p-4">*/}
+        {/*        <h1 className="text-xl font-bold mb-4">채팅</h1>*/}
+        {/*        <p>현재 구현 중입니다.</p>*/}
+        {/*      </div>*/}
+        {/*    </WithLayout>*/}
+        {/*  </SimplePrivateRoute>*/}
+        {/*} />*/}
+
+        {/*<Route path="/mypage" element={*/}
+        {/*  <SimplePrivateRoute>*/}
+        {/*    <WithLayout>*/}
+        {/*      <div className="p-4">*/}
+        {/*        <h1 className="text-xl font-bold mb-4">마이페이지</h1>*/}
+        {/*        <p>현재 구현 중입니다.</p>*/}
+        {/*      </div>*/}
+        {/*    </WithLayout>*/}
+        {/*  </SimplePrivateRoute>*/}
+        {/*} />*/}
       </Routes>
     </Router>
   );

@@ -1,15 +1,15 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { LoginPage, OAuth2RedirectHandler, isAuthenticated } from './OAuth2';
-import MainPage from './components/main/MainPage';
 import Host from './components/host/Host';
-import Post from './components/post/Post';
 import Layout from './components/common/Layout';
 import { SettingsPage, NotificationsPage, ReportsPage, ReportPostingPage, ReportUserPage, ReportListPage, ApplicationListPage, RecruitmentListPage, ReviewListPage, UserEditPage } from './components/settings';
 import { ProfilePage, ProfileEditPage } from './components/profile';
 import { ChatListPage, GroupChatRoom, PrivateChatRoom } from './components/chat';
-import { PostingListPage, PostingViewPage } from "./components/posting";
-import PostingFormPage from "./components/posting/PostingFormPage";
+import { ApplyingListPage, ApplyingFormPage } from './components/applying';
+import ApplyingViewPage from './components/applying/ApplyingViewPage';
+import { PostingFormPage,  PostingListPage,  PostingViewPage} from './components/posting';
+import { MainPage } from './components/main/Index';
 // import { useAuthStore } from './stores/authStore'; // 주석 처리
 
 // 간단한 인증 확인 함수 (authUtils의 isAuthenticated 사용)
@@ -35,7 +35,7 @@ const App: React.FC = () => {
         {/* 로그인 화면에는 Layout 적용 안함 */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/oauth2/redirect" element={<OAuth2RedirectHandler />} />
-        
+
         {/* 메인 페이지를 기본 경로로 설정 */}
         <Route path="/" element={
           <SimplePrivateRoute>
@@ -62,40 +62,48 @@ const App: React.FC = () => {
             </WithLayout>
           </SimplePrivateRoute>
         } />
-        
+
         <Route path="/posting/:id" element={
           <SimplePrivateRoute>
             <WithLayout>
-              <PostingViewPage/>
+              <PostingViewPage />
             </WithLayout>
           </SimplePrivateRoute>
         } />
-        
+
         <Route path="/posting/create" element={
           <SimplePrivateRoute>
             <WithLayout>
-              <PostingFormPage/>
+              <PostingFormPage />
             </WithLayout>
           </SimplePrivateRoute>
         } />
-        
-        <Route path="/apply/:id" element={
+
+        <Route path="/applying/list" element={
           <SimplePrivateRoute>
             <WithLayout>
-              <div className="p-4">
-                <h1 className="text-xl font-bold mb-4">하객 신청</h1>
-                <p>현재 구현 중입니다.</p>
-                <button 
-                  className="mt-4 px-4 py-2 bg-purple-600 text-white rounded"
-                  onClick={() => window.history.back()}
-                >
-                  뒤로가기
-                </button>
-              </div>
+              <ApplyingListPage />
             </WithLayout>
           </SimplePrivateRoute>
         } />
-        
+
+
+        <Route path="/applying/:id" element={
+          <SimplePrivateRoute>
+          <WithLayout>
+            <ApplyingViewPage />
+          </WithLayout>
+        </SimplePrivateRoute>
+        } />
+
+        <Route path="/applying/create" element={
+          <SimplePrivateRoute>
+          <WithLayout>
+            <ApplyingFormPage />
+          </WithLayout>
+        </SimplePrivateRoute>
+        } />
+
         {/* 추가 페이지들 */}
         <Route path="/postings" element={
           <SimplePrivateRoute>
@@ -107,7 +115,7 @@ const App: React.FC = () => {
             </WithLayout>
           </SimplePrivateRoute>
         } />
-        
+
         <Route path="/chat" element={
           <SimplePrivateRoute>
             <ChatListPage />
@@ -125,7 +133,7 @@ const App: React.FC = () => {
             <PrivateChatRoom />
           </SimplePrivateRoute>
         } />
-        
+
         <Route path="/mypage" element={
           <SimplePrivateRoute>
             <ProfilePage />
@@ -193,13 +201,13 @@ const App: React.FC = () => {
         } />
 
         <Route path="/posting/list"
-        element={
-          <SimplePrivateRoute>
-            <WithLayout>
-              <PostingListPage/>
-            </WithLayout>
-          </SimplePrivateRoute>
-        }>
+          element={
+            <SimplePrivateRoute>
+              <WithLayout>
+                <PostingListPage />
+              </WithLayout>
+            </SimplePrivateRoute>
+          }>
         </Route>
 
         {/*<Route path="/posting/:id" element={*/}

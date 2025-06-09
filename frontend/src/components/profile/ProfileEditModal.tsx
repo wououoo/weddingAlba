@@ -68,7 +68,6 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({ isOpen, onClose }) 
       onClose(); // 성공시 모달 닫기
     } catch (err) {
       // 에러는 useProfileEdit에서 처리됨
-      console.error('프로필 저장 실패:', err);
     }
   };
 

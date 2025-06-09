@@ -42,7 +42,6 @@ export function useProfile() {
         }
       } catch (err) {
         // 오류 시에도 빈 프로필 상태로 설정
-        console.error('프로필 정보 로딩 오류:', err);
         setProfile({
           userId: 0, // 임시값
           name: '',
@@ -80,7 +79,6 @@ export function useProfile() {
         setError(null);
       }
     } catch (err) {
-      console.error('프로필 새로고침 오류:', err);
       // 오류 시에도 빈 프로필 상태로 설정
       setProfile({
         userId: 0,
@@ -147,7 +145,6 @@ export function useProfileEdit() {
         }
       } catch (err) {
         // 오류 시에도 빈 상태로 설정
-        console.error('프로필 정보 로딩 오류:', err);
         setNickname('');
         setSelfIntroduction('');
         setActivityArea('');
@@ -187,7 +184,6 @@ export function useProfileEdit() {
       }
     } catch (err) {
       setError('프로필 이미지 업로드 중 오류가 발생했습니다.');
-      console.error('프로필 이미지 업로드 오류:', err);
     } finally {
       setIsLoading(false);
     }
@@ -226,7 +222,6 @@ export function useProfileEdit() {
       }
     } catch (err) {
       setError('프로필 수정 중 오류가 발생했습니다.');
-      console.error('프로필 수정 오류:', err);
     } finally {
       setIsSaving(false);
     }

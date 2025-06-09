@@ -49,7 +49,6 @@ export const bookmarksApi = {
     try {
       return await get<BookmarkListResponse>(`${API_BASE_URL}/bookmarks?page=${page}&limit=${limit}`);
     } catch (error) {
-      console.error('북마크 목록을 가져오는 중 오류 발생:', error);
       return {
         success: false,
         data: null,
@@ -63,7 +62,6 @@ export const bookmarksApi = {
     try {
       return await post<BookmarkItem>(`${API_BASE_URL}/bookmarks`, bookmarkData);
     } catch (error) {
-      console.error('북마크 추가 중 오류 발생:', error);
       return {
         success: false,
         data: null,
@@ -77,7 +75,6 @@ export const bookmarksApi = {
     try {
       return await del<void>(`${API_BASE_URL}/bookmarks/${bookmarkId}`);
     } catch (error) {
-      console.error('북마크 삭제 중 오류 발생:', error);
       return {
         success: false,
         data: null,
@@ -91,7 +88,6 @@ export const bookmarksApi = {
     try {
       return await put<BookmarkItem>(`${API_BASE_URL}/bookmarks/${bookmarkId}/memo`, memoData);
     } catch (error) {
-      console.error('북마크 메모 수정 중 오류 발생:', error);
       return {
         success: false,
         data: null,

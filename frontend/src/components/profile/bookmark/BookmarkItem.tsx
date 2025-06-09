@@ -19,7 +19,7 @@ const BookmarkItem: React.FC<BookmarkItemProps> = ({
   // 날짜 포맷팅 함수
   const formatDate = (dateData: any) => {
     try {
-      console.log('원본 날짜 데이터:', dateData);
+
       
       let date;
       
@@ -43,7 +43,7 @@ const BookmarkItem: React.FC<BookmarkItemProps> = ({
       
       // 유효한 날짜인지 확인
       if (isNaN(date.getTime())) {
-        console.error('유효하지 않은 날짜:', dateData);
+
         return '날짜 정보 없음';
       }
       
@@ -55,16 +55,16 @@ const BookmarkItem: React.FC<BookmarkItemProps> = ({
         minute: '2-digit'
       });
     } catch (error) {
-      console.error('날짜 파싱 오류:', error, dateData);
+
       return '날짜 형식 오류';
     }
   };
 
   const handleBookmarkToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (item.isBookmarked) {
-      onBookmarkRemove(item.bookmarkId);
-    }
+    // 북마크 상태에 관계없이 삭제 함수를 호출
+    // (이미 isBookmarked가 false인 경우는 되돌리기 과정)
+    onBookmarkRemove(item.bookmarkId);
   };
 
   return (
@@ -170,7 +170,7 @@ const BookmarkItem: React.FC<BookmarkItemProps> = ({
                 ? 'text-red-500 hover:bg-red-50' 
                 : 'text-gray-400 hover:bg-gray-100'
             }`}
-            title={item.isBookmarked ? "북마크 해제" : "북마크"}
+            title={item.isBookmarked ? "북마크 해제" : "되돌리기"}
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill={item.isBookmarked ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />

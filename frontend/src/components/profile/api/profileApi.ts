@@ -20,7 +20,6 @@ export const profileApi = {
       // 실제 백엔드 API 호출
       return await get<UserProfileDTO>(`${API_BASE_URL}/profile/me`);
     } catch (error) {
-      console.error('프로필 정보를 가져오는 중 오류 발생:', error);
       return {
         success: false,
         data: null,
@@ -35,7 +34,6 @@ export const profileApi = {
       // 실제 백엔드 API 호출
       return await put<ProfileResponseDTO>(`${API_BASE_URL}/profile/me`, profileData);
     } catch (error) {
-      console.error('프로필 정보를 수정하는 중 오류 발생:', error);
       return {
         success: false,
         data: null,
@@ -60,7 +58,6 @@ export const profileApi = {
       // 실제 백엔드 API 호출 (JSON 방식)
       return await post<ProfileImageUploadResponseDTO>(`${API_BASE_URL}/profile/image`, requestData);
     } catch (error) {
-      console.error('프로필 이미지 업로드 중 오류 발생:', error);
       return {
         success: false,
         data: null,

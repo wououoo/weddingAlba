@@ -53,15 +53,12 @@ const ProfileEditPage: React.FC = () => {
   const loadGalleryImages = useCallback(async () => {
     try {
       setIsGalleryLoading(true);
-      console.log('갤러리 이미지 로드 시작...');
       
       const images = await ProfileGalleryService.getGalleryImages();
-      console.log('로드된 갤러리 이미지들:', images);
       
       setGalleryImages(images);
       setOriginalGalleryImages(images); // 초기 상태 저장
     } catch (error) {
-      console.error('갤러리 이미지 로드 실패:', error);
       setError('갤러리 이미지를 불러오는데 실패했습니다.');
     } finally {
       setIsGalleryLoading(false);
@@ -72,10 +69,8 @@ const ProfileEditPage: React.FC = () => {
   const handleEditProfileImage = useCallback((e?: React.MouseEvent) => {
     e?.preventDefault();
     e?.stopPropagation();
-    console.log('프로필 이미지 편집 버튼 클릭');
     
     if (isFileSelecting) {
-      console.log('이미 파일 선택 중...');
       return;
     }
     
@@ -86,10 +81,8 @@ const ProfileEditPage: React.FC = () => {
   const handleAddGalleryImage = useCallback((e?: React.MouseEvent) => {
     e?.preventDefault();
     e?.stopPropagation();
-    console.log('갤러리 추가 버튼 클릭');
     
     if (isFileSelecting) {
-      console.log('이미 파일 선택 중...');
       return;
     }
     
@@ -100,7 +93,6 @@ const ProfileEditPage: React.FC = () => {
   const handleGalleryFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     // 중복 처리 방지
     if (isFileSelecting) {
-      console.log('파일 선택 중복 처리 방지');
       return;
     }
     
@@ -111,8 +103,6 @@ const ProfileEditPage: React.FC = () => {
       setIsFileSelecting(false);
       return;
     }
-
-    console.log('파일 선택됨:', files.length, '개');
 
     const newFiles: File[] = [];
 
@@ -133,11 +123,9 @@ const ProfileEditPage: React.FC = () => {
     });
 
     if (newFiles.length > 0) {
-      console.log('새 파일들 추가 예정:', newFiles.length, '개');
       
       // 상태 업데이트를 하나의 함수 호출로 처리
       setPendingGalleryFiles(prev => {
-        console.log('현재 pending 파일들:', prev.length, '개');
         
         // 최대 개수 체크
         const totalCount = galleryImages.length + prev.length + newFiles.length;
@@ -147,7 +135,6 @@ const ProfileEditPage: React.FC = () => {
         }
         
         const updated = [...prev, ...newFiles];
-        console.log('업데이트된 pending 파일들:', updated.length, '개');
         return updated;
       });
     }
@@ -177,7 +164,6 @@ const ProfileEditPage: React.FC = () => {
   // 메인 이미지 변경 핸들러
   const handleSetMainImage = async (imageId: number) => {
     try {
-      console.log('메인 이미지 변경 시작:', imageId);
       
       // API 호출로 메인 이미지 설정
       await ProfileGalleryService.setMainGalleryImage(imageId);
@@ -188,9 +174,7 @@ const ProfileEditPage: React.FC = () => {
         isMain: img.id === imageId
       })));
       
-      console.log('메인 이미지 변경 완료:', imageId);
     } catch (error) {
-      console.error('메인 이미지 설정 실패:', error);
       setError('메인 이미지 설정에 실패했습니다.');
     }
   };
@@ -204,7 +188,6 @@ const ProfileEditPage: React.FC = () => {
   const handleSaveProfile = async () => {
     try {
       setIsGalleryLoading(true);
-      console.log('프로필 저장 시작 - pending 파일들:', pendingGalleryFiles.length, '개');
 
       // 통합 API 호출 - profileImage는 전달하지 않고 galleryImages만 전달
       // 서버에서 첫 번째 galleryImage를 메인 프로필 이미지로 처리하도록 함
@@ -219,21 +202,18 @@ const ProfileEditPage: React.FC = () => {
         deletedGalleryImageIds // 삭제할 갤러리 이미지 ID들
       );
       
-      console.log('프로필 저장 완료');
 
       // 성공 시 상태 정리
       setPendingGalleryFiles([]);
       setDeletedGalleryImageIds([]);
       
       // 갤러리 이미지 다시 로드 (메인 이미지 변경사항 반영)
-      console.log('저장 후 갤러리 이미지 다시 로드');
       await loadGalleryImages();
       
       // 성공 메시지 또는 페이지 이동
       navigate('/mypage', { replace: true });
       
     } catch (error) {
-      console.error('프로필 저장 실패:', error);
       setError('프로필 저장에 실패했습니다.');
     } finally {
       setIsGalleryLoading(false);
@@ -469,10 +449,7 @@ const ProfileEditPage: React.FC = () => {
                         src={image.imageUrl} 
                         alt={`갤러리 이미지 ${index + 1}`} 
                         className="w-full h-full object-cover"
-                        onLoad={() => console.log(`이미지 로드 성공: ${image.imageUrl}`)}
                         onError={(e) => {
-                          console.error(`이미지 로드 실패: ${image.imageUrl}`);
-                          console.error('이미지 에러 이벤트:', e);
                           // 이미지 로드 실패 시 대체 텍스트 표시
                           const target = e.target as HTMLImageElement;
                           target.style.display = 'none';

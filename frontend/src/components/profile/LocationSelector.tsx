@@ -66,7 +66,6 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({ value, onChange, on
           script.src = config.mapApiUrl;
           script.onload = initMap;
           script.onerror = () => {
-            console.error('네이버 지도 API 로드 실패');
             // fallback으로 공개 API 사용
             const fallbackScript = document.createElement('script');
             fallbackScript.src = 'https://openapi.map.naver.com/openapi/v3/maps.js';
@@ -78,7 +77,6 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({ value, onChange, on
           initMap();
         }
       } catch (error) {
-        console.error('지도 설정 로드 실패:', error);
         // fallback으로 공개 API 사용
         const script = document.createElement('script');
         script.src = 'https://openapi.map.naver.com/openapi/v3/maps.js';
@@ -118,7 +116,7 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({ value, onChange, on
           }
         },
         (error) => {
-          console.error('위치 정보를 가져올 수 없습니다:', error);
+          // 위치 정보 가져오기 실패
         }
       );
     }
@@ -159,7 +157,6 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({ value, onChange, on
         });
       }
     } catch (error) {
-      console.error('주소 변환 중 오류:', error);
       // 오류 시 기본 위치 정보 설정
       setSelectedLocation({
         address: '주소 정보 없음',
@@ -194,7 +191,6 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({ value, onChange, on
         alert('검색 결과가 없습니다.');
       }
     } catch (error) {
-      console.error('검색 오류:', error);
       alert('검색 중 오류가 발생했습니다.');
     } finally {
       setIsLoading(false);

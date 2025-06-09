@@ -1,6 +1,12 @@
-import {sampleData} from "./dto/PostingResponseDTO";
+import React, { useState } from "react";
+import { sampleData } from "./dto/PostingResponseDTO";
+import { useNavigate } from "react-router-dom";
 
 const PostingViewPage: React.FC = () => {
+    const navigate = useNavigate();
+    const [isFavorite, setIsFavorite] = useState(false);
+    const [showFullDescription, setShowFullDescription] = useState(false);
+    
     const {
         title,
         simplyLocation,
@@ -13,119 +19,243 @@ const PostingViewPage: React.FC = () => {
         hasMobileInvitation,
         guestMainRole,
         taskDescription,
+        tags,
+        personName,
+        personPhoneNumber,
     } = sampleData;
-    return <div className="posting-view-container bg-white">
-        <div className="posting-view-top p-5">
-            <div className="view-title flex justify-between mb-4">
-                <h1 className="text-xl font-bold">{title}</h1>
-                <div className="simply-location">
-                    <svg width="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"
-                         className="size-4 m-0 p-0">
-                        <path fill-rule="evenodd" clip-rule="evenodd"
-                              d="M8 14.667s5.667-3.334 5.667-8.074c0-2.926-2.353-5.26-5.667-5.26-3.314 0-5.667 2.334-5.667 5.26 0 4.74 5.667 8.074 5.667 8.074zm0-6a2 2 0 100-4 2 2 0 000 4z"
-                              fill="currentColor"></path>
-                    </svg>
-                    <span>{simplyLocation}</span>
+
+    const handleContact = () => {
+        if (personPhoneNumber) {
+            window.open(`tel:${personPhoneNumber}`);
+        }
+    };
+
+    const toggleFavorite = () => {
+        setIsFavorite(!isFavorite);
+    };
+
+    return (
+        <div className="bg-gray-50 min-h-screen">
+            {/* 헤더 */}
+            <div className="bg-white shadow-sm sticky top-0 z-10">
+                <div className="flex items-center justify-between p-4">
+                    <button 
+                        onClick={() => navigate(-1)}
+                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                        <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path>
+                        </svg>
+                    </button>
+                    <h1 className="text-lg font-semibold text-gray-900">하객알바 모집</h1>
+                    <button 
+                        onClick={toggleFavorite}
+                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                        <svg className={`w-6 h-6 ${isFavorite ? 'text-red-500 fill-current' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                        </svg>
+                    </button>
                 </div>
             </div>
 
-            <div className="posting-user-info mb-3">
-                <p className="posting-user-nickname flex mb-0.5">
-                    <span>{nickname}</span>
-                </p>
-                {hasMobileInvitation && (
-                    <div className="hasMobileInvitation flex align-items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="#f0bfbd" className="size-4">
-                              <path fill-rule="evenodd" d="M8.5 1.709a.75.75 0 0 0-1 0 8.963 8.963 0 0 1-4.84 2.217.75.75 0 0 0-.654.72 10.499 10.499 0 0 0 5.647 9.672.75.75 0 0 0 .694-.001 10.499 10.499 0 0 0 5.647-9.672.75.75 0 0 0-.654-.719A8.963 8.963 0 0 1 8.5 1.71Zm2.34 5.504a.75.75 0 0 0-1.18-.926L7.394 9.17l-1.156-.99a.75.75 0 1 0-.976 1.138l1.75 1.5a.75.75 0 0 0 1.078-.106l2.75-3.5Z" clip-rule="evenodd" />
-                            </svg>
-                        <span className="text-xs">모바일 청첩장 인증</span>
+            {/* 메인 콘텐츠 */}
+            <div className="px-4 py-6">
+                {/* 제목 및 위치 */}
+                <div className="bg-white rounded-xl shadow-sm p-6 mb-4">
+                    <h1 className="text-2xl font-bold text-gray-900 mb-2">{title}</h1>
+                    <div className="flex items-center text-gray-600 mb-4">
+                        <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                        </svg>
+                        <span>{simplyLocation}</span>
+                    </div>
+
+                    {/* 급여 정보 */}
+                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 mb-4">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-gray-600">급여</p>
+                                <p className="text-2xl font-bold text-blue-600">{wages}</p>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-sm text-gray-600">일급</p>
+                                <p className="text-lg font-semibold text-gray-800">당일지급</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* 모집자 정보 */}
+                <div className="bg-white rounded-xl shadow-sm p-6 mb-4">
+                    <h3 className="text-lg font-bold text-gray-900 mb-4">모집자 정보</h3>
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                            <div className="w-12 h-12 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full flex items-center justify-center">
+                                <span className="text-white font-semibold text-lg">
+                                    {nickname?.charAt(0) || 'U'}
+                                </span>
+                            </div>
+                            <div>
+                                <h4 className="font-semibold text-gray-900">{nickname}</h4>
+                                <div className="flex items-center space-x-2 mt-1">
+                                    {hasMobileInvitation && (
+                                        <div className="flex items-center space-x-1">
+                                            <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                            </svg>
+                                            <span className="text-xs text-green-600 font-medium">모바일 청첩장 인증</span>
+                                        </div>
+                                    )}
+                                    <span className="text-xs text-gray-500">누적 모집 {postingHistoryCount || 0}회</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button 
+                            onClick={handleContact}
+                            className="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors"
+                        >
+                            연락하기
+                        </button>
+                    </div>
+                </div>
+
+                {/* 알바 정보 */}
+                <div className="bg-white rounded-xl shadow-sm p-6 mb-4">
+                    <h3 className="text-lg font-bold text-gray-900 mb-4">알바정보</h3>
+                    
+                    <div className="space-y-4">
+                        {/* 날짜 */}
+                        <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 className="font-medium text-gray-900">날짜</h4>
+                                <p className="text-gray-600 text-sm">{appointmentDatetime}</p>
+                            </div>
+                        </div>
+
+                        {/* 시간 */}
+                        <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 className="font-medium text-gray-900">시간</h4>
+                                <p className="text-gray-600 text-sm">{workingHours}</p>
+                            </div>
+                        </div>
+
+                        {/* 급여 */}
+                        <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                            <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <svg className="w-5 h-5 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
+                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 className="font-medium text-gray-900">임금</h4>
+                                <p className="text-green-600 font-semibold">{wages}</p>
+                            </div>
+                        </div>
+
+                        {/* 업무 */}
+                        <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <svg className="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 className="font-medium text-gray-900">업무</h4>
+                                <p className="text-gray-600 text-sm">{guestMainRole}</p>
+                            </div>
+                        </div>
+
+                        {/* 위치 */}
+                        <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                            <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <svg className="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                                </svg>
+                            </div>
+                            <div className="flex-1">
+                                <h4 className="font-medium text-gray-900">위치</h4>
+                                <p className="text-gray-600 text-sm">{location}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* 상세내용 */}
+                {taskDescription && (
+                    <div className="bg-white rounded-xl shadow-sm p-6 mb-4">
+                        <h3 className="text-lg font-bold text-gray-900 mb-3">상세내용</h3>
+                        <div className="relative">
+                            <p className={`text-gray-600 text-sm leading-relaxed ${!showFullDescription && taskDescription.length > 100 ? 'line-clamp-3' : ''}`}>
+                                {taskDescription}
+                            </p>
+                            {taskDescription.length > 100 && (
+                                <button 
+                                    onClick={() => setShowFullDescription(!showFullDescription)}
+                                    className="mt-2 text-blue-500 text-sm font-medium hover:text-blue-600 transition-colors"
+                                >
+                                    {showFullDescription ? '접기' : '더보기'}
+                                </button>
+                            )}
+                        </div>
                     </div>
                 )}
-            </div>
-                <div className="flex justify-between mb-3">
-                    <div className="posting-history-count posting-tag">
-                        <span className="mr-1">
-                            누적 모집
-                        </span>
-                        {(postingHistoryCount ?? 0) > 0 && (
-                            <span className="total-count text-gray-600">{postingHistoryCount}회</span>
-                        )}
+
+                {/* 태그 */}
+                {tags && tags.length > 0 && (
+                    <div className="bg-white rounded-xl shadow-sm p-6 mb-4">
+                        <h3 className="text-lg font-bold text-gray-900 mb-3">태그</h3>
+                        <div className="flex flex-wrap gap-2">
+                            {tags.map((tag, index) => (
+                                <span 
+                                    key={index}
+                                    className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium"
+                                >
+                                    #{tag}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* 지도 영역 */}
+                <div className="bg-white rounded-xl shadow-sm p-6 mb-20">
+                    <h3 className="text-lg font-bold text-gray-900 mb-3">위치</h3>
+                    <div className="bg-gray-100 rounded-lg h-48 flex items-center justify-center">
+                        <div className="text-center text-gray-500">
+                            <svg className="w-12 h-12 mx-auto mb-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                            </svg>
+                            <p className="text-sm font-medium">지도</p>
+                            <p className="text-xs mt-1">{location}</p>
+                        </div>
                     </div>
                 </div>
-        </div>
-        <hr className="divide"/>
-        <div className="posting-view-content p-5">
-            <div className="content-info-title ">
-                <h1 className="text-lg font-bold mb-3">알바정보</h1>
             </div>
-            <div className="content-info">
-                <div className="info-detail">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor"
-                         className="size-4 fill-stone-400">
-                        <path
-                            d="M5.75 7.5a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5ZM5 10.25a.75.75 0 1 1 1.5 0 .75.75 0 0 1-1.5 0ZM10.25 7.5a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5ZM7.25 8.25a.75.75 0 1 1 1.5 0 .75.75 0 0 1-1.5 0ZM8 9.5A.75.75 0 1 0 8 11a.75.75 0 0 0 0-1.5Z"/>
-                        <path fill-rule="evenodd"
-                              d="M4.75 1a.75.75 0 0 0-.75.75V3a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2V1.75a.75.75 0 0 0-1.5 0V3h-5V1.75A.75.75 0 0 0 4.75 1ZM3.5 7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v4.5a1 1 0 0 1-1 1h-7a1 1 0 0 1-1-1V7Z"
-                              clip-rule="evenodd"/>
-                    </svg>
-                    <span className="detail-title">날짜</span><span className="detail-description">{appointmentDatetime}</span>
-                </div>
-                <div className="info-detail">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="size-4 fill-stone-400">
-                        <path fill-rule="evenodd"
-                              d="M1 8a7 7 0 1 1 14 0A7 7 0 0 1 1 8Zm7.75-4.25a.75.75 0 0 0-1.5 0V8c0 .414.336.75.75.75h3.25a.75.75 0 0 0 0-1.5h-2.5v-3.5Z"
-                              clip-rule="evenodd"/>
-                    </svg>
-                    <span className="detail-title">시간</span><span className="detail-description">{workingHours}</span>
-                </div>
-                <div className="info-detail">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor"
-                         className="size-4 fill-stone-400">
-                        <path
-                            d="M6.375 5.5h.875v1.75h-.875a.875.875 0 1 1 0-1.75ZM8.75 10.5V8.75h.875a.875.875 0 0 1 0 1.75H8.75Z"/>
-                        <path fill-rule="evenodd"
-                              d="M15 8A7 7 0 1 1 1 8a7 7 0 0 1 14 0ZM7.25 3.75a.75.75 0 0 1 1.5 0V4h2.5a.75.75 0 0 1 0 1.5h-2.5v1.75h.875a2.375 2.375 0 1 1 0 4.75H8.75v.25a.75.75 0 0 1-1.5 0V12h-2.5a.75.75 0 0 1 0-1.5h2.5V8.75h-.875a2.375 2.375 0 1 1 0-4.75h.875v-.25Z"
-                              clip-rule="evenodd"/>
-                    </svg>
-                    <span className="detail-title">임금</span><span className="detail-description"><span>{wages}</span></span>
-                </div>
-                <div className="info-detail">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="size-4 fill-stone-400">
-                        <path fill-rule="evenodd"
-                              d="M11 4V3a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v1H4a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-1ZM9 2.5H7a.5.5 0 0 0-.5.5v1h3V3a.5.5 0 0 0-.5-.5ZM9 9a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"
-                              clip-rule="evenodd"/>
-                        <path
-                            d="M3 11.83V12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-.17c-.313.11-.65.17-1 .17H4c-.35 0-.687-.06-1-.17Z"/>
-                    </svg>
-                    <span className="detail-title">업무</span><span className="detail-description">{guestMainRole}</span>
-                </div>
-                <div className="info-detail">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="size-4 fill-stone-400">
-                        <path d="M6 7.5a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Z"/>
-                        <path fill-rule="evenodd"
-                              d="M4 2a1.5 1.5 0 0 0-1.5 1.5v9A1.5 1.5 0 0 0 4 14h8a1.5 1.5 0 0 0 1.5-1.5V6.621a1.5 1.5 0 0 0-.44-1.06L9.94 2.439A1.5 1.5 0 0 0 8.878 2H4Zm3.5 2.5a3 3 0 1 0 1.524 5.585l1.196 1.195a.75.75 0 1 0 1.06-1.06l-1.195-1.196A3 3 0 0 0 7.5 4.5Z"
-                              clip-rule="evenodd"/>
-                    </svg>
-                    <span className="detail-title">상세내용</span><span className="detail-description">{taskDescription}</span>
-                </div>
-                <div className="info-detail">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor"
-                         className="size-4 fill-stone-400">
-                        <path fill-rule="evenodd"
-                              d="m7.539 14.841.003.003.002.002a.755.755 0 0 0 .912 0l.002-.002.003-.003.012-.009a5.57 5.57 0 0 0 .19-.153 15.588 15.588 0 0 0 2.046-2.082c1.101-1.362 2.291-3.342 2.291-5.597A5 5 0 0 0 3 7c0 2.255 1.19 4.235 2.292 5.597a15.591 15.591 0 0 0 2.046 2.082 8.916 8.916 0 0 0 .189.153l.012.01ZM8 8.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z"
-                              clip-rule="evenodd"/>
-                    </svg>
-                    <span className="detail-title">위치</span><span className="detail-description">{location}</span>
-                </div>
-            </div>
-            <div className="content-map">
-                지도 넣기
-            </div>
-        </div>
-        <button className="fixed bottom-[55px] left-0 w-full bg-[#f0bfbd] text-white text-lg font-semibold py-4 shadow-md z-50">
-            신청하기
-        </button>
-    </div>
-}
 
-export default PostingViewPage;
+            {/* 하단 고정 버튼 */}
+            <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-20">
+                <button 
+                    onClick={() => navigate('/applying/create')}
+                    className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white py-4 rounded-xl font-semibold text-lg hover:shadow-lg transition-all"
+                >
+                    신청하기
+                </button>
+            </div>
+        </div>
+    );
+};
+
+export default PostingViewPage; 

@@ -1,80 +1,139 @@
-import {PostingResponseDTO} from "../dto/PostingResponseDTO";
-import {useNavigate} from "react-router-dom";
-
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import { PostingResponseDTO } from "../dto/PostingResponseDTO";
 
 const PostingCard: React.FC<PostingResponseDTO> = ({
-                                                       postingId,
-                                                       title,
-                                                       simplyLocation,
-                                                       appointmentDatetime,
-                                                       location,
-                                                       perPay,
-                                                       wages,
-                                                       tags
-                                                   }) => {
+    postingId,
+    title,
+    simplyLocation,
+    appointmentDatetime,
+    registrationDatetime,
+    workingHours,
+    location,
+    isSelf,
+    personName,
+    hasMobileInvitation,
+    wages,
+    perPay,
+    tags,
+    guestMainRole,
+    taskDescription,
+    nickname,
+    postingHistoryCount
+}) => {
     const navigate = useNavigate();
-    return <li className="posting-card-li w-100 p-3 bg-white rounded-lg mb-5">
-        <div onClick={() => navigate(`/posting/${postingId}`)}>
-            <div className="posting-component-header flex justify-between px-2 mb-3">
-                <div className="component-header-left">
-                    <span className="title">{title}</span>
-                </div>
-                <div className="component-header-right">
-                    <div className="simply-location">
-                        {/*대략적인 위치*/}
-                        <svg width="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"
-                             className="size-4 m-0 p-0">
-                            <path fill-rule="evenodd" clip-rule="evenodd"
-                                  d="M8 14.667s5.667-3.334 5.667-8.074c0-2.926-2.353-5.26-5.667-5.26-3.314 0-5.667 2.334-5.667 5.26 0 4.74 5.667 8.074 5.667 8.074zm0-6a2 2 0 100-4 2 2 0 000 4z"
-                                  fill="currentColor"></path>
+
+    return (
+        <div 
+            onClick={() => navigate(`/posting/${postingId}`)}
+            className="bg-white rounded-xl p-4 mb-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+        >
+            {/* 상단 정보 */}
+            <div className="flex items-start space-x-3 mb-3">
+                {/* 아바타 */}
+                <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                        <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                         </svg>
-                        <span>{simplyLocation}</span>
+                    </div>
+                </div>
+
+                {/* 모집글 정보 */}
+                <div className="flex-1">
+                    <div className="flex items-center space-x-2 mb-1">
+                        <span className="text-xs text-gray-500">
+                            {isSelf ? "본인 결혼식" : "지인 결혼식"}
+                        </span>
+                        <span className="text-xs text-gray-300">•</span>
+                        <span className="text-xs text-gray-500">{guestMainRole}</span>
+                    </div>
+                    <h3 className="font-semibold text-gray-900 mb-1">{title}</h3>
+                    <div className="flex items-center text-xs text-gray-500">
+                        <span>{nickname}</span>
+                        <span className="mx-1">•</span>
+                        <span>모집 {postingHistoryCount}회</span>
+                    </div>
+                </div>
+
+                {/* 위치 */}
+                <div className="flex items-center text-gray-500">
+                    <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                    </svg>
+                    <span className="text-sm">{simplyLocation}</span>
+                </div>
+            </div>
+
+            {/* 결혼식 정보 */}
+            <div className="space-y-2 mb-3">
+                {/* 예식일시 */}
+                <div className="flex items-center text-gray-600">
+                    <svg className="w-4 h-4 mr-2 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                    </svg>
+                    <span className="text-sm">{appointmentDatetime}</span>
+                </div>
+
+                {/* 예식장 위치 */}
+                <div className="flex items-center text-gray-600">
+                    <svg className="w-4 h-4 mr-2 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                    </svg>
+                    <span className="text-sm">{location}</span>
+                </div>
+
+                {/* 근무시간 */}
+                <div className="flex items-center text-gray-600">
+                    <svg className="w-4 h-4 mr-2 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                    </svg>
+                    <span className="text-sm">{workingHours}</span>
+                </div>
+
+                {/* 급여 */}
+                <div className="flex items-center">
+                    <svg className="w-4 h-4 mr-2 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
+                    </svg>
+                    <span className="text-sm font-medium text-blue-600">
+                        {perPay} {wages}
+                    </span>
+                    <div className="ml-auto flex items-center space-x-2">
+                        {hasMobileInvitation && (
+                            <div className="bg-green-100 text-green-700 px-2 py-1 rounded-md text-xs font-medium">
+                                📱 청첩장 제출
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
-            <div className="posting-component-body px-2 mb-3">
-                <div className="content-wrap">
-                    <div className="content-detail-wrap flex">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor"
-                             className="size-4 fill-stone-400">
-                            <path
-                                d="M5.75 7.5a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5ZM5 10.25a.75.75 0 1 1 1.5 0 .75.75 0 0 1-1.5 0ZM10.25 7.5a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5ZM7.25 8.25a.75.75 0 1 1 1.5 0 .75.75 0 0 1-1.5 0ZM8 9.5A.75.75 0 1 0 8 11a.75.75 0 0 0 0-1.5Z"/>
-                            <path fill-rule="evenodd"
-                                  d="M4.75 1a.75.75 0 0 0-.75.75V3a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2V1.75a.75.75 0 0 0-1.5 0V3h-5V1.75A.75.75 0 0 0 4.75 1ZM3.5 7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v4.5a1 1 0 0 1-1 1h-7a1 1 0 0 1-1-1V7Z"
-                                  clip-rule="evenodd"/>
-                        </svg>
-                        <span className="content-text">{appointmentDatetime}</span>
-                    </div>
-                    <div className="content-detail-wrap flex">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor"
-                             className="size-4 fill-stone-400">
-                            <path fill-rule="evenodd"
-                                  d="m7.539 14.841.003.003.002.002a.755.755 0 0 0 .912 0l.002-.002.003-.003.012-.009a5.57 5.57 0 0 0 .19-.153 15.588 15.588 0 0 0 2.046-2.082c1.101-1.362 2.291-3.342 2.291-5.597A5 5 0 0 0 3 7c0 2.255 1.19 4.235 2.292 5.597a15.591 15.591 0 0 0 2.046 2.082 8.916 8.916 0 0 0 .189.153l.012.01ZM8 8.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z"
-                                  clip-rule="evenodd"/>
-                        </svg>
-                        <span className="content-text">{location}</span>
-                    </div>
-                    <div className="content-detail-wrap flex">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor"
-                             className="size-4 fill-stone-400">
-                            <path
-                                d="M6.375 5.5h.875v1.75h-.875a.875.875 0 1 1 0-1.75ZM8.75 10.5V8.75h.875a.875.875 0 0 1 0 1.75H8.75Z"/>
-                            <path fill-rule="evenodd"
-                                  d="M15 8A7 7 0 1 1 1 8a7 7 0 0 1 14 0ZM7.25 3.75a.75.75 0 0 1 1.5 0V4h2.5a.75.75 0 0 1 0 1.5h-2.5v1.75h.875a2.375 2.375 0 1 1 0 4.75H8.75v.25a.75.75 0 0 1-1.5 0V12h-2.5a.75.75 0 0 1 0-1.5h2.5V8.75h-.875a2.375 2.375 0 1 1 0-4.75h.875v-.25Z"
-                                  clip-rule="evenodd"/>
-                        </svg>
-                        <span className="content-text"><span className="highlight-text">{perPay}</span>{wages}</span>
-                    </div>
+
+            {/* 상세 설명 */}
+            {taskDescription && (
+                <div className="mb-3">
+                    <p className="text-sm text-gray-600 line-clamp-2">
+                        {taskDescription}
+                    </p>
                 </div>
-            </div>
-            <div className="posting-component-footer px-2">
-                <div className="tag-wrap">
-                    {tags?.map((t, i) => (
-                        <span key={i} className="posting-tag">{t}</span>
+            )}
+
+            {/* 태그들 */}
+            {tags && tags.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                    {tags.map((tag, index) => (
+                        <span 
+                            key={index}
+                            className="bg-gray-100 text-gray-700 px-2 py-1 rounded-md text-xs"
+                        >
+                            {tag}
+                        </span>
                     ))}
                 </div>
-            </div>
+            )}
         </div>
-    </li>;
-}
-export default PostingCard;
+    );
+};
+
+export default PostingCard; 

@@ -162,8 +162,8 @@ const PostingListPage: React.FC = () => {
         <div className="bg-gray-50 min-h-screen">
                         {/* 헤더 */}
             <div className="bg-white px-4 py-6">
-                <h1 className="text-xl font-bold text-gray-900 mb-4">
-                    도와드릴 결혼식 지역을 선택해보세요
+                <h1 className="text-center text-xl font-bold text-gray-900 mb-4">
+                    원하는 지역과 역할 선택해보세요.
                 </h1>
                 
                 {/* 드롭다운 필터들 */}

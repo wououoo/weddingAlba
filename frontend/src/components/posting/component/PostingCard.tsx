@@ -7,11 +7,9 @@ const PostingCard: React.FC<PostingResponseDTO> = ({
     title,
     simplyLocation,
     appointmentDatetime,
-    registrationDatetime,
     workingHours,
     location,
     isSelf,
-    personName,
     hasMobileInvitation,
     wages,
     perPay,
@@ -26,18 +24,9 @@ const PostingCard: React.FC<PostingResponseDTO> = ({
     return (
         <div 
             onClick={() => navigate(`/posting/${postingId}`)}
-            className="bg-white rounded-xl p-4 mb-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-        >
+            className="bg-white rounded-xl p-4 mb-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
             {/* 상단 정보 */}
             <div className="flex items-start space-x-3 mb-3">
-                {/* 아바타 */}
-                <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                        <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                        </svg>
-                    </div>
-                </div>
 
                 {/* 모집글 정보 */}
                 <div className="flex-1">

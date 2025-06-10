@@ -14,6 +14,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+import wedding.alba.function.posting.PostingRequestDTO;
 
 import java.time.LocalDateTime;
 
@@ -69,7 +70,7 @@ public class Posting {
     @Column(name="guest_main_role")
     private String guestMainRole;       // 하객 주요 역할
 
-    @Column(name="detaion_content")
+    @Column(name="detail_content")
     private String detailContent;     // 상세내용
 
     @Column(name="tags")

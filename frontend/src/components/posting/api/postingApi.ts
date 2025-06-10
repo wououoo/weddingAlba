@@ -8,7 +8,7 @@ export const postingApi = {
     // 모집글 등록
     addPosting: async (postingData: PostingRequestDTO) => {
         try {
-            return await post<PostingResponseDTO>(`${API_BASE_URL}/postings`, postingData);
+            return await post<PostingResponseDTO>(`${API_BASE_URL}/posting/create`, postingData);
         } catch (error) {
             return {
                 success: false,

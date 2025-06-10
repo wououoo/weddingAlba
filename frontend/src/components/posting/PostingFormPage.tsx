@@ -18,7 +18,7 @@ const PostingFormPage: React.FC = () => {
         
         const token = localToken || sessionToken || jwtToken;
         if (token && !accessToken) {
-        localStorage.setItem('accessToken', token);
+            localStorage.setItem('accessToken', token);
         }
     }, []);
     
@@ -124,8 +124,8 @@ const PostingFormPage: React.FC = () => {
         detailContent: '',
         personName: '',
         personPhoneNumber: '',
-        hasMobileInvitation: false,
-        isSelf: false,
+        hasMobileInvitation: 0,
+        isSelf: 0,
         tags: []
     });
 
@@ -196,8 +196,8 @@ const PostingFormPage: React.FC = () => {
                                 <input
                                     type="radio"
                                     name="isSelf"
-                                    checked={formData.isSelf === true}
-                                    onChange={() => handleInputChange('isSelf', true)}
+                                    checked={formData.isSelf === 1}
+                                    onChange={() => handleInputChange('isSelf', 1)}
                                     className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                                 />
                                 <span className="ml-2 text-sm text-gray-700">당사자입니다.</span>
@@ -206,8 +206,8 @@ const PostingFormPage: React.FC = () => {
                                 <input
                                     type="radio"
                                     name="isSelf"
-                                    checked={formData.isSelf === false}
-                                    onChange={() => handleInputChange('isSelf', false)}
+                                    checked={formData.isSelf === 0}
+                                    onChange={() => handleInputChange('isSelf', 0)}
                                     className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                                 />
                                 <span className="ml-2 text-sm text-gray-700">대리인입니다.</span>
@@ -296,8 +296,8 @@ const PostingFormPage: React.FC = () => {
                                 <input
                                     type="radio"
                                     name="hasMobileInvitation"
-                                    checked={formData.hasMobileInvitation === true}
-                                    onChange={() => handleInputChange('hasMobileInvitation', true)}
+                                    checked={formData.hasMobileInvitation === 1}
+                                    onChange={() => handleInputChange('hasMobileInvitation', 1)}
                                     className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                                 />
                                 <span className="ml-2 text-sm text-gray-700">있음</span>
@@ -306,8 +306,8 @@ const PostingFormPage: React.FC = () => {
                                 <input
                                     type="radio"
                                     name="hasMobileInvitation"
-                                    checked={formData.hasMobileInvitation === false}
-                                    onChange={() => handleInputChange('hasMobileInvitation', false)}
+                                    checked={formData.hasMobileInvitation === 0}
+                                    onChange={() => handleInputChange('hasMobileInvitation', 0)}
                                     className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                                 />
                                 <span className="ml-2 text-sm text-gray-700">없음</span>
@@ -537,7 +537,7 @@ const PostingFormPage: React.FC = () => {
                         취소
                     </button>
                     <button
-                        onClick={postingSubmit}
+                        onClick={handleSubmit}
                         className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all"
                     >
                         등록하기

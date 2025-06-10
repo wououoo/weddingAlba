@@ -1,7 +1,7 @@
 export interface PostingRequestDTO {
     // 기본정보
     title?: string;                     // 모집글 제목
-    isSelf?: boolean;                   // 본인 결혼식 여부
+    isSelf?: number;                   // 본인 결혼식 여부
     personName?: string;                // 결혼식 당사자 이름
     personPhoneNumber?: string;         // 결혼식 당사자 번호
     registrationDatetime?: string;      // 모집글 등록일시
@@ -10,7 +10,7 @@ export interface PostingRequestDTO {
     appointmentDatetime?: string;       // 결혼식 예정일시
     location?: string;                  // 결혼식 위치
     simplyLocation?: string;            // 간략한 위치
-    hasMobileInvitation?: boolean;      // 모바일 청첩장 제출 여부
+    hasMobileInvitation?: number;      // 모바일 청첩장 제출 여부
 
     // 알바 정보
     workingHours?: string;              // 근무시간 

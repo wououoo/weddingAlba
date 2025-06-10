@@ -22,7 +22,7 @@ export const useToast = (): UseToastReturn => {
   });
 
   const showToast = useCallback((message: string, actionText?: string, onAction?: () => void) => {
-    console.log('showToast 호출:', { message, actionText, onAction: !!onAction });
+
     
     setToastState({
       isVisible: true,
@@ -33,7 +33,7 @@ export const useToast = (): UseToastReturn => {
   }, []);
 
   const hideToast = useCallback(() => {
-    console.log('hideToast 호출');
+
     
     setToastState(prev => ({
       ...prev,

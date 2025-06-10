@@ -20,49 +20,22 @@ const BookmarkList: React.FC<BookmarkListProps> = ({ className = '' }) => {
   const [editingMemo, setEditingMemo] = useState<{ bookmarkId: number; memo: string } | null>(null);
   const [isSavingMemo, setIsSavingMemo] = useState(false);
   
-  // 삭제된 북마크를 일시적으로 저장하는 상태
-  const [pendingRemoval, setPendingRemoval] = useState<{ bookmarkId: number; item: any } | null>(null);
-  const removalTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  // 렌더링 없이 삭제 상태 관리 (useRef 사용)
+  const deletedItemsRef = useRef<Set<number>>(new Set());
+  const pendingTimersRef = useRef<Map<number, { item: any; timeoutId: NodeJS.Timeout }>>(new Map());
+  
+  // 화면 업데이트용 강제 리렌더링 (필요시에만)
+  const [, forceUpdate] = useState({});
+  const triggerRerender = useCallback(() => {
+    forceUpdate({});
+  }, []);
 
   const itemsPerPage = 10;
 
-  // 북마크 해제 되돌리기 (먼저 정의)
-  const handleUndoRemoval = useCallback(() => {
-   
-    if (!pendingRemoval) {
-      return;
-    }
-
-
-    // 타이머 취소
-    if (removalTimeoutRef.current) {
-      clearTimeout(removalTimeoutRef.current);
-      removalTimeoutRef.current = null;
-    }
-
-    // 북마크 상태 복원
-    setBookmarkItems(prev => {
-      const updated = prev.map(item => 
-        item.bookmarkId === pendingRemoval.bookmarkId 
-          ? { ...pendingRemoval.item, isBookmarked: true }
-          : item
-      );
-      return updated;
-    });
-    setTotalCount(prev => prev + 1);
-
-    // 상태 초기화
-    setPendingRemoval(null);
-    hideToast();
-    
-  }, [pendingRemoval, hideToast]);
-
   // 실제 북마크 해제 API 호출
   const performBookmarkRemoval = async (bookmarkId: number) => {
-    try {      
+    try {
       const response = await del<any>(`/bookmarks/${bookmarkId}`);
-      
-      // 백엔드 응답 구조에 맞춰 수정: 200 응답이면 성공으로 처리
       const isSuccess = response.success !== false;
       
       if (!isSuccess && response.success === false) {
@@ -71,106 +44,115 @@ const BookmarkList: React.FC<BookmarkListProps> = ({ className = '' }) => {
 
       return true;
     } catch (error) {
+      console.error('북마크 삭제 API 오류:', error);
       return false;
     }
   };
 
-  // 북마크 해제 (토스트 방식)
-  const handleBookmarkRemove = useCallback((bookmarkId: number) => {
+  // 되돌리기 처리
+  const handleUndoRemoval = useCallback((bookmarkId: number) => {
+    console.log(`북마크 ${bookmarkId} 되돌리기 시작`);
     
-    // 이미 삭제 대기 중인 아이템이라면 되돌리기 (현재 상태를 직접 참조)
-    const currentPending = pendingRemoval;
-    if (currentPending && currentPending.bookmarkId === bookmarkId) {
-      handleUndoRemoval();
+    const pendingItem = pendingTimersRef.current.get(bookmarkId);
+    if (!pendingItem) {
+      console.log(`되돌리기: 북마크 ${bookmarkId}를 pending에서 찾을 수 없음`);
       return;
     }
 
-    // 기존 타이머가 있다면 취소
-    if (removalTimeoutRef.current) {
-      clearTimeout(removalTimeoutRef.current);
+    // 타이머 취소
+    clearTimeout(pendingItem.timeoutId);
+    
+    // 삭제 목록에서 제거
+    deletedItemsRef.current.delete(bookmarkId);
+    pendingTimersRef.current.delete(bookmarkId);
+    
+    // 총 개수 복원
+    setTotalCount(prev => prev + 1);
+    
+    // 토스트 숨기기
+    hideToast();
+    
+    // 화면 업데이트
+    triggerRerender();
+    
+    console.log(`북마크 ${bookmarkId} 되돌리기 완료`);
+  }, [hideToast, triggerRerender]);
+
+  // 북마크 해제 (렌더링 없는 버전)
+  const handleBookmarkRemove = useCallback((bookmarkId: number) => {
+    console.log(`북마크 삭제 요청: ${bookmarkId}`);
+    
+    // 이미 삭제 대기 중이면 되돌리기
+    if (deletedItemsRef.current.has(bookmarkId)) {
+      console.log(`북마크 ${bookmarkId} 이미 삭제 대기 중 - 되돌리기`);
+      handleUndoRemoval(bookmarkId);
+      return;
     }
 
-    // 해당 북마크 아이템 찾기
+    // 해당 북마크 찾기
     const targetItem = bookmarkItems.find(item => item.bookmarkId === bookmarkId);
     if (!targetItem) {
+      console.log(`북마크 ${bookmarkId}를 찾을 수 없음`);
       return;
     }
 
+    console.log(`북마크 ${bookmarkId} 삭제 처리 시작`);
 
-
-    // 메모리에 삭제될 아이템 저장 (딥 복사로 단절된 객체 생성)
+    // 백업 아이템 생성
     const backupItem = {
       ...targetItem,
       posting: { ...targetItem.posting },
-      isBookmarked: true // 백업 시에는 항상 true로 저장
+      isBookmarked: true
     };
-    setPendingRemoval({ bookmarkId, item: backupItem });
 
-    // UI에서 즉시 제거 (isBookmarked를 false로 설정)
-    setBookmarkItems(prev => prev.map(item => 
-      item.bookmarkId === bookmarkId 
-        ? { ...item, isBookmarked: false }
-        : item
-    ));
-    setTotalCount(prev => prev - 1);
+    // 1. 삭제 목록에 추가 (렌더링 없음)
+    deletedItemsRef.current.add(bookmarkId);
+    
+    // 2. 총 개수 감소
+    setTotalCount(prev => {
+      const newCount = prev - 1;
+      console.log(`총 개수 변경: ${prev} -> ${newCount}`);
+      return newCount;
+    });
 
-    // 토스트 표시 (handleUndoRemoval을 직접 참조하지 않고 새로운 함수 생성)
+    // 3. 토스트 표시
     showToast(
       '북마크가 해제되었습니다',
       '되돌리기',
-      () => {
-        // pendingRemoval 상태를 직접 확인하지 않고 bookmarkId로 처리
-        
-        // 타이머 취소
-        if (removalTimeoutRef.current) {
-          clearTimeout(removalTimeoutRef.current);
-          removalTimeoutRef.current = null;
-        }
-
-        // 북마크 상태 복원 (backupItem 사용)
-        setBookmarkItems(prev => {
-          const updated = prev.map(item => 
-            item.bookmarkId === bookmarkId 
-              ? { ...backupItem, isBookmarked: true }
-              : item
-          );
-          return updated;
-        });
-        setTotalCount(prev => prev + 1);
-
-        // 상태 초기화
-        setPendingRemoval(null);
-        hideToast();
-      }
+      () => handleUndoRemoval(bookmarkId)
     );
 
-    // 4초 후 실제 삭제 실행
-    removalTimeoutRef.current = setTimeout(async () => {
+    // 4. 타이머 설정
+    const timeoutId = setTimeout(async () => {
+      console.log(`북마크 ${bookmarkId} API 삭제 시작`);
       const success = await performBookmarkRemoval(bookmarkId);
+      
       if (success) {
-        // 성공 시 완전히 제거
+        console.log(`북마크 ${bookmarkId} API 삭제 성공`);
+        // 성공: 실제 목록에서 제거
         setBookmarkItems(prev => prev.filter(item => item.bookmarkId !== bookmarkId));
-        setPendingRemoval(null);
-        hideToast();
-      } else {        
-        // 북마크 상태 복원
-        setBookmarkItems(prev => {
-          const updated = prev.map(item => 
-            item.bookmarkId === bookmarkId 
-              ? { ...backupItem, isBookmarked: true }
-              : item
-          );
-          return updated;
-        });
+      } else {
+        console.log(`북마크 ${bookmarkId} API 삭제 실패 - 복원`);
+        // 실패: 삭제 목록에서 제거하여 복원
+        deletedItemsRef.current.delete(bookmarkId);
         setTotalCount(prev => prev + 1);
-        setPendingRemoval(null);
-        hideToast();
-        
+        triggerRerender(); // 화면 업데이트
         alert('북마크 해제에 실패했습니다. 다시 시도해주세요.');
       }
-    }, 2000);
+      
+      // pending에서 제거
+      pendingTimersRef.current.delete(bookmarkId);
+      console.log(`북마크 ${bookmarkId} pending에서 제거`);
+    }, 4000);
+
+    // 5. pending에 추가
+    pendingTimersRef.current.set(bookmarkId, { item: backupItem, timeoutId });
+    console.log(`북마크 ${bookmarkId} pending에 추가`);
+
+    // 6. 화면 업데이트 (삭제된 것처럼 보이게)
+    triggerRerender();
     
-  }, [bookmarkItems, showToast, hideToast]);
+  }, [bookmarkItems, handleUndoRemoval, showToast, triggerRerender]);
 
   // 북마크 목록 가져오기
   const fetchBookmarks = async (page: number = 1, append: boolean = false) => {
@@ -178,10 +160,8 @@ const BookmarkList: React.FC<BookmarkListProps> = ({ className = '' }) => {
     try {
       const currentScrollY = append ? window.scrollY : 0;
       
-      
       const response = await get<any>(`/bookmarks?page=${page}&limit=${itemsPerPage}`);
             
-      // 백엔드 응답 구조에 맞춰 수정: success 필드가 없는 경우도 처리
       const isSuccess = response.success !== false && response.data !== null && response.data !== undefined;
       
       if (!isSuccess) {
@@ -200,7 +180,6 @@ const BookmarkList: React.FC<BookmarkListProps> = ({ className = '' }) => {
         throw new Error(response.message || '북마크 목록을 불러오는데 실패했습니다.');
       }
 
-      // 응답 데이터 구조 확인
       let apiResponse;
       if (response.data && response.data.data) {
         apiResponse = response.data;
@@ -210,7 +189,6 @@ const BookmarkList: React.FC<BookmarkListProps> = ({ className = '' }) => {
         apiResponse = response;
       }
 
-      // 빈 배열인 경우 정상적으로 처리
       if (!apiResponse.data || apiResponse.data.length === 0) {
         if (append && page > 1) {
           setHasMore(false);
@@ -223,7 +201,6 @@ const BookmarkList: React.FC<BookmarkListProps> = ({ className = '' }) => {
         return;
       }
 
-      // 데이터 매핑
       const mappedData = apiResponse.data.map((bookmark: any) => ({
         bookmarkId: bookmark.bookmarkId,
         postingId: bookmark.postingId,
@@ -254,7 +231,6 @@ const BookmarkList: React.FC<BookmarkListProps> = ({ className = '' }) => {
       setHasMore(apiResponse.hasMore || false);
       setCurrentPage(apiResponse.currentPage || page);
 
-      // 스크롤 위치 복원
       if (append && currentScrollY > 0) {
         setTimeout(() => {
           window.scrollTo(0, currentScrollY);
@@ -262,7 +238,6 @@ const BookmarkList: React.FC<BookmarkListProps> = ({ className = '' }) => {
       }
 
     } catch (error) {
-      
       if (error instanceof Error) {
         if (error.message.includes('timeout') || error.message.includes('ECONNABORTED')) {
           if (!append) {
@@ -316,23 +291,20 @@ const BookmarkList: React.FC<BookmarkListProps> = ({ className = '' }) => {
     });
   };
 
-  // 모달에서 메모 삭제 (전체 삭제 버튼용)
+  // 모달에서 메모 삭제
   const handleDeleteMemoFromModal = async () => {
     if (!editingMemo) return;
     
     try {
-      
       const response = await del<any>(`/bookmarks/${editingMemo.bookmarkId}/memo`);
       
-      
-      // 백엔드에서 북마크 객체를 직접 반환하는 경우 처리
       let isSuccess = false;
       
       if (response.success === true && response.data) {
         isSuccess = true;
-      } else if (response.bookmarkId) {
+      } else if ((response as any).bookmarkId) {
         isSuccess = true;
-      } else if (response.data && response.data.bookmarkId) {
+      } else if (response.data && (response.data as any).bookmarkId) {
         isSuccess = true;
       }
       
@@ -340,14 +312,12 @@ const BookmarkList: React.FC<BookmarkListProps> = ({ className = '' }) => {
         throw new Error('메모 삭제에 실패했습니다.');
       }
 
-      // 성공적으로 삭제되면 상태 업데이트
       setBookmarkItems(prev => prev.map(item => 
         item.bookmarkId === editingMemo.bookmarkId 
           ? { ...item, memo: null }
           : item
       ));
 
-      // 모달 닫기
       setEditingMemo(null);
       alert('메모가 성공적으로 삭제되었습니다.');
     } catch (error) {
@@ -365,30 +335,20 @@ const BookmarkList: React.FC<BookmarkListProps> = ({ className = '' }) => {
         memo: editingMemo.memo
       });
       
-      // 백엔드에서 북마크 객체를 직접 반환하는 경우 처리
       let isSuccess = false;
-      let bookmarkData = null;
       
       if (response.success === true && response.data) {
-        // httpClient가 래핑한 응답: {success: true, data: BookmarkObject}
         isSuccess = true;
-        bookmarkData = response.data;
-      } else if (response.bookmarkId) {
-        // 백엔드에서 직접 반환한 북마크 객체
+      } else if ((response as any).bookmarkId) {
         isSuccess = true;
-        bookmarkData = response;
-      } else if (response.data && response.data.bookmarkId) {
-        // 중간 래핑된 형태
+      } else if (response.data && (response.data as any).bookmarkId) {
         isSuccess = true;
-        bookmarkData = response.data;
       }
       
-     
       if (!isSuccess) {
         throw new Error('메모 저장에 실패했습니다.');
       }
 
-      // 성공적으로 저장되면 상태 업데이트
       setBookmarkItems(prev => prev.map(item => 
         item.bookmarkId === editingMemo.bookmarkId 
           ? { ...item, memo: editingMemo.memo }
@@ -411,17 +371,13 @@ const BookmarkList: React.FC<BookmarkListProps> = ({ className = '' }) => {
     try {
       const response = await del<any>(`/bookmarks/${bookmarkId}/memo`);
       
-      // 백엔드에서 북마크 객체를 직접 반환하는 경우 처리
       let isSuccess = false;
       
       if (response.success === true && response.data) {
-        // httpClient가 래핑한 응답: {success: true, data: BookmarkObject}
         isSuccess = true;
-      } else if (response.bookmarkId) {
-        // 백엔드에서 직접 반환한 북마크 객체
+      } else if ((response as any).bookmarkId) {
         isSuccess = true;
-      } else if (response.data && response.data.bookmarkId) {
-        // 중간 래핑된 형태
+      } else if (response.data && (response.data as any).bookmarkId) {
         isSuccess = true;
       }
             
@@ -429,7 +385,6 @@ const BookmarkList: React.FC<BookmarkListProps> = ({ className = '' }) => {
         throw new Error('메모 삭제에 실패했습니다.');
       }
 
-      // 성공적으로 삭제되면 상태 업데이트
       setBookmarkItems(prev => prev.map(item => 
         item.bookmarkId === bookmarkId 
           ? { ...item, memo: null }
@@ -455,9 +410,9 @@ const BookmarkList: React.FC<BookmarkListProps> = ({ className = '' }) => {
   // 컴포넌트 언마운트 시 타이머 정리
   useEffect(() => {
     return () => {
-      if (removalTimeoutRef.current) {
-        clearTimeout(removalTimeoutRef.current);
-      }
+      pendingTimersRef.current.forEach(({ timeoutId }) => {
+        clearTimeout(timeoutId);
+      });
     };
   }, []);
 
@@ -488,14 +443,24 @@ const BookmarkList: React.FC<BookmarkListProps> = ({ className = '' }) => {
     );
   }
 
+  // 화면에 표시할 아이템들 (삭제 대기 중인 것들은 회색으로 표시)
+  const visibleItems = bookmarkItems.map(item => ({
+    ...item,
+    // 삭제 대기 중이면 isBookmarked를 false로 설정 (회색으로 표시됨)
+    isBookmarked: !deletedItemsRef.current.has(item.bookmarkId)
+  }));
+  
+  // 실제로 보이는 (삭제되지 않은) 개수
+  const activeCount = bookmarkItems.filter(item => !deletedItemsRef.current.has(item.bookmarkId)).length;
+
   return (
     <div className={className}>
       <div className="mb-4 text-sm text-gray-600">
-        총 {totalCount}개 중 {bookmarkItems.filter(item => item.isBookmarked).length}개를 북마크했습니다.
+        총 {totalCount}개 중 {activeCount}개를 북마크했습니다.
       </div>
       
       <div className="space-y-4">
-        {bookmarkItems.map((item, index) => (
+        {visibleItems.map((item, index) => (
           <BookmarkItem
             key={`${item.bookmarkId}-${index}`}
             item={item}

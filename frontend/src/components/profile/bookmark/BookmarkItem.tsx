@@ -62,13 +62,27 @@ const BookmarkItem: React.FC<BookmarkItemProps> = ({
 
   const handleBookmarkToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
+    console.log(`BookmarkItem: 북마크 ${item.bookmarkId} 버튼 클릭, 현재 상태: ${item.isBookmarked}`);
     // 북마크 상태에 관계없이 삭제 함수를 호출
     // (이미 isBookmarked가 false인 경우는 되돌리기 과정)
     onBookmarkRemove(item.bookmarkId);
   };
 
   return (
-    <div className={`border rounded-lg p-4 hover:shadow-md transition-all bg-white cursor-pointer ${!item.isBookmarked ? 'opacity-60' : ''}`}>
+    <div className={`border rounded-lg p-4 hover:shadow-md transition-all bg-white cursor-pointer ${
+      !item.isBookmarked 
+        ? 'opacity-60 border-red-200 bg-red-50' 
+        : ''
+    }`}>
+      {/* 삭제 대기 중일 때 표시할 메시지 */}
+      {!item.isBookmarked && (
+        <div className="mb-2 text-xs text-red-600 bg-red-100 px-2 py-1 rounded flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          삭제 대기 중 - 하트를 다시 눌러 되돌리거나 아래 '되돌리기'를 눌러주세요
+        </div>
+      )}
       <div className="flex justify-between items-start">
         <div 
           className="flex-1"

@@ -1,20 +1,23 @@
 import React from 'react';
 
+// 리뷰 타입 정의
+type ReviewType = 'guest' | 'host';
+
 interface ReviewItemProps {
   review: any;
+  reviewType: ReviewType;
   onPostingClick: (postingId: number) => void;
 }
 
 const ReviewItem: React.FC<ReviewItemProps> = ({
   review,
+  reviewType,
   onPostingClick
 }) => {
   
   // 날짜 포맷팅 함수
   const formatDate = (dateData: any) => {
     try {
-      console.log('원본 날짜 데이터:', dateData);
-      
       let date;
       
       // 배열 형태의 날짜 데이터 처리 [year, month, day, hour, minute]
@@ -37,7 +40,6 @@ const ReviewItem: React.FC<ReviewItemProps> = ({
       
       // 유효한 날짜인지 확인
       if (isNaN(date.getTime())) {
-        console.error('유효하지 않은 날짜:', dateData);
         return '날짜 정보 없음';
       }
       
@@ -49,7 +51,6 @@ const ReviewItem: React.FC<ReviewItemProps> = ({
         minute: '2-digit'
       });
     } catch (error) {
-      console.error('날짜 파싱 오류:', error, dateData);
       return '날짜 형식 오류';
     }
   };
@@ -93,68 +94,93 @@ const ReviewItem: React.FC<ReviewItemProps> = ({
   };
 
   return (
-    <div className="border rounded-lg p-4 hover:shadow-md transition-all bg-white">
+    <div className="border border-gray-200 rounded-xl p-5 hover:shadow-lg transition-all duration-300 bg-white">
       <div className="flex justify-between items-start">
         <div className="flex-1">
           {/* 리뷰 헤더 */}
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center space-x-3">
-              {/* 게스트 정보 */}
-              <div className="flex items-center space-x-2">
-                <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
-                  {review.guestInfo?.profileImageUrl ? (
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex items-center space-x-3 flex-1">
+              {/* 리뷰 대상 정보 */}
+              <div className="flex items-center space-x-3">
+                <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
+                  {/* 게스트 리뷰인 경우 게스트 정보, 호스트 리뷰인 경우 호스트 정보 */}
+                  {(reviewType === 'guest' ? review.guestInfo?.profileImageUrl : review.hostInfo?.profileImageUrl) ? (
                     <img 
-                      src={review.guestInfo.profileImageUrl} 
-                      alt="게스트 프로필" 
+                      src={reviewType === 'guest' ? review.guestInfo.profileImageUrl : review.hostInfo.profileImageUrl} 
+                      alt={`${reviewType === 'guest' ? '게스트' : '호스트'} 프로필`} 
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
                   )}
                 </div>
                 <div>
-                  <div className="font-medium text-sm">
-                    {review.guestInfo?.nickname || '게스트'}
+                  <div className="font-semibold text-gray-800">
+                    {reviewType === 'guest' 
+                      ? (review.guestInfo?.nickname || '게스트') 
+                      : (review.hostInfo?.nickname || '호스트')
+                    }
                   </div>
-                  <div className="text-xs text-gray-500">
-                    하객력 {review.guestInfo?.guestPower || 0}
+                  <div className="text-xs text-gray-500 mt-0.5">
+                    {reviewType === 'guest' 
+                      ? `하객력 ${review.guestInfo?.guestPower || 0}`
+                      : `호스트력 ${review.hostInfo?.hostPower || 0}`
+                    }
                   </div>
                 </div>
               </div>
             </div>
             
-            {/* 점수와 별점 */}
-            <div className={`flex items-center space-x-2 px-3 py-1 rounded-full ${getScoreBgColor(review.score)}`}>
-              <div className="flex items-center space-x-1">
-                {renderStars(review.score)}
+            {/* 오른쪽: 리뷰 타입 배지 및 점수 */}
+            <div className="flex flex-col items-end space-y-2">
+              {/* 리뷰 타입 표시 배지 */}
+              <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                reviewType === 'guest' 
+                  ? 'bg-blue-100 text-blue-700' 
+                  : 'bg-green-100 text-green-700'
+              }`}>
+                {reviewType === 'guest' ? '게스트 리뷰' : '호스트 리뷰'}
               </div>
-              <span className={`text-sm font-medium ${getScoreColor(review.score)}`}>
-                {review.score}/5
-              </span>
+              
+              {/* 점수와 별점 */}
+              <div className={`flex items-center space-x-2 px-3 py-1.5 rounded-full ${getScoreBgColor(review.score)}`}>
+                <div className="flex items-center space-x-1">
+                  {renderStars(review.score)}
+                </div>
+                <span className={`text-sm font-semibold ${getScoreColor(review.score)}`}>
+                  {review.score}/5
+                </span>
+              </div>
             </div>
           </div>
 
           {/* 리뷰 내용 */}
-          <div className="mb-3">
-            <p className="text-gray-700 leading-relaxed">
+          <div className="mb-4">
+            <div className="text-xs text-gray-500 mb-2 font-medium">
+              {reviewType === 'guest' 
+                ? '모집자가 나에게 작성한 리뷰:' 
+                : '내가 모집자에게 작성한 리뷰:'
+              }
+            </div>
+            <p className="text-gray-800 leading-relaxed text-sm">
               "{review.content}"
             </p>
           </div>
 
           {/* 결혼식 정보 */}
           <div 
-            className="bg-gray-50 p-3 rounded cursor-pointer hover:bg-gray-100 transition-colors"
+            className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 rounded-lg cursor-pointer hover:from-purple-50 hover:to-blue-50 hover:border-purple-200 border border-transparent transition-all duration-200"
             onClick={() => onPostingClick(review.postingId)}
           >
-            <h4 className="font-medium text-purple-600 mb-1 hover:text-purple-700 transition-colors">
+            <h4 className="font-semibold text-purple-600 mb-2 hover:text-purple-700 transition-colors">
               {review.postingInfo?.title}
             </h4>
             
             {/* 장소 정보 */}
-            <div className="flex items-center text-sm text-gray-600 mb-1">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="flex items-center text-sm text-gray-600 mb-2">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
@@ -163,7 +189,7 @@ const ReviewItem: React.FC<ReviewItemProps> = ({
             
             {/* 결혼식 날짜 */}
             <div className="flex items-center text-sm text-gray-600">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a1 1 0 012 0v4m4-4v4m-6 4h8m-8 0V9a1 1 0 011-1h6a1 1 0 011 1v6m-8 0h8" />
               </svg>
               {formatDate(review.postingInfo?.appointmentDatetime)}
@@ -171,9 +197,9 @@ const ReviewItem: React.FC<ReviewItemProps> = ({
           </div>
 
           {/* 리뷰 작성 일시 */}
-          <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
+          <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
             <div className="text-xs text-gray-500 flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               리뷰 작성: {formatDate(review.createdAt)}

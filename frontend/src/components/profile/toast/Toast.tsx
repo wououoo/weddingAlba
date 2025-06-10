@@ -42,30 +42,20 @@ const Toast: React.FC<ToastProps> = ({
     e.preventDefault();
     e.stopPropagation();
     
-    console.log('Toast 액션 버튼 클릭', { onAction: !!onAction });
-    
     if (onAction) {
-      console.log('onAction 실행 시작');
       onAction();
-      console.log('onAction 실행 완료');
-    } else {
-      console.log('onAction이 없습니다!');
     }
   };
 
   const handleCloseClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log('Toast 닫기 버튼 클릭');
     onClose();
   };
 
   if (!isVisible) {
-    console.log('Toast 비표시 상태');
     return null;
   }
-
-  console.log('Toast 렌더링');
 
   return (
     <div className="fixed bottom-20 left-4 right-4 z-50">

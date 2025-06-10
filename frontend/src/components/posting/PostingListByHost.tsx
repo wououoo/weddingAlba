@@ -41,11 +41,11 @@ const PostingListByHost: React.FC = () => {
             personName: '이민수',
             personPhoneNumber: '010-1234-5678',
             hasMobileInvitation: true,
-            perPay: '일급',
-            wages: '50,000원',
+            payType: '일급',
+            payAmount: '50,000원',
             tags: ['친구대행', '당일지급', '식비지급'],
             guestMainRole: '고등학교 동창',
-            taskDescription: '90년대 초반 여성, MBTI가 E였으면 좋겠습니다.',
+            detailContent: '90년대 초반 여성, MBTI가 E였으면 좋겠습니다.',
             nickname: '포효하는 고라니123',
             postingHistoryCount: 3,
             applicantCount: 3,
@@ -98,11 +98,11 @@ const PostingListByHost: React.FC = () => {
             personName: '정윤아',
             personPhoneNumber: '010-9876-5432',
             hasMobileInvitation: false,
-            perPay: '일급',
-            wages: '60,000원',
+            payType: '일급',
+            payAmount: '60,000원',
             tags: ['급구', '교통비지원'],
             guestMainRole: '직장동료',
-            taskDescription: '조용하고 차분한 성격의 분을 선호합니다.',
+            detailContent: '조용하고 차분한 성격의 분을 선호합니다.',
             nickname: '포효하는 고라니123',
             postingHistoryCount: 3,
             applicantCount: 1,
@@ -252,7 +252,7 @@ const PostingListByHost: React.FC = () => {
                             </div>
 
                             <div className="text-sm text-gray-600">
-                                <span className="font-medium text-blue-600">{posting.wages}</span>
+                                <span className="font-medium text-blue-600">{posting.payAmount}</span>
                                 <span className="mx-2">•</span>
                                 <span>{posting.workingHours}</span>
                             </div>

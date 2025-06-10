@@ -1,21 +1,25 @@
-// 기본 DTO
 export interface PostingResponseDTO {
+    // 기본정보
     postingId?: number;                 // 모집글 ID
     title?: string;                     // 모집글 제목
-    simplyLocation?: string;            // 간략한 위치
-    appointmentDatetime?: string;       // 약속일시
-    registrationDatetime?: string;      // 모집글 등록일시
-    workingHours?: string;              // 근무시간 
-    location?: string;                  // 결혼식 우치
     isSelf?: boolean;                   // 본인 결혼식 여부
     personName?: string;                // 결혼식 당사자 이름
     personPhoneNumber?: string;         // 결혼식 당사자 번호
+    registrationDatetime?: string;      // 모집글 등록일시
+
+    // 예식 정보
+    appointmentDatetime?: string;       // 결혼식 예정일시
+    location?: string;                  // 결혼식 위치
+    simplyLocation?: string;            // 간략한 위치
     hasMobileInvitation?: boolean;      // 모바일 청첩장 제출 여부
-    wages?: string;                     // 임금
-    perPay?: string;                    // 일급 인지 시급인지
-    tags?: string[] | [];               // 태그
+
+    // 알바 정보
+    workingHours?: string;              // 근무시간 
+    payType?: string;                    // 일급 인지 시급인지
+    payAmount?: string;                     // 임금
     guestMainRole?: string;             // 주 하객 업무내용
-    taskDescription?: string;           //상세 내용
+    detailContent?: string;           //상세 내용
+    tags?: string[] | [];               // 태그
 
     // 모집자 정보
     userId?: number;                    // 모집자 ID
@@ -36,15 +40,15 @@ export const sampleData: PostingResponseDTO = {
     personName: '이민수',
     personPhoneNumber: '010-1234-5678',
     hasMobileInvitation: true,
-    wages: '50,000원',
-    perPay: '일급',
+    payAmount: '50,000원',
+    payType: '일급',
     tags: [
         '친구대행',
         '당일지급',
         '식비지급'
     ],
     guestMainRole: '고등학교 동창',
-    taskDescription: '90년대 초반 여성, MBTI가 E였으면 좋겠습니다.',
+    detailContent: '90년대 초반 여성, MBTI가 E였으면 좋겠습니다.',
 
     userId: 101,
     nickname : '포효하는 고라니123',
@@ -65,8 +69,8 @@ export const sampleDataList: PostingResponseDTO[] = [
         personName: '이민수',
         personPhoneNumber: '010-1234-5678',
         hasMobileInvitation: true,
-        perPay : '일급',
-        wages: '50,000원',
+        payType : '일급',
+        payAmount: '50,000원',
         tags: [
             '친구대행',
             '당일지급',
@@ -85,8 +89,8 @@ export const sampleDataList: PostingResponseDTO[] = [
         personName: '정윤아',
         personPhoneNumber: '010-9876-5432',
         hasMobileInvitation: false,
-        perPay : '시급',
-        wages: '15,000원',
+        payType   : '시급',
+        payAmount: '15,000원',
         tags: [
             '급구',
             '당일지급',
@@ -105,8 +109,8 @@ export const sampleDataList: PostingResponseDTO[] = [
         personName: '최현우',
         personPhoneNumber: '010-5555-6666',
         hasMobileInvitation: true,
-        perPay : '일급',
-        wages: '60,000원',
+        payType : '일급',
+        payAmount: '60,000원',
         tags: [
             '급구',
             '교통비지원'

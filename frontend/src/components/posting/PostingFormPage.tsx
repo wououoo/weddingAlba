@@ -1,12 +1,26 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from "react-router-dom";
-import { PostingResponseDTO } from "./dto/PostingResponseDTO";
+import { PostingRequestDTO } from "./dto/PostingRequestDTO";
+import { postingApi } from './api/postingApi';
 
 const PostingFormPage: React.FC = () => {
     const navigate = useNavigate();
     const [tags, setTags] = useState<string[]>([]);
     const [tagInput, setTagInput] = useState<string>('');
     const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+
+    // 토큰 설정
+    useEffect(() => {
+        const localToken = localStorage.getItem('authToken');
+        const sessionToken = sessionStorage.getItem('authToken');
+        const accessToken = localStorage.getItem('accessToken');
+        const jwtToken = localStorage.getItem('jwtToken');
+        
+        const token = localToken || sessionToken || jwtToken;
+        if (token && !accessToken) {
+        localStorage.setItem('accessToken', token);
+        }
+    }, []);
     
     // 임금 관련 상태
     const [payType, setPayType] = useState<'hourly' | 'daily'>('hourly'); // 시급 또는 일급
@@ -14,23 +28,6 @@ const PostingFormPage: React.FC = () => {
     const [startTime, setStartTime] = useState<string>(''); // 근무 시작 시간
     const [endTime, setEndTime] = useState<string>(''); // 근무 종료 시간
     const [totalPay, setTotalPay] = useState<number>(0); // 최종 지급 금액
-
-    // 폼 데이터 상태
-    const [formData, setFormData] = useState<Partial<PostingResponseDTO>>({
-        title: '',
-        simplyLocation: '',
-        appointmentDatetime: '',
-        location: '',
-        workingHours: '',
-        wages: '',
-        guestMainRole: '',
-        taskDescription: '',
-        personName: '',
-        personPhoneNumber: '',
-        hasMobileInvitation: false,
-        isSelf: false,
-        tags: []
-    });
 
     // 근무시간 계산 및 최종 지급 금액 계산
     const calculatePay = () => {
@@ -61,23 +58,23 @@ const PostingFormPage: React.FC = () => {
         
         // formData 업데이트
         const workingHoursText = `${startTime} ~ ${endTime} (${diffInHours.toFixed(1)}시간)`;
-        const wagesText = `${payType === 'hourly' ? '시급' : '일급'} ${payAmount.toLocaleString()}원 (총 ${finalPay.toLocaleString()}원)`;
         
         setFormData(prev => ({
             ...prev,
             workingHours: workingHoursText,
-            wages: wagesText
+            payType : payType,
+            payAmount: payAmount.toString()
         }));
     };
 
     // 값 변경 시 자동 계산
-    React.useEffect(() => {
+    useEffect(() => {
         calculatePay();
     }, [startTime, endTime, payType, payAmount]);
 
     // 폼 데이터 입력 변경 핸들러
     // 'field'는 변경될 폼 데이터의 키(예: 'title', 'location')이고, 'value'는 새로운 값입니다.
-    const handleInputChange = (field: keyof PostingResponseDTO, value: any) => {
+    const handleInputChange = (field: keyof PostingRequestDTO, value: any) => {
         setFormData(prev => ({
             ...prev,
             [field]: value
@@ -116,25 +113,41 @@ const PostingFormPage: React.FC = () => {
         }
     };
 
+    // 폼 데이터 상태
+    const [formData, setFormData] = useState<Partial<PostingRequestDTO>>({
+        title: '',
+        appointmentDatetime: '',
+        location: '',
+        workingHours: '',
+        payAmount: '',
+        guestMainRole: '',
+        detailContent: '',
+        personName: '',
+        personPhoneNumber: '',
+        hasMobileInvitation: false,
+        isSelf: false,
+        tags: []
+    });
+
     // 폼 제출 핸들러
     // 폼 유효성을 검사하고, 유효한 경우 폼 데이터를 콘솔에 기록한 후 이전 페이지로 이동합니다.
     const handleSubmit = () => {
-        if (!formData.title || !formData.appointmentDatetime || !formData.location || !startTime || !endTime || payAmount <= 0) {
+        if (!formData.title || !formData.appointmentDatetime  || !startTime || !endTime || payAmount <= 0) {
             alert('필수 항목을 입력해주세요.');
             return;
         }
 
         console.log('Form Data:', formData);
-        console.log('Pay Info:', {
-            payType,
-            payAmount,
-            startTime,
-            endTime,
-            totalPay
-        });
+        postingApi.addPosting(formData);
+        // console.log('Pay Info:', {
+        //     payType,
+        //     payAmount,
+        //     startTime,
+        //     endTime,
+        //     totalPay
+        // });
         console.log('Uploaded File:', uploadedFile);
 
-        navigate(-1);
     };
 
     return (
@@ -212,7 +225,7 @@ const PostingFormPage: React.FC = () => {
                                 type="text"
                                 value={formData.personName || ''}
                                 onChange={(e) => handleInputChange('personName', e.target.value)}
-                                placeholder="예: 이민수"
+                                placeholder="당사자 이름을 작성해주세요. 예: 이민수"
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             />
                         </div>
@@ -224,7 +237,7 @@ const PostingFormPage: React.FC = () => {
                                 type="tel"
                                 value={formData.personPhoneNumber || ''}
                                 onChange={(e) => handleInputChange('personPhoneNumber', e.target.value)}
-                                placeholder="010-1234-5678"
+                                placeholder="당사자 연락처를 작성해주세요. 예: 010-1234-5678"
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             />
                         </div>
@@ -248,10 +261,10 @@ const PostingFormPage: React.FC = () => {
                         />
                     </div>
 
-                    {/* 예식장 주소 */}
+                    {/* 결혼식장 주소 */}
                     <div className="mb-4">
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                            예식장 주소 <span className="text-red-500">*</span>
+                            결혼식장 주소 <span className="text-red-500">*</span>
                         </label>
                         <div className="flex">
                             <input
@@ -416,7 +429,7 @@ const PostingFormPage: React.FC = () => {
                         {/* 임금 금액 입력 */}
                         <div className="flex items-center">
                             <input
-                                type="number"
+                                type="text"
                                 value={payAmount || ''}
                                 onChange={(e) => setPayAmount(Number(e.target.value))}
                                 placeholder={payType === 'hourly' ? '시급을 입력하세요' : '일급을 입력하세요'}
@@ -461,8 +474,8 @@ const PostingFormPage: React.FC = () => {
                             상세 내용
                         </label>
                         <textarea
-                            value={formData.taskDescription || ''}
-                            onChange={(e) => handleInputChange('taskDescription', e.target.value)}
+                            value={formData.detailContent || ''}
+                            onChange={(e) => handleInputChange('detailContent', e.target.value)}
                             placeholder="90년대 초반 여성, MBTI가 E였으면 좋겠습니다."
                             rows={4}
                             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
@@ -524,7 +537,7 @@ const PostingFormPage: React.FC = () => {
                         취소
                     </button>
                     <button
-                        onClick={handleSubmit}
+                        onClick={postingSubmit}
                         className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all"
                     >
                         등록하기

@@ -45,15 +45,15 @@ const PostingListPage: React.FC = () => {
             personName: '이민수',
             personPhoneNumber: '010-1234-5678',
             hasMobileInvitation: true,
-            perPay: '일급',
-            wages: '50,000원',
+            payType: '일급',
+            payAmount: '50,000원',
             tags: [
                 '친구대행',
                 '당일지급',
                 '식비지급'
             ],
             guestMainRole: '고등학교 동창',
-            taskDescription: '90년대 초반 여성, MBTI가 E였으면 좋겠습니다.',
+            detailContent: '90년대 초반 여성, MBTI가 E였으면 좋겠습니다.',
             nickname: '포효하는 고라니123',
             postingHistoryCount: 3
         },
@@ -70,15 +70,15 @@ const PostingListPage: React.FC = () => {
             personName: '정윤아',
             personPhoneNumber: '010-9876-5432',
             hasMobileInvitation: false,
-            perPay: '시급',
-            wages: '15,000원',
+            payType: '시급',
+            payAmount: '15,000원',
             tags: [
                 '급구',
                 '당일지급',
                 '친구대행'
             ],
             guestMainRole: '대학교 친구',
-            taskDescription: '밝고 활발한 성격이신 분을 찾습니다.',
+            detailContent: '밝고 활발한 성격이신 분을 찾습니다.',
             nickname: '행복한신부',
             postingHistoryCount: 1
         },
@@ -95,14 +95,14 @@ const PostingListPage: React.FC = () => {
             personName: '최현우',
             personPhoneNumber: '010-5555-6666',
             hasMobileInvitation: true,
-            perPay: '일급',
-            wages: '60,000원',
+            payType: '일급',
+            payAmount: '60,000원',
             tags: [
                 '급구',
                 '교통비지원'
             ],
             guestMainRole: '직장동료',
-            taskDescription: '조용하고 차분한 성격의 분을 선호합니다.',
+            detailContent: '조용하고 차분한 성격의 분을 선호합니다.',
             nickname: '대전거주자',
             postingHistoryCount: 5
         },
@@ -119,15 +119,15 @@ const PostingListPage: React.FC = () => {
             personName: '김서연',
             personPhoneNumber: '010-7777-8888',
             hasMobileInvitation: true,
-            perPay: '일급',
-            wages: '45,000원',
+            payType: '일급',
+            payAmount: '45,000원',
             tags: [
                 '친구대행',
                 '식비지급',
                 '주차지원'
             ],
             guestMainRole: '회사 후배',
-            taskDescription: '20대 후반~30대 초반 여성분을 찾고 있습니다.',
+            detailContent: '20대 후반~30대 초반 여성분을 찾고 있습니다.',
             nickname: '착한언니',
             postingHistoryCount: 2
         },
@@ -144,15 +144,15 @@ const PostingListPage: React.FC = () => {
             personName: '박지민',
             personPhoneNumber: '010-2222-3333',
             hasMobileInvitation: false,
-            perPay: '시급',
-            wages: '18,000원',
+            payType: '시급',
+            payAmount: '18,000원',
             tags: [
                 '당일지급',
                 '교통비지원',
                 '선물준비'
             ],
             guestMainRole: '동네친구',
-            taskDescription: '밝고 사교적인 성격의 분이면 좋겠어요.',
+            detailContent: '밝고 사교적인 성격의 분이면 좋겠어요.',
             nickname: '수원토박이',
             postingHistoryCount: 7
         }

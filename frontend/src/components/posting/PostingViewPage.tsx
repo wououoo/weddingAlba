@@ -13,12 +13,12 @@ const PostingViewPage: React.FC = () => {
         appointmentDatetime,
         location,
         workingHours,
-        wages,
+        payAmount,
         nickname,
         postingHistoryCount,
         hasMobileInvitation,
         guestMainRole,
-        taskDescription,
+        detailContent,
         tags,
         personName,
         personPhoneNumber,
@@ -161,7 +161,7 @@ const PostingViewPage: React.FC = () => {
                             </div>
                             <div>
                                 <h4 className="font-medium text-gray-900">임금</h4>
-                                <p className="text-green-600 font-semibold">{wages}</p>
+                                <p className="text-green-600 font-semibold">{payAmount}</p>
                             </div>
                         </div>
 
@@ -194,14 +194,14 @@ const PostingViewPage: React.FC = () => {
                 </div>
 
                 {/* 상세내용 */}
-                {taskDescription && (
+                {detailContent && (
                     <div className="bg-white rounded-xl shadow-sm p-6 mb-4">
                         <h3 className="text-lg font-bold text-gray-900 mb-3">상세내용</h3>
                         <div className="relative">
-                            <p className={`text-gray-600 text-sm leading-relaxed ${!showFullDescription && taskDescription.length > 100 ? 'line-clamp-3' : ''}`}>
-                                {taskDescription}
+                            <p className={`text-gray-600 text-sm leading-relaxed ${!showFullDescription && detailContent.length > 100 ? 'line-clamp-3' : ''}`}>
+                                {detailContent}
                             </p>
-                            {taskDescription.length > 100 && (
+                            {detailContent.length > 100 && (
                                 <button 
                                     onClick={() => setShowFullDescription(!showFullDescription)}
                                     className="mt-2 text-blue-500 text-sm font-medium hover:text-blue-600 transition-colors"

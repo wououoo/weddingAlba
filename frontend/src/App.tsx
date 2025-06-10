@@ -9,7 +9,7 @@ import { ChatListPage, GroupChatRoom, PrivateChatRoom } from './components/chat'
 import { ApplyingListPage, ApplyingFormPage } from './components/applying';
 import ApplyingViewPage from './components/applying/ApplyingViewPage';
 import { PostingFormPage,  PostingListPage,  PostingViewPage} from './components/posting';
-import { MainPage } from './components/main/Index';
+import MainPage from './components/main/MainPage';
 // import { useAuthStore } from './stores/authStore'; // 주석 처리
 
 // 간단한 인증 확인 함수 (authUtils의 isAuthenticated 사용)

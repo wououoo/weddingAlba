@@ -8,7 +8,7 @@ import { ProfilePage, ProfileEditPage } from './components/profile';
 import { ChatListPage, GroupChatRoom, PrivateChatRoom } from './components/chat';
 import { ApplyingListPage, ApplyingFormPage } from './components/applying';
 import ApplyingViewPage from './components/applying/ApplyingViewPage';
-import { PostingFormPage,  PostingListPage,  PostingViewPage} from './components/posting';
+import { PostingFormPage,  PostingListByHost,  PostingListPage,  PostingViewPage} from './components/posting';
 import MainPage from './components/main/MainPage';
 // import { useAuthStore } from './stores/authStore'; // 주석 처리
 
@@ -55,6 +55,7 @@ const App: React.FC = () => {
         } />
 
         {/* 게시글 목록 페이지 라우트 추가 */}
+        {/* 전체 모집글 */}
         <Route path="/posting/list" element={
           <SimplePrivateRoute>
             <WithLayout>
@@ -63,6 +64,16 @@ const App: React.FC = () => {
           </SimplePrivateRoute>
         } />
 
+        {/* 모집현황 : 내가 작성한 모집글의 신청글 리스트 */}
+        <Route path="/posting/list/:hostId" element={
+          <SimplePrivateRoute>
+            <WithLayout>
+              <PostingListByHost />
+            </WithLayout>
+          </SimplePrivateRoute>
+        } />
+
+      {/* 모집글 상세보기 */}
         <Route path="/posting/:id" element={
           <SimplePrivateRoute>
             <WithLayout>
@@ -71,6 +82,7 @@ const App: React.FC = () => {
           </SimplePrivateRoute>
         } />
 
+        {/* 모집글 작성 */}
         <Route path="/posting/create" element={
           <SimplePrivateRoute>
             <WithLayout>
@@ -79,6 +91,7 @@ const App: React.FC = () => {
           </SimplePrivateRoute>
         } />
 
+        {/* 신청글 리스트 : default가 본인 작성 */}
         <Route path="/applying/list" element={
           <SimplePrivateRoute>
             <WithLayout>
@@ -87,7 +100,7 @@ const App: React.FC = () => {
           </SimplePrivateRoute>
         } />
 
-
+        {/*  신청글 상세보기 */}
         <Route path="/applying/:id" element={
           <SimplePrivateRoute>
           <WithLayout>
@@ -96,6 +109,7 @@ const App: React.FC = () => {
         </SimplePrivateRoute>
         } />
 
+        {/* 신청글 작성하기 */}
         <Route path="/applying/create" element={
           <SimplePrivateRoute>
           <WithLayout>

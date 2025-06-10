@@ -105,7 +105,8 @@ const MainPage: React.FC = () => {
                     </div>
                     <p className="text-sm">모집하기</p>
                 </button>
-                <button className="flex flex-col justify-center items-center p-1">
+                <button className="flex flex-col justify-center items-center p-1"
+                onClick={() => navigate('/posting/list/1')}>
                     <div className="w-8 h-8 mb-4">
                         <img src="/images/hired-icon-img.png" alt="모집현황" className="w-full h-full object-contain"/>
                     </div>
@@ -118,7 +119,7 @@ const MainPage: React.FC = () => {
                     <div className="w-8 h-8 mb-4">
                         <img src="/images/applying-icon-img.png" alt="지원하기" className="w-full h-full object-contain"/>
                     </div>
-                    <p className="text-sm">지원하기</p>
+                    <p className="text-sm">신청하기</p>
                 </button>
                 <button 
                     className="flex flex-col justify-center items-center p-1"
@@ -127,7 +128,7 @@ const MainPage: React.FC = () => {
                     <div className="w-8 h-8 mb-4">
                         <img src="/images/applied-icon-img.png" alt="지원현황" className="w-full h-full object-contain"/>
                     </div>
-                    <p className="text-sm">지원현황</p>
+                    <p className="text-sm">신청현황</p>
                 </button>
             </div>
 

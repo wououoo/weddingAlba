@@ -1,15 +1,37 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from "react-router-dom";
-import { PostingRequestDTO } from "./dto/PostingRequestDTO";
-import { postingApi } from './api/postingApi';
+import { usePostingForm } from './hooks/usePostingForm';
+import AddressSearch from '../common/AddressSearch';
 
 const PostingFormPage: React.FC = () => {
     const navigate = useNavigate();
-    const [tags, setTags] = useState<string[]>([]);
-    const [tagInput, setTagInput] = useState<string>('');
-    const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+    const {
+        tags,
+        tagInput,
+        setTagInput,
+        uploadedFile,
+        payType,
+        setPayType,
+        payAmount,
+        setPayAmount,
+        startTime,
+        setStartTime,
+        endTime,
+        setEndTime,
+        totalPay,
+        formData,
+        handleInputChange,
+        handleTagKeyDown,
+        removeTag,
+        handleFileUpload,
+        handleSubmit,
+        isAddressSearchOpen,
+        openAddressSearch,
+        closeAddressSearch,
+        handleAddressComplete
+    } = usePostingForm();
 
-    // 토큰 설정
+    // 토큰 설정 (이 부분은 폼 로직과 독립적이므로 PostingFormPage에 유지됩니다.)
     useEffect(() => {
         const localToken = localStorage.getItem('authToken');
         const sessionToken = sessionStorage.getItem('authToken');
@@ -21,133 +43,10 @@ const PostingFormPage: React.FC = () => {
             localStorage.setItem('accessToken', token);
         }
     }, []);
-    
-    // 임금 관련 상태
-    const [payType, setPayType] = useState<'hourly' | 'daily'>('hourly'); // 시급 또는 일급
-    const [payAmount, setPayAmount] = useState<number>(0); // 임금 금액
-    const [startTime, setStartTime] = useState<string>(''); // 근무 시작 시간
-    const [endTime, setEndTime] = useState<string>(''); // 근무 종료 시간
-    const [totalPay, setTotalPay] = useState<number>(0); // 최종 지급 금액
 
-    // 근무시간 계산 및 최종 지급 금액 계산
-    const calculatePay = () => {
-        if (!startTime || !endTime || payAmount <= 0) {
-            setTotalPay(0);
-            return;
-        }
-
-        const start = new Date(`2000-01-01T${startTime}`);
-        const end = new Date(`2000-01-01T${endTime}`);
-        
-        if (end <= start) {
-            setTotalPay(0);
-            return;
-        }
-
-        const diffInMs = end.getTime() - start.getTime();
-        const diffInHours = diffInMs / (1000 * 60 * 60);
-
-        let finalPay = 0;
-        if (payType === 'hourly') {
-            finalPay = Math.round(diffInHours * payAmount);
-        } else {
-            finalPay = payAmount; // 일급의 경우 시간과 관계없이 고정 금액
-        }
-
-        setTotalPay(finalPay);
-        
-        // formData 업데이트
-        const workingHoursText = `${startTime} ~ ${endTime} (${diffInHours.toFixed(1)}시간)`;
-        
-        setFormData(prev => ({
-            ...prev,
-            workingHours: workingHoursText,
-            payType : payType,
-            payAmount: payAmount.toString()
-        }));
-    };
-
-    // 값 변경 시 자동 계산
-    useEffect(() => {
-        calculatePay();
-    }, [startTime, endTime, payType, payAmount]);
-
-    // 폼 데이터 입력 변경 핸들러
-    // 'field'는 변경될 폼 데이터의 키(예: 'title', 'location')이고, 'value'는 새로운 값입니다.
-    const handleInputChange = (field: keyof PostingRequestDTO, value: any) => {
-        setFormData(prev => ({
-            ...prev,
-            [field]: value
-        }));
-    };
-
-    // 태그 입력 필드에서 키 다운 이벤트 핸들러
-    // Enter 또는 쉼표(,)를 누르면 태그를 추가합니다.
-    const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === 'Enter' || e.key === ',') {
-            e.preventDefault();
-            const newTag = tagInput.trim();
-            if (newTag && tags.length < 5 && !tags.includes(newTag)) {
-                const updatedTags = [...tags, newTag];
-                setTags(updatedTags);
-                setFormData(prev => ({ ...prev, tags: updatedTags }));
-                setTagInput('');
-            }
-        }
-    };
-
-    // 태그 제거 핸들러
-    // 'tagToRemove'는 제거할 태그 문자열입니다.
-    const removeTag = (tagToRemove: string) => {
-        const updatedTags = tags.filter(tag => tag !== tagToRemove);
-        setTags(updatedTags);
-        setFormData(prev => ({ ...prev, tags: updatedTags }));
-    };
-
-    // 파일 업로드 핸들러
-    // 사용자가 파일을 선택하면 'uploadedFile' 상태를 업데이트합니다.
-    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            setUploadedFile(file);
-        }
-    };
-
-    // 폼 데이터 상태
-    const [formData, setFormData] = useState<Partial<PostingRequestDTO>>({
-        title: '',
-        appointmentDatetime: '',
-        location: '',
-        workingHours: '',
-        payAmount: '',
-        guestMainRole: '',
-        detailContent: '',
-        personName: '',
-        personPhoneNumber: '',
-        hasMobileInvitation: 0,
-        isSelf: 0,
-        tags: []
-    });
-
-    // 폼 제출 핸들러
-    // 폼 유효성을 검사하고, 유효한 경우 폼 데이터를 콘솔에 기록한 후 이전 페이지로 이동합니다.
-    const handleSubmit = () => {
-        if (!formData.title || !formData.appointmentDatetime  || !startTime || !endTime || payAmount <= 0) {
-            alert('필수 항목을 입력해주세요.');
-            return;
-        }
-
-        console.log('Form Data:', formData);
-        postingApi.addPosting(formData);
-        // console.log('Pay Info:', {
-        //     payType,
-        //     payAmount,
-        //     startTime,
-        //     endTime,
-        //     totalPay
-        // });
-        console.log('Uploaded File:', uploadedFile);
-
+    // 폼 제출 핸들러 (커스텀 훅의 handleSubmit을 사용하고, 추가적인 navigation 로직을 여기에 둡니다)
+    const handleFormSubmit = () => {
+        handleSubmit(); // 커스텀 훅의 handleSubmit 호출
     };
 
     return (
@@ -269,14 +168,14 @@ const PostingFormPage: React.FC = () => {
                         <div className="flex">
                             <input
                                 type="text"
-                                value={formData.location || ''}
+                                value={formData.address || ''}
                                 readOnly
                                 placeholder="예: 서울시 강남구 예식홀 1층"
                                 className="w-full px-4 py-3 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             />
                             <button
                                 type="button"
-                                onClick={() => alert('주소 검색 API 연동 예정: 예식장 주소')}
+                                onClick={openAddressSearch}
                                 className="px-4 py-3 bg-blue-500 text-white rounded-r-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             >
                                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -284,7 +183,52 @@ const PostingFormPage: React.FC = () => {
                                 </svg>
                             </button>
                         </div>
+                        {/* 건물명 */}
+                        <div className="mt-3">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                건물명
+                            </label>
+                            <input
+                                type="text"
+                                value={formData.buildingName || ''}
+                                readOnly
+                                placeholder="건물명 (자동 입력)"
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                        </div>
+                        {/* 시/도 및 시/군/구 */}
+                        <div className="mt-3">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                시/도 및 시/군/구
+                            </label>
+                            <input
+                                type="text"
+                                value={formData.sidoSigungu || ''}
+                                readOnly
+                                placeholder="시/도 시/군/구 (자동 입력)"
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                        </div>
                     </div>
+
+                    {/* AddressSearch 모달 (isAddressSearchOpen 상태에 따라 렌더링) */}
+                    {isAddressSearchOpen && (
+                        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+                            <div className="bg-white rounded-lg p-4 max-w-lg w-full">
+                                <div className="flex justify-end">
+                                    <button onClick={closeAddressSearch} className="text-gray-500 hover:text-gray-700">
+                                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+                                <AddressSearch
+                                    onComplete={handleAddressComplete}
+                                    onClose={closeAddressSearch}
+                                />
+                            </div>
+                        </div>
+                    )}
 
                     {/* 모바일 청첩장 */}
                     <div className="mb-4">
@@ -315,7 +259,7 @@ const PostingFormPage: React.FC = () => {
                         </div>
 
                         {/* 파일 업로드 (모바일 청첩장이 있을 때만) */}
-                        {formData.hasMobileInvitation && (
+                        {formData.hasMobileInvitation === 1&& (
                             <div className="mt-3">
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
                                     청첩장 이미지 업로드
@@ -504,7 +448,7 @@ const PostingFormPage: React.FC = () => {
 
                     {/* 태그 목록 */}
                     <div className="flex flex-wrap gap-2">
-                        {tags.map((tag, index) => (
+                        {tags.map((tag: string, index: number) => (
                             <span
                                 key={index}
                                 className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium"
@@ -537,7 +481,7 @@ const PostingFormPage: React.FC = () => {
                         취소
                     </button>
                     <button
-                        onClick={handleSubmit}
+                        onClick={handleFormSubmit}
                         className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all"
                     >
                         등록하기

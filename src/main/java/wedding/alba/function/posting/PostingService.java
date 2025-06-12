@@ -1,6 +1,9 @@
 package wedding.alba.function.posting;
 
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import wedding.alba.entity.Posting;
@@ -13,25 +16,13 @@ public class PostingService {
     @Autowired
     private PostingRepository postingRepository;
 
+    @Autowired
+    private PostingWrapper postingWrapper;
+
     public PostingResponseDTO createPosting(PostingRequestDTO postingDto) {
 
         // dto -> Posting 엔터티로 변경
-        Posting posting = Posting.builder()
-                .userId(postingDto.getUserId())
-                .title(postingDto.getTitle())
-                .isSelf(postingDto.getIsSelf())
-                .personName(postingDto.getPersonName())
-                .personPhoneNumber(postingDto.getPersonPhoneNumber())
-                .appointmentDatetime(postingDto.getAppointmentDatetime())
-                .location(postingDto.getLocation())
-                .hasMobileInvitation(postingDto.getHasMobileInvitation())
-                .workingHours(postingDto.getWorkingHours())
-                .payType(postingDto.getPayType())
-                .payAmount(postingDto.getPayAmount())
-                .guestMainRole(postingDto.getGuestMainRole())
-                .detailContent(postingDto.getDetailContent())
-                .tags(postingDto.getTags().toString())
-                .build();
+        Posting posting = postingWrapper.toEntity(postingDto);
 
         // insert
         Posting responsePosting = postingRepository.save(posting);
@@ -39,7 +30,12 @@ public class PostingService {
         PostingResponseDTO responseDTO = PostingResponseDTO.builder()
                 .postingId(responsePosting.getPostingId())
                 .build();
+
         return responseDTO;
     }
 
+    public List<PostingResponseDTO> getPostingAllList() {
+        List<Posting> postings = postingRepository.findAll();
+        return postingWrapper.toResponseDTOList(postings);
+    }
 }

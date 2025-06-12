@@ -20,7 +20,9 @@ public class PostingRequestDTO {
     private String personPhoneNumber;
 
     private LocalDateTime appointmentDatetime;
-    private String location;
+    private String address;
+    private String buildingName;
+    private String sidoSigungu;
     private Integer hasMobileInvitation;
     private String workingHours;
     private String payType;

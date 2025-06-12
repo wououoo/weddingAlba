@@ -8,13 +8,14 @@ export interface PostingRequestDTO {
 
     // 예식 정보
     appointmentDatetime?: string;       // 결혼식 예정일시
-    location?: string;                  // 결혼식 위치
-    simplyLocation?: string;            // 간략한 위치
+    address?: string;                   // 결혼식 장소 주소 추가
+    buildingName?: string;              // 건물명 추가
+    sidoSigungu?: string;               // 시도 + 시군구 추가
     hasMobileInvitation?: number;      // 모바일 청첩장 제출 여부
 
     // 알바 정보
     workingHours?: string;              // 근무시간 
-    payType?: string;                    // 일급 인지 시급인지
+    payType?: 'hourly' | 'daily';      // 일급 인지 시급인지
     payAmount?: string;                     // 임금
     guestMainRole?: string;             // 주 하객 업무내용
     detailContent?: string;           //상세 내용

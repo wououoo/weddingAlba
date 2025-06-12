@@ -3,8 +3,12 @@ package wedding.alba.function.posting;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -35,7 +39,13 @@ public class PostingController {
         } catch(Exception e) {
             return ResponseEntity.ok(ApiResponse.error("모집글 생성에 실패했습니다. 다시 확인해주세요."));
         }
+    }
 
+    @GetMapping("/list")
+    public ResponseEntity<ApiResponse<List<PostingResponseDTO>>> getPostingList(HttpServletRequest request) {
+        Long userId = extractUserIdFromToken(request);
+        List<PostingResponseDTO> postingList = postingService.getPostingAllList();
+        return ResponseEntity.ok(ApiResponse.success(postingList));
     }
 
     

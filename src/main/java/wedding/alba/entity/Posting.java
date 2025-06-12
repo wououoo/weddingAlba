@@ -14,7 +14,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
-import wedding.alba.function.posting.PostingRequestDTO;
 
 import java.time.LocalDateTime;
 
@@ -51,8 +50,14 @@ public class Posting {
     @Column(name = "appointment_datetime")
     private LocalDateTime appointmentDatetime;  // 결혼식 예정 일시
 
-    @Column(name = "location")
-    private String location;            // 결혼식 장소
+    @Column(name = "address")
+    private String address;             // 결혼식 장소 주소
+
+    @Column(name = "building_name")
+    private String buildingName;        // 건물이름
+
+    @Column(name = "sido_sigungu")
+    private String sidoSigungu;         // 시도 + 시군구
     
     @Column(name = "has_mobile_invitation")
     private Integer hasMobileInvitation; // 모바일 청첩장 여부 (0: 없음, 1: 있음)
@@ -61,8 +66,8 @@ public class Posting {
     @Column(name="working_hours")
     private String workingHours;        // 근무 시간
 
-    @Column(name="pay_type")
-    private String payType;             // 급여 타입 (시급, 일급)
+    @Enumerated(EnumType.STRING)
+    private PayType payType;             // 급여 타입 (시급, 일급)
 
     @Column(name="pay_amount")
     private String payAmount;          // 급여 금액
@@ -79,4 +84,9 @@ public class Posting {
     @CreationTimestamp
     @Column(name = "registration_datetime", updatable = false)
     private LocalDateTime registrationDatetime;  // 모집글 등록 일시
+
+    public enum PayType {
+        DAILY, HOURLY
+    }
+
 }

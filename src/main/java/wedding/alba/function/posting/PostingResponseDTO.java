@@ -14,6 +14,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class PostingResponseDTO {
+    private Long postingId;
     private Long userId;
     private String title;
     private Integer isSelf;
@@ -21,7 +22,9 @@ public class PostingResponseDTO {
     private String personPhoneNumber;
 
     private LocalDateTime appointmentDatetime;
-    private String location;
+    private String address;
+    private String buildingName;
+    private String sidoSigungu;
     private Integer hasMobileInvitation;
     private String workingHours;
     private String payType;

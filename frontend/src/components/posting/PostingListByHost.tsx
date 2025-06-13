@@ -32,16 +32,16 @@ const PostingListByHost: React.FC = () => {
             postingId: 1,
             userId: 101,
             title: '친구 결혼식 도우미 모집',
-            simplyLocation: '서울 강남',
+            sidoSigungu: '서울 강남',
             appointmentDatetime: '2025년 06월 20일 15시',
             registrationDatetime: '2025년 05월 18일 10시 30분',
             workingHours: '최소 2시간 이상',
-            location: '서울시 강남구 예식홀 1층',
+            address: '서울시 강남구 예식홀 1층',
             isSelf: false,
             personName: '이민수',
             personPhoneNumber: '010-1234-5678',
             hasMobileInvitation: true,
-            payType: '일급',
+            payTypeStr: '일급',
             payAmount: '50,000원',
             tags: ['친구대행', '당일지급', '식비지급'],
             guestMainRole: '고등학교 동창',
@@ -89,16 +89,16 @@ const PostingListByHost: React.FC = () => {
             postingId: 2,
             userId: 101,
             title: '사촌 결혼식 도와주실 분 구합니다',
-            simplyLocation: '부산 해운대',
+            sidoSigungu: '부산 해운대',
             appointmentDatetime: '2025년 07월 10일 11시',
             registrationDatetime: '2025년 05월 17일 14시 20분',
             workingHours: '3시간 정도',
-            location: '부산 해운대 더베이 101',
+            address: '부산 해운대 더베이 101',
             isSelf: false,
             personName: '정윤아',
             personPhoneNumber: '010-9876-5432',
             hasMobileInvitation: false,
-            payType: '일급',
+            payTypeStr: '일급',
             payAmount: '60,000원',
             tags: ['급구', '교통비지원'],
             guestMainRole: '직장동료',
@@ -238,7 +238,7 @@ const PostingListByHost: React.FC = () => {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                 </svg>
-                                <span>{posting.simplyLocation}</span>
+                                <span>{posting.sidoSigungu}</span>
                                 <span className="mx-2">•</span>
                                 <span>{posting.appointmentDatetime}</span>
                             </div>

@@ -8,11 +8,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import wedding.alba.config.JwtConfig;
 import wedding.alba.dto.ApiResponse;
 
@@ -46,6 +42,14 @@ public class PostingController {
         Long userId = extractUserIdFromToken(request);
         List<PostingResponseDTO> postingList = postingService.getPostingAllList();
         return ResponseEntity.ok(ApiResponse.success(postingList));
+    }
+
+    @GetMapping("/detail/{postingId}")
+    public ResponseEntity<ApiResponse<PostingResponseDTO>> getPostingDetail(@PathVariable Long postingId,  HttpServletRequest request) {
+        Long userId = extractUserIdFromToken(request);
+        PostingResponseDTO dto = postingService.getPostingDetail(postingId);
+        System.out.println(dto);
+        return ResponseEntity.ok(ApiResponse.success(dto));
     }
 
     

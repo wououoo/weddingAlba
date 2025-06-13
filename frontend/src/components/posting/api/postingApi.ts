@@ -16,6 +16,17 @@ export const postingApi = {
                 message: '모집글 등록에 실패했습니다.'
             };
         }
-    }
+    },
 
+    getPostingDetail: async (id: string) => {
+        try {
+            return await get<PostingResponseDTO>(`${API_BASE_URL}/posting/detail/${id}`);
+        } catch(error) {
+            return {
+                success: false,
+                data: null,
+                message: '모집글 상세 조회에 실패했습니다.'
+            };
+        }
+    },
 }

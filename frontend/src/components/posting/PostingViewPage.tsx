@@ -1,17 +1,47 @@
-import React, { useState } from "react";
-import { sampleData } from "./dto/PostingResponseDTO";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { postingApi } from "./api/postingApi";
+import { PostingResponseDTO } from "./dto";
 
 const PostingViewPage: React.FC = () => {
     const navigate = useNavigate();
+    const { id } = useParams<{ id: string }>();
     const [isFavorite, setIsFavorite] = useState(false);
     const [showFullDescription, setShowFullDescription] = useState(false);
-    
+    const [postingData, setPostingData] = useState<PostingResponseDTO | null>(null);
+
+    useEffect(() => {
+        if (id) {
+            const fetchPosting = async () => {
+                try {
+                    const response = await postingApi.getPostingDetail(id);
+                    console.log(response.data);
+                    if (response.success && response.data) {
+                        setPostingData(response.data as PostingResponseDTO);
+                    } else {
+                        console.error("Failed to fetch posting detail:", response.message);
+                        setPostingData(null);
+                    }
+                } catch (error) {
+                    console.error("Error fetching posting data:", error);
+                    setPostingData(null);
+                } 
+            };
+            fetchPosting();
+        }
+    }, [id]);
+
+    if (!postingData) {
+        return <div className="flex justify-center items-center h-screen">게시물을 찾을 수 없습니다.</div>;
+    }
+
     const {
+        postingId,
         title,
-        simplyLocation,
+        address,
+        buildingName,
+        sidoSigungu,
         appointmentDatetime,
-        location,
         workingHours,
         payAmount,
         nickname,
@@ -20,15 +50,9 @@ const PostingViewPage: React.FC = () => {
         guestMainRole,
         detailContent,
         tags,
-        personName,
-        personPhoneNumber,
-    } = sampleData;
-
-    // const handleContact = () => {
-    //     if (personPhoneNumber) {
-    //         window.open(`tel:${personPhoneNumber}`);
-    //     }
-    // };
+        userId,
+        payTypeStr
+    } = postingData;
 
     const toggleFavorite = () => {
         setIsFavorite(!isFavorite);
@@ -74,22 +98,8 @@ const PostingViewPage: React.FC = () => {
                         <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                         </svg>
-                        <span>{simplyLocation}</span>
+                        <span>{sidoSigungu}</span>
                     </div>
-
-                    {/* 급여 정보 */}
-                    {/* <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 mb-4">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-gray-600">급여</p>
-                                <p className="text-2xl font-bold text-blue-600">{wages}</p>
-                            </div>
-                            <div className="text-right">
-                                <p className="text-sm text-gray-600">일급</p>
-                                <p className="text-lg font-semibold text-gray-800">당일지급</p>
-                            </div>
-                        </div>
-                    </div> */}
                 </div>
 
                 {/* 모집자 정보 */}
@@ -161,7 +171,7 @@ const PostingViewPage: React.FC = () => {
                             </div>
                             <div>
                                 <h4 className="font-medium text-gray-900">임금</h4>
-                                <p className="text-green-600 font-semibold">{payAmount}</p>
+                                <p className="text-green-600 font-semibold">{payTypeStr} {payAmount}</p>
                             </div>
                         </div>
 
@@ -187,7 +197,7 @@ const PostingViewPage: React.FC = () => {
                             </div>
                             <div className="flex-1">
                                 <h4 className="font-medium text-gray-900">위치</h4>
-                                <p className="text-gray-600 text-sm">{location}</p>
+                                <p className="text-gray-600 text-sm">{address} {buildingName}</p>
                             </div>
                         </div>
                     </div>
@@ -239,7 +249,7 @@ const PostingViewPage: React.FC = () => {
                                 <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                             </svg>
                             <p className="text-sm font-medium">지도</p>
-                            <p className="text-xs mt-1">{location}</p>
+                            <p className="text-xs mt-1">{address} {buildingName}</p>
                         </div>
                     </div>
                 </div>
@@ -247,12 +257,24 @@ const PostingViewPage: React.FC = () => {
 
             {/* 하단 고정 버튼 */}
             <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-20">
-                <button 
-                    onClick={() => navigate('/applying/create')}
-                    className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white py-4 rounded-xl font-semibold text-lg hover:shadow-lg transition-all"
-                >
-                    신청하기
-                </button>
+                <div className="flex space-x-3">
+                    <button
+                        onClick={toggleFavorite}
+                        className={`flex-1 py-4 rounded-xl font-semibold text-lg transition-all
+                            ${isFavorite
+                                ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                                : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}
+                        `}
+                    >
+                        찜하기
+                    </button>
+                    <button
+                        onClick={() => navigate('/applying/create')}
+                        className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white py-4 rounded-xl font-semibold text-lg hover:shadow-lg transition-all"
+                    >
+                        신청하기
+                    </button>
+                </div>
             </div>
         </div>
     );

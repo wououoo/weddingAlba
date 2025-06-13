@@ -5,7 +5,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.stereotype.Component;
+import wedding.alba.entity.Profile;
+import wedding.alba.entity.User;
+
+@Component
 public class PostingWrapper {
+
     public Posting toEntity(PostingRequestDTO postingDto) {
         return Posting.builder()
             .userId(postingDto.getUserId())
@@ -23,8 +29,18 @@ public class PostingWrapper {
             .payAmount(postingDto.getPayAmount())
             .guestMainRole(postingDto.getGuestMainRole())
             .detailContent(postingDto.getDetailContent())
-            .tags(postingDto.getTags().toString())
+            .tags(postingDto.getTags() != null ? String.join(",", postingDto.getTags()) : null)
             .build();
+    }
+
+    public List<PostingResponseDTO> toResponseDTOList(List<Posting> postings) {
+        if (postings == null) {
+            return Collections.emptyList();
+        }
+        
+        return postings.stream()
+            .map(this::toResponseDTO)
+            .collect(Collectors.toList());
     }
 
     public PostingResponseDTO toResponseDTO(Posting posting) {
@@ -41,7 +57,7 @@ public class PostingWrapper {
             .sidoSigungu(posting.getSidoSigungu())
             .hasMobileInvitation(posting.getHasMobileInvitation())
             .workingHours(posting.getWorkingHours())
-            .payType(posting.getPayType().name())
+            .payType(posting.getPayType())
             .payAmount(posting.getPayAmount())
             .guestMainRole(posting.getGuestMainRole())
             .detailContent(posting.getDetailContent())
@@ -53,9 +69,30 @@ public class PostingWrapper {
             .build();
     }
 
-    public List<PostingResponseDTO> toResponseDTOList(List<Posting> postings) {
-        return postings.stream()
-            .map(this::toResponseDTO)
-            .collect(Collectors.toList());
+    public PostingResponseDTO toDetailDTO (Posting posting, Profile profile) {
+        return PostingResponseDTO.builder()
+                .postingId(posting.getPostingId())
+                .userId(posting.getUserId())
+                .title(posting.getTitle())
+                .appointmentDatetime(posting.getAppointmentDatetime())
+                .address(posting.getAddress())
+                .buildingName(posting.getBuildingName())
+                .sidoSigungu(posting.getSidoSigungu())
+                .hasMobileInvitation(posting.getHasMobileInvitation())
+                .workingHours(posting.getWorkingHours())
+                .payType(posting.getPayType())
+                .payAmount(posting.getPayAmount())
+                .guestMainRole(posting.getGuestMainRole())
+                .detailContent(posting.getDetailContent())
+                .tags(posting.getTags() != null && !posting.getTags().isEmpty() ?
+                    java.util.Arrays.stream(posting.getTags().split(","))
+                                            .filter(tag -> !tag.trim().isEmpty())
+                                            .collect(Collectors.toList()) :
+                    Collections.emptyList())
+                .registrationDatetime(posting.getRegistrationDatetime())
+                .nickname(profile.getNickname())
+                .postingHistoryCount(0)
+                .build();
     }
+
 }

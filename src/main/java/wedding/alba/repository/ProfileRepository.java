@@ -11,6 +11,8 @@ import java.util.Optional;
 
 @Repository
 public interface ProfileRepository extends JpaRepository<Profile, Long> {
+
+    Optional<Profile> findByUserId(Long userId);
     
     // 활동 지역으로 프로필 조회
     List<Profile> findByActivityAreaContaining(String activityArea);

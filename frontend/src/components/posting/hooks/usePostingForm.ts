@@ -5,6 +5,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { PostingRequestDTO } from '../dto';
 import { postingApi } from '../api/postingApi';
+import { useNavigate } from 'react-router-dom';
 
 // Daum Postcode API에서 반환되는 데이터의 최소한의 인터페이스 정의
 // (daum-postcode.d.ts 파일이 없으므로 여기에 포함)
@@ -61,6 +62,7 @@ interface UsePostingFormResult {
  * @returns {UsePostingResult} 게시물 폼 관련 상태와 핸들러 함수들.
  */
 export const usePostingForm = (): UsePostingFormResult => {
+    const navigate = useNavigate();
     // 태그 관련 상태 관리
     const [tags, setTags] = useState<string[]>([]);
     const [tagInput, setTagInput] = useState<string>('');
@@ -240,16 +242,21 @@ export const usePostingForm = (): UsePostingFormResult => {
      * 폼 유효성을 검사하고, 유효한 경우 폼 데이터를 콘솔에 기록하고 API를 호출합니다.
      * `useCallback`을 사용하여 불필요한 함수 재생성을 방지합니다.
      */
-    const handleSubmit = useCallback(() => {
+    const handleSubmit = useCallback(async () => {
         // 필수 항목 유효성 검사
         if (!formData.title || !formData.appointmentDatetime  || !startTime || !endTime || payAmount <= 0) {
             alert('필수 항목을 입력해주세요.');
             return;
         }
 
-        console.log('Form Data:', formData);
-        postingApi.addPosting(formData); // 게시물 추가 API 호출
-        console.log('Uploaded File:', uploadedFile);
+        const response = await postingApi.addPosting(formData); // 게시물 추가 API 호출
+        const postingId = response.data?.postingId;
+        console.log(postingId)
+        if(response.success) {
+            navigate(`/posting/${postingId}`);
+        } else {
+            alert('모집글 생성에 실패했습니다.');
+        }
 
     }, [formData, startTime, endTime, payAmount, uploadedFile]);
 

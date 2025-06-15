@@ -65,6 +65,7 @@ export const MainPostingList: React.FC = () => {
                                                 <div 
                                                     className="img"
                                                     ref={el => { imgRefs.current[index] = el; }}
+
                                                 ></div>
                                             </a>
                                             <div className="detail">

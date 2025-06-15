@@ -307,7 +307,7 @@ const UserEditPage: React.FC = () => {
             {/* 이름 */}
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="name">
-                이름
+                이름 <span className="text-red-500">*</span>
               </label>
               <input
                 id="name"
@@ -315,8 +315,9 @@ const UserEditPage: React.FC = () => {
                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                required
                 disabled={isLoading}
+                placeholder="이름을 입력해주세요"
+                required
               />
             </div>
           </div>
@@ -328,7 +329,7 @@ const UserEditPage: React.FC = () => {
             {/* 성별 선택 */}
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2">
-                성별
+                성별 <span className="text-gray-500 text-xs font-normal">(선택사항)</span>
               </label>
               <div 
                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline flex justify-between items-center cursor-pointer"
@@ -346,7 +347,7 @@ const UserEditPage: React.FC = () => {
             {/* 전화번호 */}
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="phone">
-                전화번호
+                전화번호 <span className="text-gray-500 text-xs font-normal">(선택사항)</span>
               </label>
               <input
                 id="phone"
@@ -355,7 +356,6 @@ const UserEditPage: React.FC = () => {
                 value={phone}
                 onChange={handlePhoneNumberChange}
                 placeholder="010-0000-0000"
-                required
                 disabled={isLoading}
               />
             </div>
@@ -363,7 +363,7 @@ const UserEditPage: React.FC = () => {
             {/* 생년월일 */}
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="birthdate">
-                생년월일
+                생년월일 <span className="text-gray-500 text-xs font-normal">(선택사항)</span>
               </label>
               <div 
                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline flex justify-between items-center cursor-pointer"
@@ -381,7 +381,7 @@ const UserEditPage: React.FC = () => {
           
           {/* 주소 정보 섹션 */}
           <div className="mb-6">
-            <h2 className="text-lg font-semibold mb-3 text-gray-700">주소 정보</h2>
+            <h2 className="text-lg font-semibold mb-3 text-gray-700">주소 정보 <span className="text-gray-500 text-sm font-normal">(선택사항)</span></h2>
             
             {/* 주소 검색 버튼 */}
             <div className="mb-4">
@@ -413,6 +413,22 @@ const UserEditPage: React.FC = () => {
               <div className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight bg-gray-100">
                 {city || '주소 검색으로 선택해주세요'}
               </div>
+            </div>
+            
+            {/* 상세주소 입력 */}
+            <div className="mb-4">
+              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="detailAddress">
+                상세주소
+              </label>
+              <input
+                id="detailAddress"
+                type="text"
+                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                value={detailAddress}
+                onChange={(e) => setDetailAddress(e.target.value)}
+                placeholder="상세주소를 입력해주세요 (예: 101동 1002호)"
+                disabled={isLoading}
+              />
             </div>
           </div>
           

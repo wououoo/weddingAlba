@@ -1,4 +1,4 @@
-// utils.ts - 유틸리티 함수
+// Utils.ts - 유틸리티 함수
 
 // 가격 포맷팅 함수
 export const formatPrice = (price: number): string => {

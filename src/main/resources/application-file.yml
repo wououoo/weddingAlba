@@ -1,0 +1,17 @@
+# 파일 업로드 설정
+file:
+  upload:
+    path: ./uploads  # 프로젝트 루트의 uploads 폴더
+    url: /uploads    # 웹에서 접근할 URL 경로
+
+# Spring 파일 업로드 설정
+spring:
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 25MB
+      
+  # 정적 리소스 설정
+  web:
+    resources:
+      static-locations: file:./uploads/,classpath:/static/

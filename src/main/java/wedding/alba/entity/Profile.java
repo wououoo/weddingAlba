@@ -43,4 +43,11 @@ public class Profile {
     
     @Column(name = "profile_image_url")
     private String profileImageUrl;    // 프로필 이미지 URL
+    
+    /**
+     * User 엔티티와의 1:1 관계 설정
+     */
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    private User user;
 }

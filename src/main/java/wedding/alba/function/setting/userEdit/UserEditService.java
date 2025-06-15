@@ -53,27 +53,41 @@ public class UserEditService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NoSuchElementException("사용자를 찾을 수 없습니다. ID: " + userId));
         
-        // 수정 가능한 필드만 업데이트
-        user.setName(request.getName());
+        // 수정 가능한 필드만 업데이트 (빈 문자열과 null 처리 개선)
+        
+        // 이름은 필수 (빈 문자열 체크)
+        if (request.getName() != null && !request.getName().trim().isEmpty()) {
+            user.setName(request.getName().trim());
+        }
+        
+        // 선택적 필드들 - null이 아니고 빈 문자열이 아닌 경우만 업데이트
         if (request.getGender() != null) {
             user.setGender(request.getGender());
         }
-        if (request.getPhoneNumber() != null) {
-            user.setPhoneNumber(request.getPhoneNumber());
+        
+        if (request.getPhoneNumber() != null && !request.getPhoneNumber().trim().isEmpty()) {
+            user.setPhoneNumber(request.getPhoneNumber().trim());
         }
+        
         if (request.getBirth() != null) {
             user.setBirth(request.getBirth());
         }
-        if (request.getAddressCity() != null) {
-            user.setAddressCity(request.getAddressCity());
+        
+        if (request.getAddressCity() != null && !request.getAddressCity().trim().isEmpty()) {
+            user.setAddressCity(request.getAddressCity().trim());
         }
-        if (request.getAddressDistrict() != null) {
-            user.setAddressDistrict(request.getAddressDistrict());
+        
+        if (request.getAddressDistrict() != null && !request.getAddressDistrict().trim().isEmpty()) {
+            user.setAddressDistrict(request.getAddressDistrict().trim());
         }
-        if (request.getAddressDetail() != null) {
-            user.setAddressDetail(request.getAddressDetail());
+        
+        if (request.getAddressDetail() != null && !request.getAddressDetail().trim().isEmpty()) {
+            user.setAddressDetail(request.getAddressDetail().trim());
         }
 
+        log.info("사용자 정보 업데이트 요청 - userId: {}, name: {}, phone: {}", 
+                 userId, request.getName(), request.getPhoneNumber());
+        
         User updatedUser = userRepository.save(user);
         log.info("사용자 정보가 업데이트되었습니다. ID: {}", userId);
         

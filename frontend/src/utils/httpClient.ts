@@ -30,6 +30,15 @@ class HttpClient {
         if (token) {
           config.headers['Authorization'] = `Bearer ${token}`;
         }
+        
+        // 디버깅을 위한 로그
+        console.log('Request:', {
+          url: config.url,
+          method: config.method,
+          headers: config.headers,
+          token: token ? 'EXISTS' : 'NOT_FOUND'
+        });
+        
         return config;
       },
       (error) => {
@@ -45,10 +54,19 @@ class HttpClient {
       (error) => {
         // 401 에러 처리 (인증 만료)
         if (error.response && error.response.status === 401) {
-          // 리프레시 토큰으로 새 액세스 토큰 요청 또는 로그인 페이지로 리다이렉트
-          localStorage.removeItem('accessToken');
-          window.location.href = '/login';
+        // 리프레시 토큰으로 새 액세스 토큰 요청 또는 로그인 페이지로 리다이렉트
+        localStorage.removeItem('accessToken');
+        window.location.href = '/login';
         }
+      
+      // 디버깅을 위한 로그 추가
+      console.error('HTTP Error:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        url: error.config?.url,
+        method: error.config?.method,
+        headers: error.config?.headers
+      });
         return Promise.reject(error);
       }
     );

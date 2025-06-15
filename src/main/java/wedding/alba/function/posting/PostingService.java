@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import wedding.alba.entity.Posting;
 import wedding.alba.entity.Profile;
 import wedding.alba.repository.PostingRepository;
-import wedding.alba.repository.ProfileRepository;
+import wedding.alba.function.profile.ProfileRepository;
 import wedding.alba.repository.UserRepository;
 
 @Service

@@ -44,6 +44,8 @@ public class WebSecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // 공개 리소스
                         .requestMatchers("/api/auth/**", "/oauth2/**", "/login/**").permitAll()
+                        // 업로드된 파일들 (정적 리소스) 접근 허용
+                        .requestMatchers("/uploads/**").permitAll()
                         // Swagger UI 등의 개발 도구 접근 허용
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         // 나머지 모든 요청은 인증 필요

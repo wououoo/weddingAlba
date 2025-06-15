@@ -1,11 +1,21 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { LoginPage, OAuth2RedirectHandler, isAuthenticated } from './OAuth2';
+
 import Host from './components/host/Host';
 import Layout from './components/common/Layout';
-import { SettingsPage, NotificationsPage, ReportsPage, ReportPostingPage, ReportUserPage, ReportListPage, ApplicationListPage, RecruitmentListPage, ReviewListPage, UserEditPage } from './components/settings';
-import { ProfilePage, ProfileEditPage } from './components/profile';
-import { ChatListPage, GroupChatRoom, PrivateChatRoom } from './components/chat';
+import SettingsPage from './components/settings/SettingsPage';
+import NotificationsPage from './components/settings/notifications/NotificationsPage';
+import { ReportsPage, ReportPostingPage, ReportUserPage, ReportListPage } from './components/settings/reports';
+import { ApplicationListPage } from './components/settings/applications';
+import { RecruitmentListPage } from './components/settings/recruitments';
+import { ReviewListPage } from './components/settings/reviews';
+import { UserEditPage } from './components/settings/user';
+import ProfilePage from './components/profile/ProfilePage';
+import ProfileEditPage from './components/profile/ProfileEditPage';
+import ChatListPage from './components/chat/ChatListPage';
+import GroupChatRoom from './components/chat/GroupChatRoom';
+import PrivateChatRoom from './components/chat/PrivateChatRoom';
 import { ApplyingListPage, ApplyingFormPage } from './components/applying';
 import ApplyingViewPage from './components/applying/ApplyingViewPage';
 import { PostingFormPage,  PostingListByHost,  PostingListPage,  PostingViewPage} from './components/posting';

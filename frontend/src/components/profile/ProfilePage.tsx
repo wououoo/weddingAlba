@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AppFooter } from '../Common';
+import { AppFooter } from '../common';
 import { useProfile } from './hooks/useProfile';
 import { BookmarkList } from './bookmark';
 import { ReviewList } from './review';

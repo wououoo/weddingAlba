@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AppFooter } from '../Common';
+import { AppFooter } from '../common';
 
 // 샘플 채팅방 데이터
 const sampleChatRooms = [

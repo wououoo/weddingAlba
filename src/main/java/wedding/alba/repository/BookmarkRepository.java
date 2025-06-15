@@ -169,7 +169,7 @@ public interface BookmarkRepository extends JpaRepository<Bookmark, Long> {
             "JOIN FETCH b.posting p " +
             "WHERE b.userId = :userId " +
             "AND (p.title LIKE %:keyword% " +
-            "OR p.location LIKE %:keyword% " +
+            "OR p.address LIKE %:keyword% " +
             "OR p.personName LIKE %:keyword%) " +
             "ORDER BY b.marcDate DESC")
     Page<Bookmark> searchBookmarksWithPosting(

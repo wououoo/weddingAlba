@@ -2,24 +2,26 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { LoginPage, OAuth2RedirectHandler, isAuthenticated } from './OAuth2';
 
-import MainPage from './components/Main/MainPage';
-// 컴포넌트 관련 import 수정
-import Main from './components/Main';
-import Host from './components/Host/Host';
-import Post from './components/Post/Post';
-import Layout from './components/Common/Layout';
-import SettingsPage from './components/Settings/SettingsPage';
-import NotificationsPage from './components/Settings/notifications/NotificationsPage';
-import { ReportsPage, ReportPostingPage, ReportUserPage, ReportListPage } from './components/Settings/reports';
-import { ApplicationListPage } from './components/Settings/applications';
-import { RecruitmentListPage } from './components/Settings/recruitments';
-import { ReviewListPage } from './components/Settings/reviews';
-import { UserEditPage } from './components/Settings/user';
-import ProfilePage from './components/Profile/ProfilePage';
-import ProfileEditPage from './components/Profile/ProfileEditPage';
-import ChatListPage from './components/Chat/ChatListPage';
-import GroupChatRoom from './components/Chat/GroupChatRoom';
-import PrivateChatRoom from './components/Chat/PrivateChatRoom';
+import Host from './components/host/Host';
+import Layout from './components/common/Layout';
+import SettingsPage from './components/settings/SettingsPage';
+import NotificationsPage from './components/settings/notifications/NotificationsPage';
+import { ReportsPage, ReportPostingPage, ReportUserPage, ReportListPage } from './components/settings/reports';
+import { ApplicationListPage } from './components/settings/applications';
+import { RecruitmentListPage } from './components/settings/recruitments';
+import { ReviewListPage } from './components/settings/reviews';
+import { UserEditPage } from './components/settings/user';
+import ProfilePage from './components/profile/ProfilePage';
+import ProfileEditPage from './components/profile/ProfileEditPage';
+import ChatListPage from './components/chat/ChatListPage';
+import GroupChatRoom from './components/chat/GroupChatRoom';
+import PrivateChatRoom from './components/chat/PrivateChatRoom';
+import { ApplyingListPage, ApplyingFormPage } from './components/applying';
+import ApplyingViewPage from './components/applying/ApplyingViewPage';
+import { PostingFormPage,  PostingListByHost,  PostingListPage,  PostingViewPage} from './components/posting';
+import MainPage from './components/main/MainPage';
+
+
 
 // import { useAuthStore } from './stores/authStore'; // 주석 처리
 
@@ -46,7 +48,7 @@ const App: React.FC = () => {
         {/* 로그인 화면에는 Layout 적용 안함 */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/oauth2/redirect" element={<OAuth2RedirectHandler />} />
-        
+
         {/* 메인 페이지를 기본 경로로 설정 */}
         <Route path="/" element={
           <SimplePrivateRoute>
@@ -66,65 +68,69 @@ const App: React.FC = () => {
         } />
 
         {/* 게시글 목록 페이지 라우트 추가 */}
+        {/* 전체 모집글 */}
         <Route path="/posting/list" element={
           <SimplePrivateRoute>
             <WithLayout>
-              <Post />
+              <PostingListPage />
             </WithLayout>
           </SimplePrivateRoute>
         } />
-        
+
+        {/* 모집현황 : 내가 작성한 모집글의 신청글 리스트 */}
+        <Route path="/posting/list/:hostId" element={
+          <SimplePrivateRoute>
+            <WithLayout>
+              <PostingListByHost />
+            </WithLayout>
+          </SimplePrivateRoute>
+        } />
+
+      {/* 모집글 상세보기 */}
         <Route path="/posting/:id" element={
           <SimplePrivateRoute>
             <WithLayout>
-              <div className="p-4">
-                <h1 className="text-xl font-bold mb-4">게시글 상세 페이지</h1>
-                <p>현재 구현 중입니다.</p>
-                <button 
-                  className="mt-4 px-4 py-2 bg-purple-600 text-white rounded"
-                  onClick={() => window.history.back()}
-                >
-                  뒤로가기
-                </button>
-              </div>
+              <PostingViewPage />
             </WithLayout>
           </SimplePrivateRoute>
         } />
-        
+
+        {/* 모집글 작성 */}
         <Route path="/posting/create" element={
           <SimplePrivateRoute>
             <WithLayout>
-              <div className="p-4">
-                <h1 className="text-xl font-bold mb-4">게시글 작성</h1>
-                <p>현재 구현 중입니다.</p>
-                <button 
-                  className="mt-4 px-4 py-2 bg-purple-600 text-white rounded"
-                  onClick={() => window.history.back()}
-                >
-                  뒤로가기
-                </button>
-              </div>
+              <PostingFormPage />
             </WithLayout>
           </SimplePrivateRoute>
         } />
-        
-        <Route path="/apply/:id" element={
+
+        {/* 신청글 리스트 : default가 본인 작성 */}
+        <Route path="/applying/list" element={
           <SimplePrivateRoute>
             <WithLayout>
-              <div className="p-4">
-                <h1 className="text-xl font-bold mb-4">하객 신청</h1>
-                <p>현재 구현 중입니다.</p>
-                <button 
-                  className="mt-4 px-4 py-2 bg-purple-600 text-white rounded"
-                  onClick={() => window.history.back()}
-                >
-                  뒤로가기
-                </button>
-              </div>
+              <ApplyingListPage />
             </WithLayout>
           </SimplePrivateRoute>
         } />
-        
+
+        {/*  신청글 상세보기 */}
+        <Route path="/applying/:id" element={
+          <SimplePrivateRoute>
+          <WithLayout>
+            <ApplyingViewPage />
+          </WithLayout>
+        </SimplePrivateRoute>
+        } />
+
+        {/* 신청글 작성하기 */}
+        <Route path="/applying/create" element={
+          <SimplePrivateRoute>
+          <WithLayout>
+            <ApplyingFormPage />
+          </WithLayout>
+        </SimplePrivateRoute>
+        } />
+
         {/* 추가 페이지들 */}
         <Route path="/postings" element={
           <SimplePrivateRoute>
@@ -136,7 +142,7 @@ const App: React.FC = () => {
             </WithLayout>
           </SimplePrivateRoute>
         } />
-        
+
         <Route path="/chat" element={
           <SimplePrivateRoute>
             <ChatListPage />
@@ -154,7 +160,7 @@ const App: React.FC = () => {
             <PrivateChatRoom />
           </SimplePrivateRoute>
         } />
-        
+
         <Route path="/mypage" element={
           <SimplePrivateRoute>
             <ProfilePage />
@@ -220,6 +226,101 @@ const App: React.FC = () => {
             <ReviewListPage />
           </SimplePrivateRoute>
         } />
+
+        <Route path="/posting/list"
+          element={
+            <SimplePrivateRoute>
+              <WithLayout>
+                <PostingListPage />
+              </WithLayout>
+            </SimplePrivateRoute>
+          }>
+        </Route>
+
+        {/*<Route path="/posting/:id" element={*/}
+        {/*  <SimplePrivateRoute>*/}
+        {/*    <WithLayout>*/}
+        {/*      <div className="p-4">*/}
+        {/*        <h1 className="text-xl font-bold mb-4">게시글 상세 페이지</h1>*/}
+        {/*        <p>현재 구현 중입니다.</p>*/}
+        {/*        <button */}
+        {/*          className="mt-4 px-4 py-2 bg-purple-600 text-white rounded"*/}
+        {/*          onClick={() => window.history.back()}*/}
+        {/*        >*/}
+        {/*          뒤로가기*/}
+        {/*        </button>*/}
+        {/*      </div>*/}
+        {/*    </WithLayout>*/}
+        {/*  </SimplePrivateRoute>*/}
+        {/*} />*/}
+
+        {/*<Route path="/posting/create" element={*/}
+        {/*  <SimplePrivateRoute>*/}
+        {/*    <WithLayout>*/}
+        {/*      <div className="p-4">*/}
+        {/*        <h1 className="text-xl font-bold mb-4">게시글 작성</h1>*/}
+        {/*        <p>현재 구현 중입니다.</p>*/}
+        {/*        <button */}
+        {/*          className="mt-4 px-4 py-2 bg-purple-600 text-white rounded"*/}
+        {/*          onClick={() => window.history.back()}*/}
+        {/*        >*/}
+        {/*          뒤로가기*/}
+        {/*        </button>*/}
+        {/*      </div>*/}
+        {/*    </WithLayout>*/}
+        {/*  </SimplePrivateRoute>*/}
+        {/*} />*/}
+
+        {/*<Route path="/apply/:id" element={*/}
+        {/*  <SimplePrivateRoute>*/}
+        {/*    <WithLayout>*/}
+        {/*      <div className="p-4">*/}
+        {/*        <h1 className="text-xl font-bold mb-4">하객 신청</h1>*/}
+        {/*        <p>현재 구현 중입니다.</p>*/}
+        {/*        <button*/}
+        {/*          className="mt-4 px-4 py-2 bg-purple-600 text-white rounded"*/}
+        {/*          onClick={() => window.history.back()}*/}
+        {/*        >*/}
+        {/*          뒤로가기*/}
+        {/*        </button>*/}
+        {/*      </div>*/}
+        {/*    </WithLayout>*/}
+        {/*  </SimplePrivateRoute>*/}
+        {/*} />*/}
+
+        {/* 추가 페이지들 */}
+        {/*<Route path="/postings" element={*/}
+        {/*  <SimplePrivateRoute>*/}
+        {/*    <WithLayout>*/}
+        {/*      <div className="p-4">*/}
+        {/*        <h1 className="text-xl font-bold mb-4">예정된 공고</h1>*/}
+        {/*        <p>현재 구현 중입니다.</p>*/}
+        {/*      </div>*/}
+        {/*    </WithLayout>*/}
+        {/*  </SimplePrivateRoute>*/}
+        {/*} />*/}
+
+        {/*<Route path="/chat" element={*/}
+        {/*  <SimplePrivateRoute>*/}
+        {/*    <WithLayout>*/}
+        {/*      <div className="p-4">*/}
+        {/*        <h1 className="text-xl font-bold mb-4">채팅</h1>*/}
+        {/*        <p>현재 구현 중입니다.</p>*/}
+        {/*      </div>*/}
+        {/*    </WithLayout>*/}
+        {/*  </SimplePrivateRoute>*/}
+        {/*} />*/}
+
+        {/*<Route path="/mypage" element={*/}
+        {/*  <SimplePrivateRoute>*/}
+        {/*    <WithLayout>*/}
+        {/*      <div className="p-4">*/}
+        {/*        <h1 className="text-xl font-bold mb-4">마이페이지</h1>*/}
+        {/*        <p>현재 구현 중입니다.</p>*/}
+        {/*      </div>*/}
+        {/*    </WithLayout>*/}
+        {/*  </SimplePrivateRoute>*/}
+        {/*} />*/}
       </Routes>
     </Router>
   );

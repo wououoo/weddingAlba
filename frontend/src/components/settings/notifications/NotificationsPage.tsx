@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AppFooter } from '../../Common';
+import { AppFooter } from '../../common';
 
 const NotificationsPage: React.FC = () => {
   const navigate = useNavigate();

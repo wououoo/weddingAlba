@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogoutComponent, WithdrawComponent } from './auth';
-import { AppFooter } from '../Common';
+import { AppFooter } from '../common';
 
 const SettingsPage: React.FC = () => {
   const navigate = useNavigate();

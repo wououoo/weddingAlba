@@ -32,29 +32,61 @@ public class Posting {
     
     @Column(name = "user_id")
     private Long userId;              // 모집글 작성자 ID
-    
+
+    // 기본정보
     @Column(name = "title")
     private String title;              // 모집글 제목
-    
-    @Column(name = "appointment_datetime")
-    private LocalDateTime appointmentDatetime;  // 결혼식 예정 일시
-    
-    @CreationTimestamp
-    @Column(name = "registration_datetime", updatable = false)
-    private LocalDateTime registrationDatetime;  // 모집글 등록 일시
-    
-    @Column(name = "location")
-    private String location;            // 결혼식 장소
-    
+
     @Column(name = "is_self")
     private Integer isSelf;             // 본인 결혼식 여부 (0: 아님, 1: 본인 결혼식)
-    
+
     @Column(name = "person_name")
     private String personName;          // 결혼식 당사자 이름
     
     @Column(name = "person_phone_number")
     private String personPhoneNumber;   // 결혼식 당사자 연락처
     
+    // 예식 정보
+    @Column(name = "appointment_datetime")
+    private LocalDateTime appointmentDatetime;  // 결혼식 예정 일시
+
+    @Column(name = "address")
+    private String address;             // 결혼식 장소 주소
+
+    @Column(name = "building_name")
+    private String buildingName;        // 건물이름
+
+    @Column(name = "sido_sigungu")
+    private String sidoSigungu;         // 시도 + 시군구
+    
     @Column(name = "has_mobile_invitation")
     private Integer hasMobileInvitation; // 모바일 청첩장 여부 (0: 없음, 1: 있음)
+
+    // 알바정보
+    @Column(name="working_hours")
+    private String workingHours;        // 근무 시간
+
+    @Enumerated(EnumType.STRING)
+    private PayType payType;             // 급여 타입 (시급, 일급)
+
+    @Column(name="pay_amount")
+    private String payAmount;          // 급여 금액
+
+    @Column(name="guest_main_role")
+    private String guestMainRole;       // 하객 주요 역할
+
+    @Column(name="detail_content")
+    private String detailContent;     // 상세내용
+
+    @Column(name="tags")
+    private String tags;              // 태그 (최대 5개)
+
+    @CreationTimestamp
+    @Column(name = "registration_datetime", updatable = false)
+    private LocalDateTime registrationDatetime;  // 모집글 등록 일시
+
+    public enum PayType {
+        DAILY, HOURLY
+    }
+
 }

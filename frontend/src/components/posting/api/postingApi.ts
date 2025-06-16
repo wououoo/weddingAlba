@@ -1,4 +1,4 @@
-import { get, put, post, ApiResponse } from '../../../utils/httpClient';
+import { get, put, post, del, ApiResponse } from '../../../utils/httpClient';
 import { PostingRequestDTO, PostingResponseDTO } from '../dto';
 
 // API 기본 URL
@@ -14,6 +14,32 @@ export const postingApi = {
                 success: false,
                 data: null,
                 message: '모집글 등록에 실패했습니다.'
+            };
+        }
+    },
+
+    // 모집글 수정
+    updatePosting: async (id: string, postingData: PostingRequestDTO) => {
+        try {
+            return await put<PostingResponseDTO>(`${API_BASE_URL}/posting/update/${id}`, postingData);
+        } catch (error) {
+            return {
+                success: false,
+                data: null,
+                message: '모집글 수정에 실패했습니다.'
+            };
+        }
+    },
+
+    // 모집글 삭제
+    deletePosting: async (id: number) => {
+        try {
+            return await del<void>(`${API_BASE_URL}/posting/delete/${id}`);
+        } catch (error) {
+            return {
+                success: false,
+                data: null,
+                message: '모집글 삭제에 실패했습니다.'
             };
         }
     },

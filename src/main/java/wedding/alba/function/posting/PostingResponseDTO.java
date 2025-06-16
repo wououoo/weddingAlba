@@ -1,6 +1,6 @@
 package wedding.alba.function.posting;
 
-
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import wedding.alba.entity.Posting;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 @Data
@@ -17,7 +18,10 @@ import java.util.List;
 public class PostingResponseDTO {
     private Long postingId;
     private String title;
+    
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime appointmentDatetime;
+    
     private Integer isSelf;
     private String personName;
     private String personPhoneNumber;
@@ -27,6 +31,13 @@ public class PostingResponseDTO {
     private String sidoSigungu;
     private Integer hasMobileInvitation;
     private String workingHours;
+    
+    @JsonFormat(pattern = "HH:mm:ss")
+    private LocalTime startTime;
+    
+    @JsonFormat(pattern = "HH:mm:ss")
+    private LocalTime endTime;
+    
     private Posting.PayType payType;
     private String payTypeStr;
     private String payAmount;
@@ -35,11 +46,16 @@ public class PostingResponseDTO {
     private String detailContent;
     private List<String> tags;
 
-    // 사욛자 및 프로필 정보
+    // 사욷자 및 프로필 정보
     private String nickname;
     private Integer postingHistoryCount;        // 누적 모집 횟수
     private Long userId;
+    
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime registrationDatetime;
+    
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime updateDatetime;
 
     public void setPayTypeStr() {
         if(this.payType == null) {

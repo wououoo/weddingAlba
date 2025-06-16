@@ -48,7 +48,6 @@ public class PostingController {
     public ResponseEntity<ApiResponse<PostingResponseDTO>> getPostingDetail(@PathVariable Long postingId,  HttpServletRequest request) {
         Long userId = extractUserIdFromToken(request);
         PostingResponseDTO dto = postingService.getPostingDetail(postingId);
-        System.out.println(dto);
         return ResponseEntity.ok(ApiResponse.success(dto));
     }
 

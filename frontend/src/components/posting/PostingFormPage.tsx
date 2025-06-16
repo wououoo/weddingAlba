@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useNavigate } from "react-router-dom";
 import { usePostingForm } from './hooks/usePostingForm';
 import AddressSearch from '../common/AddressSearch';
+import { convertDatetime } from '../common/base';
 
 const PostingFormPage: React.FC = () => {
     const navigate = useNavigate();
@@ -31,7 +32,6 @@ const PostingFormPage: React.FC = () => {
         handleAddressComplete
     } = usePostingForm();
 
-    // 토큰 설정 (이 부분은 폼 로직과 독립적이므로 PostingFormPage에 유지됩니다.)
     useEffect(() => {
         const localToken = localStorage.getItem('authToken');
         const sessionToken = sessionStorage.getItem('authToken');
@@ -158,6 +158,11 @@ const PostingFormPage: React.FC = () => {
                             onChange={(e) => handleInputChange('appointmentDatetime', e.target.value)}
                             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
+                        {formData.appointmentDatetime && (
+                            <p className="mt-2 text-sm text-gray-600">
+                                선택된 일시: {convertDatetime(formData.appointmentDatetime)}
+                            </p>
+                        )}
                     </div>
 
                     {/* 결혼식장 주소 */}

@@ -14,8 +14,10 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Entity
 @Table(name = "postings")
@@ -63,6 +65,12 @@ public class Posting {
     private Integer hasMobileInvitation; // 모바일 청첩장 여부 (0: 없음, 1: 있음)
 
     // 알바정보
+    @Column(name="start_time")
+    private LocalTime startTime;           // 근무 시작 시간
+
+    @Column(name="end_time")
+    private LocalTime endTime;           // 근무 종료 시간
+
     @Column(name="working_hours")
     private String workingHours;        // 근무 시간
 
@@ -70,7 +78,7 @@ public class Posting {
     private PayType payType;             // 급여 타입 (시급, 일급)
 
     @Column(name="pay_amount")
-    private String payAmount;          // 급여 금액
+    private String payAmount;           // 급여 금액
 
     @Column(name="guest_main_role")
     private String guestMainRole;       // 하객 주요 역할
@@ -84,6 +92,10 @@ public class Posting {
     @CreationTimestamp
     @Column(name = "registration_datetime", updatable = false)
     private LocalDateTime registrationDatetime;  // 모집글 등록 일시
+
+    @UpdateTimestamp
+    @Column(name = "update_datetime")
+    private LocalDateTime updateDatetime;   // 모집글 수정 일시
 
     public enum PayType {
         DAILY, HOURLY

@@ -9,8 +9,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import wedding.alba.entity.Bookmark;
 import wedding.alba.entity.Posting;
+import wedding.alba.function.posting.PostingRepository;
 import wedding.alba.repository.BookmarkRepository;
-import wedding.alba.repository.PostingRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;

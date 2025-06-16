@@ -7,7 +7,6 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
 import wedding.alba.entity.Profile;
-import wedding.alba.entity.User;
 
 @Component
 public class PostingWrapper {
@@ -25,6 +24,8 @@ public class PostingWrapper {
             .sidoSigungu(postingDto.getSidoSigungu())
             .hasMobileInvitation(postingDto.getHasMobileInvitation())
             .workingHours(postingDto.getWorkingHours())
+            .startTime(postingDto.getStartTime())
+            .endTime(postingDto.getEndTime())
             .payType(Posting.PayType.valueOf(postingDto.getPayType().toUpperCase()))
             .payAmount(postingDto.getPayAmount())
             .guestMainRole(postingDto.getGuestMainRole())
@@ -73,6 +74,9 @@ public class PostingWrapper {
         return PostingResponseDTO.builder()
                 .postingId(posting.getPostingId())
                 .userId(posting.getUserId())
+                .isSelf(posting.getIsSelf())
+                .personName(posting.getPersonName())
+                .personPhoneNumber(posting.getPersonPhoneNumber())
                 .title(posting.getTitle())
                 .appointmentDatetime(posting.getAppointmentDatetime())
                 .address(posting.getAddress())
@@ -80,6 +84,8 @@ public class PostingWrapper {
                 .sidoSigungu(posting.getSidoSigungu())
                 .hasMobileInvitation(posting.getHasMobileInvitation())
                 .workingHours(posting.getWorkingHours())
+                .startTime(posting.getStartTime())
+                .endTime(posting.getEndTime())
                 .payType(posting.getPayType())
                 .payAmount(posting.getPayAmount())
                 .guestMainRole(posting.getGuestMainRole())
@@ -90,6 +96,7 @@ public class PostingWrapper {
                                             .collect(Collectors.toList()) :
                     Collections.emptyList())
                 .registrationDatetime(posting.getRegistrationDatetime())
+                .updateDatetime(posting.getUpdateDatetime())
                 .nickname(profile.getNickname())
                 .postingHistoryCount(0)
                 .build();

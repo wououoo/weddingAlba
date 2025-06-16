@@ -1,35 +1,26 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { postingApi } from "./api/postingApi";
-import { PostingResponseDTO } from "./dto";
+import React from "react";
+import { convertDatetime, convertPay, convertTime } from "../common/base";
+import { usePostingView } from "./hooks/usePostingView";
 
 const PostingViewPage: React.FC = () => {
-    const navigate = useNavigate();
-    const { id } = useParams<{ id: string }>();
-    const [isFavorite, setIsFavorite] = useState(false);
-    const [showFullDescription, setShowFullDescription] = useState(false);
-    const [postingData, setPostingData] = useState<PostingResponseDTO | null>(null);
+    const {
+        postingData,
+        isFavorite,
+        showFullDescription,
+        isLoading,
+        isMyPosting,
+        toggleFavorite,
+        toggleDescription,
+        goBack,
+        goToUserProfile,
+        goToEditPage,
+        goToApplyPage,
+        deletePosting
+    } = usePostingView();
 
-    useEffect(() => {
-        if (id) {
-            const fetchPosting = async () => {
-                try {
-                    const response = await postingApi.getPostingDetail(id);
-                    console.log(response.data);
-                    if (response.success && response.data) {
-                        setPostingData(response.data as PostingResponseDTO);
-                    } else {
-                        console.error("Failed to fetch posting detail:", response.message);
-                        setPostingData(null);
-                    }
-                } catch (error) {
-                    console.error("Error fetching posting data:", error);
-                    setPostingData(null);
-                } 
-            };
-            fetchPosting();
-        }
-    }, [id]);
+    if (isLoading) {
+        return <div className="flex justify-center items-center h-screen">로딩 중...</div>;
+    }
 
     if (!postingData) {
         return <div className="flex justify-center items-center h-screen">게시물을 찾을 수 없습니다.</div>;
@@ -42,6 +33,8 @@ const PostingViewPage: React.FC = () => {
         buildingName,
         sidoSigungu,
         appointmentDatetime,
+        startTime,
+        endTime,
         workingHours,
         payAmount,
         nickname,
@@ -51,12 +44,8 @@ const PostingViewPage: React.FC = () => {
         detailContent,
         tags,
         userId,
-        payTypeStr
+        payType
     } = postingData;
-
-    const toggleFavorite = () => {
-        setIsFavorite(!isFavorite);
-    };
 
     return (
         <div className="bg-gray-50 min-h-screen">
@@ -64,7 +53,7 @@ const PostingViewPage: React.FC = () => {
             <div className="bg-white shadow-sm sticky top-0 z-10">
                 <div className="flex items-center justify-between p-4">
                     <button 
-                        onClick={() => navigate(-1)}
+                        onClick={goBack}
                         className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                     >
                         <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -103,7 +92,8 @@ const PostingViewPage: React.FC = () => {
                 </div>
 
                 {/* 모집자 정보 */}
-                <div className="bg-white rounded-xl shadow-sm p-6 mb-4">
+                {/* 해당 모집자 프로필로 이동하게 */}
+                <div className="bg-white rounded-xl shadow-sm p-6 mb-4" onClick={() => userId && goToUserProfile(userId)}>
                     <h3 className="text-lg font-bold text-gray-900 mb-4">모집자 정보</h3>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
@@ -144,7 +134,7 @@ const PostingViewPage: React.FC = () => {
                             </div>
                             <div>
                                 <h4 className="font-medium text-gray-900">날짜</h4>
-                                <p className="text-gray-600 text-sm">{appointmentDatetime}</p>
+                                <p className="text-gray-600 text-sm">{convertDatetime(appointmentDatetime || '')}</p>
                             </div>
                         </div>
 
@@ -157,7 +147,7 @@ const PostingViewPage: React.FC = () => {
                             </div>
                             <div>
                                 <h4 className="font-medium text-gray-900">시간</h4>
-                                <p className="text-gray-600 text-sm">{workingHours}</p>
+                                <p className="text-gray-600 text-sm">{convertTime(startTime || '')} 부터 {convertTime(endTime || '')}, {Math.floor(Number(workingHours))}시간</p>
                             </div>
                         </div>
 
@@ -171,7 +161,7 @@ const PostingViewPage: React.FC = () => {
                             </div>
                             <div>
                                 <h4 className="font-medium text-gray-900">임금</h4>
-                                <p className="text-green-600 font-semibold">{payTypeStr} {payAmount}</p>
+                                <p className="text-green-600 font-semibold">{convertPay(payType || '', payAmount || '', workingHours || '')}</p>
                             </div>
                         </div>
 
@@ -213,7 +203,7 @@ const PostingViewPage: React.FC = () => {
                             </p>
                             {detailContent.length > 100 && (
                                 <button 
-                                    onClick={() => setShowFullDescription(!showFullDescription)}
+                                    onClick={toggleDescription}
                                     className="mt-2 text-blue-500 text-sm font-medium hover:text-blue-600 transition-colors"
                                 >
                                     {showFullDescription ? '접기' : '더보기'}
@@ -258,22 +248,40 @@ const PostingViewPage: React.FC = () => {
             {/* 하단 고정 버튼 */}
             <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-20">
                 <div className="flex space-x-3">
-                    <button
-                        onClick={toggleFavorite}
-                        className={`flex-1 py-4 rounded-xl font-semibold text-lg transition-all
-                            ${isFavorite
-                                ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                                : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}
-                        `}
-                    >
-                        찜하기
-                    </button>
-                    <button
-                        onClick={() => navigate('/applying/create')}
-                        className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white py-4 rounded-xl font-semibold text-lg hover:shadow-lg transition-all"
-                    >
-                        신청하기
-                    </button>
+                    {isMyPosting ? (
+                        <button
+                            onClick={() => postingId && deletePosting(postingId)}
+                            className="flex-1 bg-red-500 text-white py-4 rounded-xl font-semibold text-lg hover:bg-red-600 transition-all"
+                        >
+                            삭제하기
+                        </button>
+                    ) : (
+                        <button
+                            onClick={toggleFavorite}
+                            className={`flex-1 py-4 rounded-xl font-semibold text-lg transition-all
+                                ${isFavorite
+                                    ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                                    : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}
+                            `}
+                        >
+                            찜하기
+                        </button>
+                    )}
+                    {isMyPosting ? (
+                        <button
+                            onClick={() => postingId && goToEditPage(postingId)}
+                            className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white py-4 rounded-xl font-semibold text-lg hover:shadow-lg transition-all"
+                        >
+                            수정하기
+                        </button>
+                    ) : (
+                        <button
+                            onClick={goToApplyPage}
+                            className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white py-4 rounded-xl font-semibold text-lg hover:shadow-lg transition-all"
+                        >
+                            신청하기
+                        </button>
+                    )}
                 </div>
             </div>
         </div>

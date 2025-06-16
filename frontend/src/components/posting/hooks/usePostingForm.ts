@@ -5,7 +5,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { PostingRequestDTO } from '../dto';
 import { postingApi } from '../api/postingApi';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 // Daum Postcode API에서 반환되는 데이터의 최소한의 인터페이스 정의
 // (daum-postcode.d.ts 파일이 없으므로 여기에 포함)
@@ -63,6 +63,8 @@ interface UsePostingFormResult {
  */
 export const usePostingForm = (): UsePostingFormResult => {
     const navigate = useNavigate();
+    const { postingId } = useParams<{ postingId: string }>();
+    const isEditMode = !!postingId;
     // 태그 관련 상태 관리
     const [tags, setTags] = useState<string[]>([]);
     const [tagInput, setTagInput] = useState<string>('');
@@ -84,15 +86,64 @@ export const usePostingForm = (): UsePostingFormResult => {
         buildingName: '',
         sidoSigungu: '',
         workingHours: '',
+        startTime: '',
+        endTime: '',
         payAmount: '',
         guestMainRole: '',
         detailContent: '',
         personName: '',
         personPhoneNumber: '',
-        hasMobileInvitation: 0,
-        isSelf: 0,
+        hasMobileInvitation: null,
+        isSelf: null,
         tags: []
     });
+
+    // 게시물 데이터 로드 (수정 모드일 때)
+    useEffect(() => {
+        if (isEditMode && postingId) {
+            const loadPosting = async () => {
+                try {
+                    const response = await postingApi.getPostingDetail(postingId); // getPostingById 대신 getPostingDetail 사용
+                    if (response.success && response.data) {
+                        // 불러온 데이터를 formData에 설정
+                        const loadedData = response.data;
+                        setFormData({
+                            title: loadedData.title || '',
+                            isSelf: loadedData.isSelf || null,
+                            personName: loadedData.personName || '',
+                            personPhoneNumber: loadedData.personPhoneNumber || '',
+                            appointmentDatetime: loadedData.appointmentDatetime || '',
+                            address: loadedData.address || '',
+                            buildingName: loadedData.buildingName || '',
+                            sidoSigungu: loadedData.sidoSigungu || '',
+                            hasMobileInvitation: loadedData.hasMobileInvitation || null,
+                            startTime: loadedData.startTime || '',
+                            endTime: loadedData.endTime || '',
+                            workingHours: loadedData.workingHours || '',
+                            payType: loadedData.payType === 'DAILY' ? 'daily' : 'hourly',
+                            payAmount: loadedData.payAmount || '',
+                            guestMainRole: loadedData.guestMainRole || '',
+                            detailContent: loadedData.detailContent || '',
+                            tags: loadedData.tags || [],
+                        });
+                        setPayType(loadedData.payType === 'DAILY' ? 'daily' : 'hourly');
+                        setPayAmount(Number(loadedData.payAmount));
+                        setStartTime(loadedData.startTime || '');
+                        setEndTime(loadedData.endTime || '');
+                        setTags(loadedData.tags || []);
+                    } else {
+                        alert('게시물 로드에 실패했습니다.');
+                        navigate('/postings'); // 실패 시 목록 페이지로 이동
+                    }
+                } catch (error) {
+                    console.error('Error loading posting:', error);
+                    alert('게시물 로드 중 오류가 발생했습니다.');
+                    navigate('/postings');
+                }
+            };
+            loadPosting();
+        }
+    }, [isEditMode, postingId, navigate]);
 
     // 주소 검색 관련 상태 추가
     const [isAddressSearchOpen, setIsAddressSearchOpen] = useState<boolean>(false);
@@ -163,11 +214,13 @@ export const usePostingForm = (): UsePostingFormResult => {
             return time;
         };
 
-        const workingHoursText = `${formatTimeForDisplay(startTime)}부터 ${formatTimeForDisplay(endTime)}, ${diffInHours.toFixed(1)}`;
+        const workingHours = `${diffInHours.toFixed(1)}`;
         
         setFormData(prev => ({
             ...prev,
-            workingHours: workingHoursText,
+            startTime: startTime,
+            endTime: endTime,
+            workingHours: workingHours,
             payType : payType,
             payAmount: payAmount.toString()
         }));
@@ -244,21 +297,28 @@ export const usePostingForm = (): UsePostingFormResult => {
      */
     const handleSubmit = useCallback(async () => {
         // 필수 항목 유효성 검사
-        if (!formData.title || !formData.appointmentDatetime  || !startTime || !endTime || payAmount <= 0) {
+        if (!formData.title || !formData.appointmentDatetime || !startTime || !endTime || payAmount <= 0) {
             alert('필수 항목을 입력해주세요.');
             return;
         }
 
-        const response = await postingApi.addPosting(formData); // 게시물 추가 API 호출
-        const postingId = response.data?.postingId;
-        console.log(postingId)
-        if(response.success) {
-            navigate(`/posting/${postingId}`);
+        let response;
+        if (isEditMode && postingId) {
+            // 수정 모드: 게시물 수정 API 호출
+            response = await postingApi.updatePosting(postingId, formData);
         } else {
-            alert('모집글 생성에 실패했습니다.');
+            // 생성 모드: 게시물 추가 API 호출
+            response = await postingApi.addPosting(formData);
+        }
+        
+        const newOrUpdatedPostingId = response.data?.postingId;
+        if (response.success) {
+            navigate(`/posting/${newOrUpdatedPostingId}`);
+        } else {
+            alert(isEditMode ? '모집글 수정에 실패했습니다.' : '모집글 생성에 실패했습니다.');
         }
 
-    }, [formData, startTime, endTime, payAmount, uploadedFile]);
+    }, [formData, startTime, endTime, payAmount, uploadedFile, isEditMode, postingId, navigate]);
 
     // 훅이 외부로 노출할 상태와 함수들을 반환합니다.
     return {
@@ -277,7 +337,6 @@ export const usePostingForm = (): UsePostingFormResult => {
         handleFileUpload,
         handleSubmit,
         calculatePay,
-        // 주소 검색 관련 필드 반환
         isAddressSearchOpen,
         openAddressSearch,
         closeAddressSearch,

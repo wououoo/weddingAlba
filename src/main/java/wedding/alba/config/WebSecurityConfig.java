@@ -44,6 +44,8 @@ public class WebSecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // 공개 리소스
                         .requestMatchers("/api/auth/**", "/oauth2/**", "/login/**").permitAll()
+                        // 공개 API (토큰 없이 접근 가능)
+                        .requestMatchers("/api/posting/public/**").permitAll()
                         // 업로드된 파일들 (정적 리소스) 접근 허용
                         .requestMatchers("/uploads/**").permitAll()
                         // Swagger UI 등의 개발 도구 접근 허용

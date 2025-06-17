@@ -7,6 +7,10 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import wedding.alba.config.JwtConfig;
@@ -37,11 +41,50 @@ public class PostingController {
         }
     }
 
-    @GetMapping("/list")
+    @GetMapping("/all/list")
     public ResponseEntity<ApiResponse<List<PostingResponseDTO>>> getPostingList(HttpServletRequest request) {
         Long userId = extractUserIdFromToken(request);
         List<PostingResponseDTO> postingList = postingService.getPostingAllList();
         return ResponseEntity.ok(ApiResponse.success(postingList));
+    }
+
+    @GetMapping("/list/paged")
+    public ResponseEntity<ApiResponse<Page<PostingResponseDTO>>> getPostingListPaged(
+            HttpServletRequest request,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        try {
+            Long userId = extractUserIdFromToken(request);
+            
+            // 최신 등록일시 순으로 정렬하는 Pageable 생성
+            Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "registrationDatetime"));
+            
+            Page<PostingResponseDTO> postingPage = postingService.getPostingPageByUserId(pageable);
+            return ResponseEntity.ok(ApiResponse.success(postingPage));
+        } catch(RuntimeException e) {
+            log.error("페이징 모집글 조회 실패: {}", e.getMessage());
+            return ResponseEntity.ok(ApiResponse.error(e.getMessage()));
+        } catch(Exception e) {
+            log.error("페이징 모집글 조회 중 예외 발생: {}", e.getMessage());
+            return ResponseEntity.ok(ApiResponse.error("모집글 조회에 실패했습니다."));
+        }
+    }
+
+    // 공개 모집글 조회
+    @GetMapping("/public/list/paged")
+    public ResponseEntity<ApiResponse<Page<PostingResponseDTO>>> getPulicPostingPage(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        try {
+            // 최신 등록일시 순으로 정렬하는 Pageable 생성
+            Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "registrationDatetime"));
+            
+            Page<PostingResponseDTO> postingPage = postingService.getPulicPostingPage(pageable);
+            return ResponseEntity.ok(ApiResponse.success(postingPage));
+        } catch(Exception e) {
+            log.error("공개 페이징 모집글 조회 중 예외 발생: {}", e.getMessage());
+            return ResponseEntity.ok(ApiResponse.error("모집글 조회에 실패했습니다."));
+        }
     }
 
     @GetMapping("/detail/{postingId}")

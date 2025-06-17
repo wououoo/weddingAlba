@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { postingApi } from '../api/postingApi';
 import { PostingResponseDTO } from '../dto';
-import { userApi } from '../../../services/api';
 
 export const usePostingView = () => {
     const navigate = useNavigate();
@@ -12,24 +11,7 @@ export const usePostingView = () => {
     const [isFavorite, setIsFavorite] = useState(false);
     const [showFullDescription, setShowFullDescription] = useState(false);
     const [postingData, setPostingData] = useState<PostingResponseDTO | null>(null);
-    const [currentUserId, setCurrentUserId] = useState<number | null>(null);
     const [isLoading, setIsLoading] = useState(true);
-
-    // 현재 로그인한 사용자 정보 가져오기
-    useEffect(() => {
-        const getCurrentUser = async () => {
-            try {
-                const response = await userApi.getProfile();
-                if (response.success && response.data) {
-                    setCurrentUserId(response.data.userId);
-                }
-            } catch (error) {
-                console.error("사용자 정보 가져오기 실패:", error);
-            }
-        };
-
-        getCurrentUser();
-    }, []);
 
     // 게시물 데이터 가져오기
     useEffect(() => {
@@ -104,24 +86,18 @@ export const usePostingView = () => {
         }
     };
 
-    // 본인 작성 글인지 확인
-    const isMyPosting = currentUserId && postingData?.userId && currentUserId === postingData.userId;
-
     return {
         // 상태
         postingData,
         isFavorite,
         showFullDescription,
         isLoading,
-        isMyPosting,
         
         // 액션 함수
         toggleFavorite,
         toggleDescription,
         goBack,
         goToUserProfile,
-        goToEditPage,
-        goToApplyPage,
-        deletePosting
+        goToApplyPage
     };
 };

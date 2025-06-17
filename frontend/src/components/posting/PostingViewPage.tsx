@@ -8,14 +8,11 @@ const PostingViewPage: React.FC = () => {
         isFavorite,
         showFullDescription,
         isLoading,
-        isMyPosting,
         toggleFavorite,
         toggleDescription,
         goBack,
         goToUserProfile,
-        goToEditPage,
         goToApplyPage,
-        deletePosting
     } = usePostingView();
 
     if (isLoading) {
@@ -105,12 +102,19 @@ const PostingViewPage: React.FC = () => {
                             <div>
                                 <h4 className="font-semibold text-gray-900">{nickname}</h4>
                                 <div className="flex items-center space-x-2 mt-1">
-                                    {hasMobileInvitation && (
+                                    {hasMobileInvitation ? (
                                         <div className="flex items-center space-x-1">
                                             <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                                                 <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                                             </svg>
                                             <span className="text-xs text-green-600 font-medium">모바일 청첩장 인증</span>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center space-x-1">
+                                            <svg className="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                            </svg>
+                                            <span className="text-xs text-gray-500 font-medium">모바일 청첩장 미인증</span>
                                         </div>
                                     )}
                                     <span className="text-xs text-gray-500">누적 모집 {postingHistoryCount || 0}회</span>
@@ -248,40 +252,22 @@ const PostingViewPage: React.FC = () => {
             {/* 하단 고정 버튼 */}
             <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-20">
                 <div className="flex space-x-3">
-                    {isMyPosting ? (
-                        <button
-                            onClick={() => postingId && deletePosting(postingId)}
-                            className="flex-1 bg-red-500 text-white py-4 rounded-xl font-semibold text-lg hover:bg-red-600 transition-all"
-                        >
-                            삭제하기
-                        </button>
-                    ) : (
-                        <button
-                            onClick={toggleFavorite}
-                            className={`flex-1 py-4 rounded-xl font-semibold text-lg transition-all
-                                ${isFavorite
-                                    ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                                    : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}
-                            `}
-                        >
-                            찜하기
-                        </button>
-                    )}
-                    {isMyPosting ? (
-                        <button
-                            onClick={() => postingId && goToEditPage(postingId)}
-                            className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white py-4 rounded-xl font-semibold text-lg hover:shadow-lg transition-all"
-                        >
-                            수정하기
-                        </button>
-                    ) : (
-                        <button
-                            onClick={goToApplyPage}
-                            className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white py-4 rounded-xl font-semibold text-lg hover:shadow-lg transition-all"
-                        >
-                            신청하기
-                        </button>
-                    )}
+                    <button
+                        onClick={toggleFavorite}
+                        className={`flex-1 py-4 rounded-xl font-semibold text-lg transition-all
+                            ${isFavorite
+                                ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                                : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}
+                        `}
+                    >
+                        찜하기
+                    </button>
+                    <button
+                        onClick={goToApplyPage}
+                        className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white py-4 rounded-xl font-semibold text-lg hover:shadow-lg transition-all"
+                    >
+                        신청하기
+                    </button>
                 </div>
             </div>
         </div>

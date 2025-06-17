@@ -55,4 +55,56 @@ export const postingApi = {
             };
         }
     },
+
+    getPostingAllList: async () => {
+        try {
+            return await get<PostingResponseDTO[]>(`${API_BASE_URL}/posting/all/list`);
+        } catch(error) {
+            return {
+                success: false,
+                data: null,
+                message: '모집글 전체 조회에 실패했습니다.'
+            };
+        }
+    },
+
+    getPostingPagedList: async (page: number = 0, size: number = 10) => {
+        try {
+            return await get<{
+                content: PostingResponseDTO[];
+                totalElements: number;
+                totalPages: number;
+                last: boolean;
+                first: boolean;
+                number: number;
+                size: number;
+            }>(`${API_BASE_URL}/posting/list/paged?page=${page}&size=${size}`);
+        } catch(error) {
+            return {
+                success: false,
+                data: null,
+                message: '모집글 페이징 조회에 실패했습니다.'
+            };
+        }
+    },
+
+    getPublicPostingPagedList: async (page: number = 0, size: number = 10) => {
+        try {
+            return await get<{
+                content: PostingResponseDTO[];
+                totalElements: number;
+                totalPages: number;
+                last: boolean;
+                first: boolean;
+                number: number;
+                size: number;
+            }>(`${API_BASE_URL}/posting/public/list/paged?page=${page}&size=${size}`);
+        } catch(error) {
+            return {
+                success: false,
+                data: null,
+                message: '공개 모집글 페이징 조회에 실패했습니다.'
+            };
+        }
+    }
 }

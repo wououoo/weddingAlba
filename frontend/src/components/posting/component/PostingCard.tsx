@@ -1,22 +1,25 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { PostingResponseDTO } from "../dto/PostingResponseDTO";
+import { convertDatetime, convertPay, convertTime } from "../../common/base";
 
 const PostingCard: React.FC<PostingResponseDTO> = ({
     postingId,
     title,
     sidoSigungu,
     appointmentDatetime,
+    startTime,
+    endTime,
     workingHours,
     address,
     buildingName,
     isSelf,
     hasMobileInvitation,
     payAmount,
+    payType,
     payTypeStr,
     tags,
     guestMainRole,
-    detailContent,
     nickname,
     postingHistoryCount
 }) => {
@@ -62,7 +65,7 @@ const PostingCard: React.FC<PostingResponseDTO> = ({
                     <svg className="w-4 h-4 mr-2 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
                     </svg>
-                    <span className="text-sm">{appointmentDatetime}</span>
+                    <span className="text-sm">{convertDatetime(appointmentDatetime || '')}</span>
                 </div>
 
                 {/* 예식장 위치 */}
@@ -78,7 +81,7 @@ const PostingCard: React.FC<PostingResponseDTO> = ({
                     <svg className="w-4 h-4 mr-2 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
                     </svg>
-                    <span className="text-sm">{workingHours}</span>
+                    <span className="text-sm">{convertTime(startTime || '')} ~ {convertTime(endTime || '')}, {Math.floor(Number(workingHours))}시간</span>
                 </div>
 
                 {/* 급여 */}
@@ -88,26 +91,17 @@ const PostingCard: React.FC<PostingResponseDTO> = ({
                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
                     </svg>
                     <span className="text-sm font-medium text-blue-600">
-                        {payTypeStr} {payAmount}
+                        {convertPay(payType || '', payAmount || '', workingHours || '')}
                     </span>
                     <div className="ml-auto flex items-center space-x-2">
-                        {hasMobileInvitation && (
+                        {hasMobileInvitation ? (
                             <div className="bg-green-100 text-green-700 px-2 py-1 rounded-md text-xs font-medium">
                                 📱 청첩장 제출
                             </div>
-                        )}
+                        ) : ''}
                     </div>
                 </div>
             </div>
-
-            {/* 상세 설명 */}
-            {detailContent && (
-                <div className="mb-3">
-                    <p className="text-sm text-gray-600 line-clamp-2">
-                        {detailContent}
-                    </p>
-                </div>
-            )}
 
             {/* 태그들 */}
             {tags && tags.length > 0 && (

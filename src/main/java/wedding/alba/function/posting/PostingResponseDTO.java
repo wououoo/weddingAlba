@@ -43,12 +43,13 @@ public class PostingResponseDTO {
     private String payAmount;
 
     private String guestMainRole;
+    private Integer targetPersonnel;  // 모집인원 (목표)
     private String detailContent;
     private List<String> tags;
 
     // 사욷자 및 프로필 정보
     private String nickname;
-    private Integer postingHistoryCount;        // 누적 모집 횟수
+    private Integer recruitmentCount;        // 누적 모집 횟수
     private Long userId;
     
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")

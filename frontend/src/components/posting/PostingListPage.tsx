@@ -17,7 +17,9 @@ const PostingListPage: React.FC = () => {
         hasMore, 
         error, 
         loadMorePostings, 
-        loadFirstPage 
+        loadFirstPage,
+        setAddress,
+        setGuestMainRole
     } = usePostingList();
 
     // 무한스크롤 훅 사용
@@ -28,10 +30,22 @@ const PostingListPage: React.FC = () => {
         threshold: 200
     });
 
+    // 선택된 지역이나 역할이 변경될 때마다 게시글 다시 불러오기
     useEffect(() => {
-        // 컴포넌트 마운트 시 첫 페이지 로드
+        // '전체'가 아닌 경우에만 address 설정 (구/군이 선택된 경우 우선)
+        let fullAddress = '';
+        if (selectedDistrict !== "전체" && selectedDistrict !== "시/도 먼저 선택") {
+            fullAddress = selectedDistrict;
+        } else if (selectedCity !== "전체") {
+            fullAddress = selectedCity;
+        }
+
+        setAddress(fullAddress);
+        setGuestMainRole(selectedRole === "전체" ? '' : selectedRole);
+        
+        // 필터 변경 시 첫 페이지부터 다시 로드
         loadFirstPage();
-    }, [loadFirstPage]);
+    }, [selectedCity, selectedDistrict, selectedRole, setAddress, setGuestMainRole, loadFirstPage]);
 
     // 지역 데이터
     const districtData: { [key: string]: string[] } = {

@@ -53,9 +53,9 @@ public class User {
     
     @Enumerated(EnumType.STRING)
     private AuthLevel authLevel;     // 권한 레벨 (USER, ADMIN, SUPER_ADMIN)
-    
-    @Column(columnDefinition = "SMALLINT DEFAULT 0")
-    private Integer blackList;       // 블랙리스트 상태 (0: 아님, 1: 블랙리스트)
+
+    @Column(nullable = false)
+    private Integer blackList = 0;       // 블랙리스트 상태 (0: 아님, 1: 블랙리스트)
     
     @CreationTimestamp
     @Column(updatable = false)

@@ -44,6 +44,7 @@ export const postingApi = {
         }
     },
 
+    // 모집글 상세조회
     getPostingDetail: async (id: string) => {
         try {
             return await get<PostingResponseDTO>(`${API_BASE_URL}/posting/detail/${id}`);
@@ -56,19 +57,7 @@ export const postingApi = {
         }
     },
 
-    getPostingAllList: async () => {
-        try {
-            return await get<PostingResponseDTO[]>(`${API_BASE_URL}/posting/all/list`);
-        } catch(error) {
-            return {
-                success: false,
-                data: null,
-                message: '모집글 전체 조회에 실패했습니다.'
-            };
-        }
-    },
-
-    getPostingPagedList: async (page: number = 0, size: number = 10) => {
+    getAllPostingList: async (page: number = 0, size: number = 10, address: string = '', guestMainRole: string = '') => {
         try {
             return await get<{
                 content: PostingResponseDTO[];
@@ -78,32 +67,12 @@ export const postingApi = {
                 first: boolean;
                 number: number;
                 size: number;
-            }>(`${API_BASE_URL}/posting/list/paged?page=${page}&size=${size}`);
+            }>(`${API_BASE_URL}/posting/list/paged?page=${page}&size=${size}&address=${address}&guestMainRole=${guestMainRole}`);
         } catch(error) {
             return {
                 success: false,
                 data: null,
-                message: '모집글 페이징 조회에 실패했습니다.'
-            };
-        }
-    },
-
-    getPublicPostingPagedList: async (page: number = 0, size: number = 10) => {
-        try {
-            return await get<{
-                content: PostingResponseDTO[];
-                totalElements: number;
-                totalPages: number;
-                last: boolean;
-                first: boolean;
-                number: number;
-                size: number;
-            }>(`${API_BASE_URL}/posting/public/list/paged?page=${page}&size=${size}`);
-        } catch(error) {
-            return {
-                success: false,
-                data: null,
-                message: '공개 모집글 페이징 조회에 실패했습니다.'
+                message: '모집글 조회에 실패했습니다.'
             };
         }
     }

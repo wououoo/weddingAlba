@@ -95,6 +95,7 @@ export const usePostingForm = (): UsePostingFormResult => {
         personPhoneNumber: '',
         hasMobileInvitation: null,
         isSelf: null,
+        recruitmentCount: 1,
         tags: []
     });
 
@@ -123,6 +124,7 @@ export const usePostingForm = (): UsePostingFormResult => {
                             payType: loadedData.payType === 'DAILY' ? 'daily' : 'hourly',
                             payAmount: loadedData.payAmount || '',
                             guestMainRole: loadedData.guestMainRole || '',
+                            recruitmentCount: loadedData.targetRecruitmentCount || 1,
                             detailContent: loadedData.detailContent || '',
                             tags: loadedData.tags || [],
                         });

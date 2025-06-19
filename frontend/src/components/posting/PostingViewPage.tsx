@@ -8,11 +8,14 @@ const PostingViewPage: React.FC = () => {
         isFavorite,
         showFullDescription,
         isLoading,
+        isAuthor,
         toggleFavorite,
         toggleDescription,
         goBack,
         goToUserProfile,
         goToApplyPage,
+        goToEditPage,
+        cancelPosting,
     } = usePostingView();
 
     if (isLoading) {
@@ -35,7 +38,7 @@ const PostingViewPage: React.FC = () => {
         workingHours,
         payAmount,
         nickname,
-        postingHistoryCount,
+        recruitmentCount,
         hasMobileInvitation,
         guestMainRole,
         detailContent,
@@ -117,7 +120,7 @@ const PostingViewPage: React.FC = () => {
                                             <span className="text-xs text-gray-500 font-medium">모바일 청첩장 미인증</span>
                                         </div>
                                     )}
-                                    <span className="text-xs text-gray-500">누적 모집 {postingHistoryCount || 0}회</span>
+                                    <span className="text-xs text-gray-500">누적 모집 {recruitmentCount || 0}회</span>
                                 </div>
                             </div>
                         </div>
@@ -252,22 +255,43 @@ const PostingViewPage: React.FC = () => {
             {/* 하단 고정 버튼 */}
             <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-20">
                 <div className="flex space-x-3">
-                    <button
-                        onClick={toggleFavorite}
-                        className={`flex-1 py-4 rounded-xl font-semibold text-lg transition-all
-                            ${isFavorite
-                                ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                                : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}
-                        `}
-                    >
-                        찜하기
-                    </button>
-                    <button
-                        onClick={goToApplyPage}
-                        className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white py-4 rounded-xl font-semibold text-lg hover:shadow-lg transition-all"
-                    >
-                        신청하기
-                    </button>
+                    {isAuthor ? (
+                        // 작성자인 경우: 모집취소하기, 수정하기
+                        <>
+                            <button
+                                onClick={cancelPosting}
+                                className="flex-1 bg-red-500 text-white py-4 rounded-xl font-semibold text-lg hover:bg-red-600 transition-all"
+                            >
+                                모집취소하기
+                            </button>
+                            <button
+                                onClick={goToEditPage}
+                                className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white py-4 rounded-xl font-semibold text-lg hover:shadow-lg transition-all"
+                            >
+                                수정하기
+                            </button>
+                        </>
+                    ) : (
+                        // 일반 사용자인 경우: 찜하기, 신청하기
+                        <>
+                            <button
+                                onClick={toggleFavorite}
+                                className={`flex-1 py-4 rounded-xl font-semibold text-lg transition-all
+                                    ${isFavorite
+                                        ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                                        : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}
+                                `}
+                            >
+                                찜하기
+                            </button>
+                            <button
+                                onClick={goToApplyPage}
+                                className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white py-4 rounded-xl font-semibold text-lg hover:shadow-lg transition-all"
+                            >
+                                신청하기
+                            </button>
+                        </>
+                    )}
                 </div>
             </div>
         </div>

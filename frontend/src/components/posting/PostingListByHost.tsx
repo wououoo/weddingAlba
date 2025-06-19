@@ -47,7 +47,7 @@ const PostingListByHost: React.FC = () => {
             guestMainRole: '고등학교 동창',
             detailContent: '90년대 초반 여성, MBTI가 E였으면 좋겠습니다.',
             nickname: '포효하는 고라니123',
-            postingHistoryCount: 3,
+            recruitmentCount: 3,
             applicantCount: 3,
             applicants: [
                 {
@@ -104,7 +104,7 @@ const PostingListByHost: React.FC = () => {
             guestMainRole: '직장동료',
             detailContent: '조용하고 차분한 성격의 분을 선호합니다.',
             nickname: '포효하는 고라니123',
-            postingHistoryCount: 3,
+            recruitmentCount: 3,
             applicantCount: 1,
             applicants: [
                 {
@@ -142,7 +142,7 @@ const PostingListByHost: React.FC = () => {
     };
 
     // 신청자 상태 변경
-    const handleStatusChange = (postingId: number, applicantId: number, newStatus: 'approved' | 'rejected') => {
+    const handleStatusChange = (postingId: number, applicantId: number, newStatus: 'pending' | 'approved' | 'rejected') => {
         // TODO: API 호출로 상태 변경
         console.log(`Posting ${postingId}, Applicant ${applicantId} status changed to ${newStatus}`);
     };
@@ -251,10 +251,52 @@ const PostingListByHost: React.FC = () => {
                                 ))}
                             </div>
 
-                            <div className="text-sm text-gray-600">
+                            <div className="text-sm text-gray-600 mb-3">
                                 <span className="font-medium text-blue-600">{posting.payAmount}</span>
                                 <span className="mx-2">•</span>
                                 <span>{posting.workingHours}</span>
+                            </div>
+
+                            {/* 모집글 관리 버튼들 */}
+                            <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                                {/* 모집취소 버튼 */}
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        console.log(`모집글 ${posting.postingId} 취소`);
+                                        // TODO: 모집취소 API 호출
+                                    }}
+                                    className="px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600 transition-colors"
+                                >
+                                    모집취소
+                                </button>
+
+                                {/* 확정 버튼 (모집인원과 확정인원이 같을 때) */}
+                                {(() => {
+                                    const approvedCount = posting.applicants.filter(applicant => applicant.status === 'approved').length;
+                                    const targetCount = posting.targetRecruitmentCount || 0;
+                                    
+                                    return approvedCount === targetCount && targetCount > 0 && (
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                console.log(`모집글 ${posting.postingId} 확정 완료`);
+                                                // TODO: 모집확정 API 호출
+                                            }}
+                                            className="px-3 py-1 bg-green-500 text-white text-sm rounded hover:bg-green-600 transition-colors"
+                                        >
+                                            확정완료
+                                        </button>
+                                    );
+                                })()}
+
+                                {/* 모집 현황 표시 */}
+                                <div className="flex items-center text-xs text-gray-500 ml-auto">
+                                    <span>
+                                        확정 {posting.applicants.filter(applicant => applicant.status === 'approved').length}명 / 
+                                        목표 {posting.targetRecruitmentCount || 0}명
+                                    </span>
+                                </div>
                             </div>
                         </div>
 
@@ -287,6 +329,54 @@ const PostingListByHost: React.FC = () => {
                                                         <p className="text-sm text-gray-700 mb-3">
                                                             {applicant.introduction}
                                                         </p>
+                                                    )}
+                                                </div>
+                                                
+                                                {/* 상태별 버튼 */}
+                                                <div className="flex gap-2 mt-2">
+                                                    {applicant.status === 'pending' && (
+                                                        <>
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleStatusChange(posting.postingId!, applicant.applicantId, 'approved');
+                                                                }}
+                                                                className="px-3 py-1 bg-green-500 text-white text-sm rounded hover:bg-green-600 transition-colors"
+                                                            >
+                                                                확정
+                                                            </button>
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleStatusChange(posting.postingId!, applicant.applicantId, 'rejected');
+                                                                }}
+                                                                className="px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600 transition-colors"
+                                                            >
+                                                                거절
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                    {applicant.status === 'approved' && (
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleStatusChange(posting.postingId!, applicant.applicantId, 'pending');
+                                                            }}
+                                                            className="px-3 py-1 bg-gray-500 text-white text-sm rounded hover:bg-gray-600 transition-colors"
+                                                        >
+                                                            취소
+                                                        </button>
+                                                    )}
+                                                    {applicant.status === 'rejected' && (
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleStatusChange(posting.postingId!, applicant.applicantId, 'pending');
+                                                            }}
+                                                            className="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 transition-colors"
+                                                        >
+                                                            거절취소
+                                                        </button>
                                                     )}
                                                 </div>
                                             </div>

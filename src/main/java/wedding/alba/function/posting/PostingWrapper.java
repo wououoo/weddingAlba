@@ -28,6 +28,7 @@ public class PostingWrapper {
             .endTime(postingDto.getEndTime())
             .payType(Posting.PayType.valueOf(postingDto.getPayType().toUpperCase()))
             .payAmount(postingDto.getPayAmount())
+                .targetPersonnel(postingDto.getTargetPersonnel())
             .guestMainRole(postingDto.getGuestMainRole())
             .detailContent(postingDto.getDetailContent())
             .tags(postingDto.getTags() != null ? String.join(",", postingDto.getTags()) : null)
@@ -61,6 +62,7 @@ public class PostingWrapper {
             .payType(posting.getPayType())
             .payAmount(posting.getPayAmount())
             .guestMainRole(posting.getGuestMainRole())
+            .targetPersonnel(posting.getTargetPersonnel())
             .detailContent(posting.getDetailContent())
             .tags(posting.getTags() != null && !posting.getTags().isEmpty() ?
                 java.util.Arrays.stream(posting.getTags().split(","))
@@ -89,6 +91,7 @@ public class PostingWrapper {
                 .payType(posting.getPayType())
                 .payAmount(posting.getPayAmount())
                 .guestMainRole(posting.getGuestMainRole())
+                .targetPersonnel(posting.getTargetPersonnel())
                 .detailContent(posting.getDetailContent())
                 .tags(posting.getTags() != null && !posting.getTags().isEmpty() ?
                     java.util.Arrays.stream(posting.getTags().split(","))
@@ -98,7 +101,7 @@ public class PostingWrapper {
                 .registrationDatetime(posting.getRegistrationDatetime())
                 .updateDatetime(posting.getUpdateDatetime())
                 .nickname(profile.getNickname())
-                .postingHistoryCount(0)
+                .recruitmentCount(profile.getRecruitmentCount())
                 .build();
     }
 

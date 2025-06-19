@@ -29,7 +29,9 @@ public class PostingRequestDTO {
     private LocalTime endTime;
     private String payType;
     private String payAmount;
+    private Integer targetPersonnel;
     private String guestMainRole;
+    private Integer recruitmentCount;    // 모집인원
     private String detailContent;
     private List<String> tags;
 }

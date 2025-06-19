@@ -80,6 +80,9 @@ public class Posting {
     @Column(name="pay_amount")
     private String payAmount;           // 급여 금액
 
+    @Column(name="target_personnel")
+    private Integer targetPersonnel;   // 모집인원
+
     @Column(name="guest_main_role")
     private String guestMainRole;       // 하객 주요 역할
 

@@ -23,13 +23,14 @@ export interface PostingResponseDTO {
     payTypeStr?: string;                  // 일급 인지 시급인지
     payAmount?: string;                   // 임금
     guestMainRole?: string;             // 주 하객 업무내용
+    targetRecruitmentCount?: number;    // 모집인원
     detailContent?: string;           //상세 내용
     tags?: string[] | [];               // 태그
 
     // 모집자 정보
     userId?: number;                    // 모집자 ID
     nickname?: string;                  // 모집자 닉네임
-    postingHistoryCount?: number;       // 누적 모집횟수
+    recruitmentCount?: number;       // 누적 모집횟수
 }
 
 

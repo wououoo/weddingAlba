@@ -101,6 +101,16 @@ const App: React.FC = () => {
           </SimplePrivateRoute>
         } />
 
+        
+        {/* 모집글 수정 */}
+        <Route path="/posting/edit/:postingId" element={
+          <SimplePrivateRoute>
+            <WithLayout>
+              <PostingFormPage />
+            </WithLayout>
+          </SimplePrivateRoute>
+        } />
+
         {/* 신청글 리스트 : default가 본인 작성 */}
         <Route path="/applying/list" element={
           <SimplePrivateRoute>
@@ -224,15 +234,7 @@ const App: React.FC = () => {
           </SimplePrivateRoute>
         } />
 
-        <Route path="/posting/list"
-          element={
-            <SimplePrivateRoute>
-              <WithLayout>
-                <PostingListPage />
-              </WithLayout>
-            </SimplePrivateRoute>
-          }>
-        </Route>
+
 
         {/*<Route path="/posting/:id" element={*/}
         {/*  <SimplePrivateRoute>*/}

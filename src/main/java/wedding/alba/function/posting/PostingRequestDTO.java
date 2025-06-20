@@ -14,6 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PostingRequestDTO {
+    private Long postingId;
     private Long userId;
     private String title;
     private Integer isSelf;

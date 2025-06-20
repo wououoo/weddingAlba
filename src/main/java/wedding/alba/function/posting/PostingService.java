@@ -42,6 +42,32 @@ public class PostingService {
         return responseDTO;
     }
 
+    public PostingResponseDTO updatePosting(Long userId, Long postingId, PostingRequestDTO postingDto) {
+        // dto -> Posting 엔터티로 변경
+        Posting findPosting = postingRepository.findById(postingId)
+                .orElseThrow(() -> {
+                        log.error("존재하지 않는 모집글 {}  수정 시도", postingId);
+                         return new IllegalArgumentException("존재하지 않는 모집글입니다.");
+                    });
+
+        // 본인 게시글인지, 수정할려는 게시글이 맞는지 확인
+        if(!findPosting.getUserId().equals(userId)) {
+            log.warn("사용자 {}가 다른 사용자의 모집글 {} 수정 시도", postingDto.getUserId(), postingId);
+            throw new IllegalArgumentException("수정 권한이 없습니다.");
+        }
+
+        Posting posting = postingWrapper.toEntity(postingDto);
+        posting.setPostingId(postingId);
+        Posting updatePosting = postingRepository.save(posting);
+        log.info("사용자 {}가  모집글 {} 수정완료",
+                updatePosting.getUserId(), updatePosting.getPostingId());
+
+        PostingResponseDTO responseDTO = PostingResponseDTO.builder()
+                .postingId(updatePosting.getPostingId())
+                .build();
+        return responseDTO;
+    }
+
 
     // 전체 모집글 리스트 조회
     public Page<PostingResponseDTO> getAllPostingList(int page, int size, String address, String guestMainRole) {

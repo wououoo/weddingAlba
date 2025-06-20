@@ -179,4 +179,16 @@ public class UserService {
     public List<User> getBlacklistedUsers() {
         return userRepository.findByBlackList(1); // 1은 블랙리스트 상태
     }
+
+    /**
+     * 제공자별 사용자 조회 (테스트용)
+     * @param provider OAuth2 제공자
+     * @return 해당 제공자의 사용자 목록
+     */
+    @Transactional(readOnly = true)
+    public List<User> getUsersByProvider(String provider) {
+        return userRepository.findAll().stream()
+                .filter(user -> provider.equals(user.getProvider()))
+                .toList();
+    }
 }

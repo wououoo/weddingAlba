@@ -47,7 +47,6 @@ const PostingListByHost: React.FC = () => {
             guestMainRole: '고등학교 동창',
             detailContent: '90년대 초반 여성, MBTI가 E였으면 좋겠습니다.',
             nickname: '포효하는 고라니123',
-            recruitmentCount: 3,
             applicantCount: 3,
             applicants: [
                 {
@@ -104,7 +103,6 @@ const PostingListByHost: React.FC = () => {
             guestMainRole: '직장동료',
             detailContent: '조용하고 차분한 성격의 분을 선호합니다.',
             nickname: '포효하는 고라니123',
-            recruitmentCount: 3,
             applicantCount: 1,
             applicants: [
                 {
@@ -274,7 +272,7 @@ const PostingListByHost: React.FC = () => {
                                 {/* 확정 버튼 (모집인원과 확정인원이 같을 때) */}
                                 {(() => {
                                     const approvedCount = posting.applicants.filter(applicant => applicant.status === 'approved').length;
-                                    const targetCount = posting.targetRecruitmentCount || 0;
+                                    const targetCount = posting.targetPersonnel || 0;
                                     
                                     return approvedCount === targetCount && targetCount > 0 && (
                                         <button
@@ -294,7 +292,7 @@ const PostingListByHost: React.FC = () => {
                                 <div className="flex items-center text-xs text-gray-500 ml-auto">
                                     <span>
                                         확정 {posting.applicants.filter(applicant => applicant.status === 'approved').length}명 / 
-                                        목표 {posting.targetRecruitmentCount || 0}명
+                                        목표 {posting.targetPersonnel || 0}명
                                     </span>
                                 </div>
                             </div>

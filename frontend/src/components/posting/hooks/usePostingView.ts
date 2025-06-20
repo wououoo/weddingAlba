@@ -1,12 +1,24 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { postingApi } from '../api/postingApi';
 import { PostingResponseDTO } from '../dto';
 import { getAccessToken } from '../../../OAuth2/authUtils';
+import { useToast } from '../../common/toast/useToast';
+
+// 쿠키에서 값을 가져오는 유틸리티 함수
+const getCookie = (name: string): string | null => {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) {
+        return parts.pop()?.split(';').shift() || null;
+    }
+    return null;
+};
 
 export const usePostingView = () => {
     const navigate = useNavigate();
     const { id } = useParams<{ id: string }>();
+    const { toastState, showToast, hideToast } = useToast();
     
     // 상태 관리
     const [isFavorite, setIsFavorite] = useState(false);
@@ -17,16 +29,34 @@ export const usePostingView = () => {
 
     // 현재 사용자 ID 추출 (JWT 토큰에서)
     useEffect(() => {
-        const token = getAccessToken();
+        // 먼저 localStorage에서 토큰 확인
+        let token = getAccessToken();
+        
+        // localStorage에 토큰이 없으면 쿠키에서 확인
+        if (!token) {
+            token = getCookie('refreshToken'); // 쿠키에서 refreshToken 가져오기
+        }
+        
         if (token) {
             try {
-                // JWT 토큰에서 사용자 ID 추출 (간단한 방법)
+                // JWT 토큰에서 사용자 ID 추출
                 const payload = JSON.parse(atob(token.split('.')[1]));
-                setCurrentUserId(payload.userId || payload.sub);
+                const extractedUserId = payload.userId || payload.sub;
+                
+                // 숫자로 변환 시도
+                const numericUserId = typeof extractedUserId === 'string' ? parseInt(extractedUserId, 10) : extractedUserId;
+                
+                setCurrentUserId(numericUserId);
+                console.log('토큰 페이로드:', payload);
+                console.log('추출된 사용자 ID (원본):', extractedUserId);
+                console.log('변환된 사용자 ID:', numericUserId);
             } catch (error) {
                 console.error('토큰 파싱 오류:', error);
                 setCurrentUserId(null);
             }
+        } else {
+            console.log('토큰을 찾을 수 없습니다.');
+            setCurrentUserId(null);
         }
     }, []);
 
@@ -55,7 +85,7 @@ export const usePostingView = () => {
         }
     }, [id]);
 
-    // 찜하기 토글 함수
+    // 찜하기 토글 함수 
     const toggleFavorite = () => {
         setIsFavorite(!isFavorite);
     };
@@ -83,27 +113,53 @@ export const usePostingView = () => {
     // 수정 페이지로 이동
     const goToEditPage = () => {
         if (id) {
-            navigate(`/posting/edit/${id}`);
+            navigate(`/posting/edit/${postingData?.postingId}`);
         }
     };
 
     // 모집 취소 함수
     const cancelPosting = async () => {
-        if (window.confirm('정말로 모집을 취소하시겠습니까?')) {
+        // 먼저 확인 Toast 표시
+        showToast('정말로 모집을 취소하시겠습니까?', '취소하기', async () => {
             try {
                 // TODO: 모집 취소 API 호출
                 console.log('모집 취소:', id);
-                alert('모집이 취소되었습니다.');
-                navigate(-1);
+                hideToast(); // 확인 Toast 닫기
+                showToast('모집이 취소되었습니다.');
+                
+                // 잠시 후 페이지 이동
+                setTimeout(() => {
+                    navigate(-1);
+                }, 1500);
             } catch (error) {
                 console.error('모집 취소 중 오류 발생:', error);
-                alert('모집 취소 중 오류가 발생했습니다.');
+                hideToast();
+                showToast('모집 취소 중 오류가 발생했습니다.');
             }
-        }
+        });
     };
 
-    // 현재 사용자가 작성자인지 확인
-    const isAuthor = currentUserId && postingData?.userId === currentUserId;
+    // 현재 사용자가 작성자인지 확인 (타입을 통일하여 비교)
+    const isAuthor = useMemo(() => {
+        if (!currentUserId || !postingData?.userId) {
+            return false;
+        }
+        
+        // 둘 다 숫자로 변환하여 비교
+        const currentUserIdNum = typeof currentUserId === 'string' ? parseInt(currentUserId, 10) : currentUserId;
+        const postingUserIdNum = typeof postingData.userId === 'string' ? parseInt(postingData.userId, 10) : postingData.userId;
+        
+        return currentUserIdNum === postingUserIdNum;
+    }, [currentUserId, postingData?.userId]);
+    
+    // 디버깅을 위한 로그
+    useEffect(() => {
+        console.log('=== 사용자 권한 확인 ===');
+        console.log('현재 사용자 ID:', currentUserId, typeof currentUserId);
+        console.log('게시물 작성자 ID:', postingData?.userId, typeof postingData?.userId);
+        console.log('작성자 여부:', isAuthor);
+        console.log('====================');
+    }, [currentUserId, postingData, isAuthor]);
 
     // 게시글 삭제 함수
     const deletePosting = async (postingId: number) => {
@@ -130,6 +186,11 @@ export const usePostingView = () => {
         showFullDescription,
         isLoading,
         isAuthor,
+        currentUserId,
+        
+        // Toast 상태
+        toastState,
+        hideToast,
         
         // 액션 함수
         toggleFavorite,
@@ -138,6 +199,7 @@ export const usePostingView = () => {
         goToUserProfile,
         goToApplyPage,
         goToEditPage,
-        cancelPosting
+        cancelPosting,
+        deletePosting
     };
 };

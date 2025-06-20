@@ -33,8 +33,8 @@ public class Applying {
     
     @Column(name = "user_id")
     private Long userId;                 // 신청자 ID
-    
-    @Column(name = "posting_id")
+
+    @Column(name="posting_id")
     private Long postingId;              // 신청한 모집글 ID
     
     @Column(name = "status")

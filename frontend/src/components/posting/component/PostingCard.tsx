@@ -21,7 +21,6 @@ const PostingCard: React.FC<PostingResponseDTO> = ({
     tags,
     guestMainRole,
     nickname,
-    recruitmentCount
 }) => {
     const navigate = useNavigate();
 
@@ -45,7 +44,6 @@ const PostingCard: React.FC<PostingResponseDTO> = ({
                     <div className="flex items-center text-xs text-gray-500">
                         <span>{nickname}</span>
                         <span className="mx-1">•</span>
-                        <span>모집 {recruitmentCount || 0}회</span>
                     </div>
                 </div>
 

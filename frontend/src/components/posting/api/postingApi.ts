@@ -19,9 +19,9 @@ export const postingApi = {
     },
 
     // 모집글 수정
-    updatePosting: async (id: string, postingData: PostingRequestDTO) => {
+    updatePosting: async (postingId: string, postingData: PostingRequestDTO) => {
         try {
-            return await put<PostingResponseDTO>(`${API_BASE_URL}/posting/update/${id}`, postingData);
+            return await put<PostingResponseDTO>(`${API_BASE_URL}/posting/update/${postingId}`, postingData);
         } catch (error) {
             return {
                 success: false,

@@ -1,6 +1,7 @@
 import React from "react";
 import { convertDatetime, convertPay, convertTime } from "../common/base";
 import { usePostingView } from "./hooks/usePostingView";
+import Toast from "../profile/toast/Toast";
 
 const PostingViewPage: React.FC = () => {
     const {
@@ -9,6 +10,9 @@ const PostingViewPage: React.FC = () => {
         showFullDescription,
         isLoading,
         isAuthor,
+        currentUserId,
+        toastState,
+        hideToast,
         toggleFavorite,
         toggleDescription,
         goBack,
@@ -16,7 +20,15 @@ const PostingViewPage: React.FC = () => {
         goToApplyPage,
         goToEditPage,
         cancelPosting,
+        deletePosting,
     } = usePostingView();
+
+    // 디버깅을 위한 로그
+    React.useEffect(() => {
+        console.log('PostingViewPage - isAuthor:', isAuthor);
+        console.log('PostingViewPage - currentUserId:', currentUserId);
+        console.log('PostingViewPage - postingData.userId:', postingData?.userId);
+    }, [isAuthor, currentUserId, postingData]);
 
     if (isLoading) {
         return <div className="flex justify-center items-center h-screen">로딩 중...</div>;
@@ -38,13 +50,13 @@ const PostingViewPage: React.FC = () => {
         workingHours,
         payAmount,
         nickname,
-        recruitmentCount,
         hasMobileInvitation,
         guestMainRole,
         detailContent,
         tags,
         userId,
-        payType
+        payTypeStr,
+        targetPersonnel
     } = postingData;
 
     return (
@@ -120,7 +132,6 @@ const PostingViewPage: React.FC = () => {
                                             <span className="text-xs text-gray-500 font-medium">모바일 청첩장 미인증</span>
                                         </div>
                                     )}
-                                    <span className="text-xs text-gray-500">누적 모집 {recruitmentCount || 0}회</span>
                                 </div>
                             </div>
                         </div>
@@ -168,7 +179,7 @@ const PostingViewPage: React.FC = () => {
                             </div>
                             <div>
                                 <h4 className="font-medium text-gray-900">임금</h4>
-                                <p className="text-green-600 font-semibold">{convertPay(payType || '', payAmount || '', workingHours || '')}</p>
+                                <p className="text-green-600 font-semibold">{payTypeStr} {Number(payAmount).toLocaleString()}원</p>
                             </div>
                         </div>
 
@@ -182,6 +193,19 @@ const PostingViewPage: React.FC = () => {
                             <div>
                                 <h4 className="font-medium text-gray-900">업무</h4>
                                 <p className="text-gray-600 text-sm">{guestMainRole}</p>
+                            </div>
+                        </div>
+
+                        {/* 모집인원 */}
+                        <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                            <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <svg className="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 className="font-medium text-gray-900">모집인원</h4>
+                                <p className="text-gray-600 text-sm">{targetPersonnel}명</p>
                             </div>
                         </div>
 
@@ -260,9 +284,9 @@ const PostingViewPage: React.FC = () => {
                         <>
                             <button
                                 onClick={cancelPosting}
-                                className="flex-1 bg-red-500 text-white py-4 rounded-xl font-semibold text-lg hover:bg-red-600 transition-all"
+                                className="flex-1 bg-gray-200 text-gray-700 py-4 rounded-xl font-semibold text-lg hover:bg-gray-300 transition-all"
                             >
-                                모집취소하기
+                                취소하기
                             </button>
                             <button
                                 onClick={goToEditPage}
@@ -294,6 +318,15 @@ const PostingViewPage: React.FC = () => {
                     )}
                 </div>
             </div>
+
+            {/* Toast 컴포넌트 */}
+            <Toast
+                isVisible={toastState.isVisible}
+                message={toastState.message}
+                actionText={toastState.actionText}
+                onAction={toastState.onAction}
+                onClose={hideToast}
+            />
         </div>
     );
 };

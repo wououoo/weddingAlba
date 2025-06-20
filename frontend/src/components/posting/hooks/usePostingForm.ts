@@ -55,6 +55,7 @@ interface UsePostingFormResult {
     openAddressSearch: () => void; // 주소 검색 모달을 여는 함수
     closeAddressSearch: () => void; // 주소 검색 모달을 닫는 함수
     handleAddressComplete: (data: DaumPostcodeData) => void; // 주소 검색 완료 시 호출될 콜백 함수
+    isEditMode: boolean; // 수정 모드 여부
 }
 
 /**
@@ -95,10 +96,9 @@ export const usePostingForm = (): UsePostingFormResult => {
         personPhoneNumber: '',
         hasMobileInvitation: null,
         isSelf: null,
-        recruitmentCount: 1,
+        targetPersonnel: 1,
         tags: []
     });
-
     // 게시물 데이터 로드 (수정 모드일 때)
     useEffect(() => {
         if (isEditMode && postingId) {
@@ -108,23 +108,25 @@ export const usePostingForm = (): UsePostingFormResult => {
                     if (response.success && response.data) {
                         // 불러온 데이터를 formData에 설정
                         const loadedData = response.data;
+                        console.log('수정모드 로드된 데이터:', loadedData);
+                        console.log('isSelf:', loadedData.isSelf, 'hasMobileInvitation:', loadedData.hasMobileInvitation);
                         setFormData({
                             title: loadedData.title || '',
-                            isSelf: loadedData.isSelf || null,
+                            isSelf: loadedData.isSelf !== null && loadedData.isSelf !== undefined ? loadedData.isSelf : null,
                             personName: loadedData.personName || '',
                             personPhoneNumber: loadedData.personPhoneNumber || '',
                             appointmentDatetime: loadedData.appointmentDatetime || '',
                             address: loadedData.address || '',
                             buildingName: loadedData.buildingName || '',
                             sidoSigungu: loadedData.sidoSigungu || '',
-                            hasMobileInvitation: loadedData.hasMobileInvitation || null,
+                            hasMobileInvitation: loadedData.hasMobileInvitation !== null && loadedData.hasMobileInvitation !== undefined ? loadedData.hasMobileInvitation : null,
                             startTime: loadedData.startTime || '',
                             endTime: loadedData.endTime || '',
                             workingHours: loadedData.workingHours || '',
                             payType: loadedData.payType === 'DAILY' ? 'daily' : 'hourly',
                             payAmount: loadedData.payAmount || '',
                             guestMainRole: loadedData.guestMainRole || '',
-                            recruitmentCount: loadedData.targetRecruitmentCount || 1,
+                            targetPersonnel: loadedData.targetPersonnel || 1,
                             detailContent: loadedData.detailContent || '',
                             tags: loadedData.tags || [],
                         });
@@ -135,12 +137,12 @@ export const usePostingForm = (): UsePostingFormResult => {
                         setTags(loadedData.tags || []);
                     } else {
                         alert('게시물 로드에 실패했습니다.');
-                        navigate('/postings'); // 실패 시 목록 페이지로 이동
+                        navigate('/posting/list'); // 실패 시 목록 페이지로 이동
                     }
                 } catch (error) {
                     console.error('Error loading posting:', error);
                     alert('게시물 로드 중 오류가 발생했습니다.');
-                    navigate('/postings');
+                    navigate('/posting/list');
                 }
             };
             loadPosting();
@@ -343,5 +345,6 @@ export const usePostingForm = (): UsePostingFormResult => {
         openAddressSearch,
         closeAddressSearch,
         handleAddressComplete,
+        isEditMode
     };
 }; 

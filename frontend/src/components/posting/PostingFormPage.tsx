@@ -29,7 +29,8 @@ const PostingFormPage: React.FC = () => {
         isAddressSearchOpen,
         openAddressSearch,
         closeAddressSearch,
-        handleAddressComplete
+        handleAddressComplete,
+        isEditMode,
     } = usePostingForm();
 
     useEffect(() => {
@@ -62,7 +63,11 @@ const PostingFormPage: React.FC = () => {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path>
                         </svg>
                     </button>
-                    <h1 className="text-lg font-semibold text-gray-900 flex-1 text-center">하객알바 모집글 작성</h1>
+                    {isEditMode ? (
+                        <h1 className="text-lg font-semibold text-gray-900 flex-1 text-center">하객알바 모집글 수정</h1>
+                    ) : (
+                        <h1 className="text-lg font-semibold text-gray-900 flex-1 text-center">하객알바 모집글 작성</h1>
+                    )}
                 </div>
             </div>
 
@@ -424,8 +429,8 @@ const PostingFormPage: React.FC = () => {
                         </label>
                         <div className="relative">
                             <select
-                                value={formData.recruitmentCount || 1}
-                                onChange={(e) => handleInputChange('recruitmentCount', Number(e.target.value))}
+                                value={formData.targetPersonnel || 1}
+                                onChange={(e) => handleInputChange('targetPersonnel', Number(e.target.value))}
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
                             >
                                 {Array.from({ length: 20 }, (_, i) => i + 1).map(num => (
@@ -509,14 +514,27 @@ const PostingFormPage: React.FC = () => {
                         onClick={() => navigate(-1)}
                         className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-200 transition-colors"
                     >
-                        취소
+                        뒤로가기
                     </button>
-                    <button
-                        onClick={handleFormSubmit}
-                        className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all"
-                    >
-                        등록하기
-                    </button>
+                    {isEditMode ? (
+                        // 수정하기인 경우: 뒤로가기, 수정하기
+                        <>
+                            <button
+                                onClick={handleFormSubmit}
+                                className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white py-4 rounded-xl font-semibold text-lg hover:shadow-lg transition-all">
+                                수정하기
+                            </button>
+                        </>
+                    ) : (
+                        // 등록하기의 경우 : 취소, 등록하기
+                        <>
+                            <button
+                                onClick={handleFormSubmit}
+                                className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all">
+                                등록하기
+                            </button>
+                        </>
+                    )}
                 </div>
             </div>
         </div>

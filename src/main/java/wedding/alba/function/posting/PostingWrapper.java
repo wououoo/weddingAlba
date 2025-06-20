@@ -13,36 +13,27 @@ public class PostingWrapper {
 
     public Posting toEntity(PostingRequestDTO postingDto) {
         return Posting.builder()
-            .userId(postingDto.getUserId())
-            .title(postingDto.getTitle())
-            .isSelf(postingDto.getIsSelf())
-            .personName(postingDto.getPersonName())
-            .personPhoneNumber(postingDto.getPersonPhoneNumber())
-            .appointmentDatetime(postingDto.getAppointmentDatetime())
-            .address(postingDto.getAddress())
-            .buildingName(postingDto.getBuildingName())
-            .sidoSigungu(postingDto.getSidoSigungu())
-            .hasMobileInvitation(postingDto.getHasMobileInvitation())
-            .workingHours(postingDto.getWorkingHours())
-            .startTime(postingDto.getStartTime())
-            .endTime(postingDto.getEndTime())
-            .payType(Posting.PayType.valueOf(postingDto.getPayType().toUpperCase()))
-            .payAmount(postingDto.getPayAmount())
+                .userId(postingDto.getUserId())
+                .title(postingDto.getTitle())
+                .isSelf(postingDto.getIsSelf())
+                .personName(postingDto.getPersonName())
+                .personPhoneNumber(postingDto.getPersonPhoneNumber())
+                .appointmentDatetime(postingDto.getAppointmentDatetime())
+                .address(postingDto.getAddress())
+                .buildingName(postingDto.getBuildingName())
+                .sidoSigungu(postingDto.getSidoSigungu())
+                .hasMobileInvitation(postingDto.getHasMobileInvitation())
+                .workingHours(postingDto.getWorkingHours())
                 .targetPersonnel(postingDto.getTargetPersonnel())
-            .guestMainRole(postingDto.getGuestMainRole())
-            .detailContent(postingDto.getDetailContent())
+                .startTime(postingDto.getStartTime())
+                .endTime(postingDto.getEndTime())
+                .payType(Posting.PayType.valueOf(postingDto.getPayType().toUpperCase()))
+                .payAmount(postingDto.getPayAmount())
+                .targetPersonnel(postingDto.getTargetPersonnel())
+                .guestMainRole(postingDto.getGuestMainRole())
+                .detailContent(postingDto.getDetailContent())
             .tags(postingDto.getTags() != null ? String.join(",", postingDto.getTags()) : null)
             .build();
-    }
-
-    public List<PostingResponseDTO> toResponseDTOList(List<Posting> postings) {
-        if (postings == null) {
-            return Collections.emptyList();
-        }
-        
-        return postings.stream()
-            .map(this::toResponseDTO)
-            .collect(Collectors.toList());
     }
 
     public PostingResponseDTO toResponseDTO(Posting posting) {
@@ -101,7 +92,6 @@ public class PostingWrapper {
                 .registrationDatetime(posting.getRegistrationDatetime())
                 .updateDatetime(posting.getUpdateDatetime())
                 .nickname(profile.getNickname())
-                .recruitmentCount(profile.getRecruitmentCount())
                 .build();
     }
 

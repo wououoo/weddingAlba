@@ -43,6 +43,21 @@ public class PostingController {
         }
     }
 
+    @PutMapping("/update/{postingId}")
+    public ResponseEntity<ApiResponse<PostingResponseDTO>> updatePosting(@PathVariable Long postingId, @RequestBody @Valid PostingRequestDTO postingDto) {
+        try {
+            Long userId = getCurrentUserId();
+            PostingResponseDTO responseDTO = postingService.updatePosting(userId, postingId, postingDto);
+            return ResponseEntity.ok(ApiResponse.success(responseDTO));
+        } catch(RuntimeException e) {
+            log.error("모집글 생성 실패: {}", e.getMessage());
+            return ResponseEntity.ok(ApiResponse.error(e.getMessage()));
+        } catch(Exception e) {
+            return ResponseEntity.ok(ApiResponse.error("모집글 생성에 실패했습니다. 다시 확인해주세요."));
+        }
+    }
+
+
     @GetMapping("/list/paged")
     public ResponseEntity<ApiResponse<Page<PostingResponseDTO>>> getPostingListPaged(
             @RequestParam(defaultValue = "0") int page,

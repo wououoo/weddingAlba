@@ -49,7 +49,6 @@ public class PostingResponseDTO {
 
     // 사욷자 및 프로필 정보
     private String nickname;
-    private Integer recruitmentCount;        // 누적 모집 횟수
     private Long userId;
     
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")

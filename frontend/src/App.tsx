@@ -130,7 +130,7 @@ const App: React.FC = () => {
         } />
 
         {/* 신청글 작성하기 */}
-        <Route path="/applying/create" element={
+        <Route path="/applying/create/:postingId" element={
           <SimplePrivateRoute>
           <WithLayout>
             <ApplyingFormPage />

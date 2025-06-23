@@ -43,7 +43,6 @@ const PostingCard: React.FC<PostingResponseDTO> = ({
                     <h3 className="font-semibold text-gray-900 mb-1">{title}</h3>
                     <div className="flex items-center text-xs text-gray-500">
                         <span>{nickname}</span>
-                        <span className="mx-1">•</span>
                     </div>
                 </div>
 

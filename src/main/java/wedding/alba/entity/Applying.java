@@ -34,9 +34,9 @@ public class Applying {
     @Column(name = "user_id")
     private Long userId;                 // 신청자 ID
 
-    @Column(name="posting_id")
-    private Long postingId;              // 신청한 모집글 ID
-    
+    @Column(name = "posting_id", nullable = false)
+    private Long postingId;
+
     @Column(name = "status")
     private Integer status;              // 신청 상태 (0: 대기, 1: 승인, -1: 거절)
     
@@ -49,4 +49,10 @@ public class Applying {
     
     @Column(name = "confirmation_datetime")
     private LocalDateTime confirmationDatetime;  // 확정 일시 (승인 혹은 거절 일시)
+
+    // 게시글과의 연관관계 (조회 전용, 삭제 연쇄 없음)
+    // optional = true: 게시글이 삭제되어도 신청글도 삭제..
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "posting_id", insertable = false, updatable = false)
+    private Posting posting;
 }

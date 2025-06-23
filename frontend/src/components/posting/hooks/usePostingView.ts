@@ -2,18 +2,8 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { postingApi } from '../api/postingApi';
 import { PostingResponseDTO } from '../dto';
-import { getAccessToken } from '../../../OAuth2/authUtils';
+import { getUserIdFromToken } from '../../../OAuth2/authUtils';
 import { useToast } from '../../common/toast/useToast';
-
-// 쿠키에서 값을 가져오는 유틸리티 함수
-const getCookie = (name: string): string | null => {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) {
-        return parts.pop()?.split(';').shift() || null;
-    }
-    return null;
-};
 
 export const usePostingView = () => {
     const navigate = useNavigate();
@@ -29,31 +19,8 @@ export const usePostingView = () => {
 
     // 현재 사용자 ID 추출 (JWT 토큰에서)
     useEffect(() => {
-        // 먼저 localStorage에서 토큰 확인
-        let token = getAccessToken();
-        
-        // localStorage에 토큰이 없으면 쿠키에서 확인
-        if (!token) {
-            token = getCookie('refreshToken'); // 쿠키에서 refreshToken 가져오기
-        }
-        
-        if (token) {
-            try {
-                // JWT 토큰에서 사용자 ID 추출
-                const payload = JSON.parse(atob(token.split('.')[1]));
-                const extractedUserId = payload.userId || payload.sub;
-                
-                // 숫자로 변환 시도
-                const numericUserId = typeof extractedUserId === 'string' ? parseInt(extractedUserId, 10) : extractedUserId;
-                
-                setCurrentUserId(numericUserId);
-            } catch (error) {
-                setCurrentUserId(null);
-            }
-        } else {
-            console.log('토큰을 찾을 수 없습니다.');
-            setCurrentUserId(null);
-        }
+        const userId = getUserIdFromToken();
+        setCurrentUserId(userId);
     }, []);
 
     // 게시물 데이터 가져오기
@@ -103,7 +70,7 @@ export const usePostingView = () => {
 
     // 신청 페이지로 이동
     const goToApplyPage = () => {
-        navigate('/applying/create');
+        navigate(`/applying/create/${postingData?.postingId}`);
     };
 
     // 수정 페이지로 이동

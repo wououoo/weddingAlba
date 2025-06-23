@@ -1,17 +1,36 @@
-import { sampleApplyingData } from "./dto/ApplyingResponseDTO";
-import { useNavigate } from "react-router-dom";
+import React from "react";
+import { useApplyingView } from "./hooks/useApplyingView";
 
 const ApplyingViewPage: React.FC = () => {
-    const navigate = useNavigate();
+    const {
+        applyingData,
+        isLoading,
+        currentUserId,
+        getStatusText,
+        getStatusColor,
+        goBack,
+        goToPosting,
+        goToEditApplying
+    } = useApplyingView();
+
+    if (isLoading) {
+        return <div className="flex justify-center items-center h-screen">로딩 중...</div>;
+    }
+
+    if (!applyingData) {
+        return <div className="flex justify-center items-center h-screen">신청 내역을 찾을 수 없습니다.</div>;
+    }
+
     const {
         applyId,
         userId,
         postingId,
+        posting,
         status,
         applyDatetime,
         prContent,
         confirmationDatetime
-    } = sampleApplyingData;
+    } = applyingData;
 
     // 임시 모집글 정보 (실제로는 API에서 가져와야 함)
     const postingInfo = {
@@ -23,39 +42,13 @@ const ApplyingViewPage: React.FC = () => {
         guestMainRole: "고등학교 동창"
     };
 
-    const getStatusText = (statusCode: number) => {
-        switch (statusCode) {
-            case 0:
-                return "대기";
-            case 1:
-                return "승인";
-            case -1:
-                return "거절";
-            default:
-                return "알 수 없음";
-        }
-    };
-
-    const getStatusColor = (statusCode: number) => {
-        switch (statusCode) {
-            case 0:
-                return "text-yellow-600 bg-yellow-100";
-            case 1:
-                return "text-green-600 bg-green-100";
-            case -1:
-                return "text-red-600 bg-red-100";
-            default:
-                return "text-gray-600 bg-gray-100";
-        }
-    };
-
     return (
         <div className="bg-gray-50 min-h-screen">
             {/* 헤더 */}
             <div className="bg-white shadow-sm sticky top-0 z-10">
                 <div className="flex items-center justify-between p-4">
                     <button 
-                        onClick={() => navigate(-1)}
+                        onClick={goBack}
                         className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                     >
                         <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -90,7 +83,7 @@ const ApplyingViewPage: React.FC = () => {
                                 <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" clipRule="evenodd" />
                             </svg>
                             <span 
-                                onClick={() => navigate(`/posting/${postingId}`)} 
+                                onClick={() => goToPosting(postingId)} 
                                 className="cursor-pointer text-blue-600 hover:underline transition-colors"
                             >
                                 모집글 #{postingId} 보러가기
@@ -104,7 +97,7 @@ const ApplyingViewPage: React.FC = () => {
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="text-lg font-bold text-gray-900">신청한 모집글</h3>
                         <button
-                            onClick={() => navigate(`/posting/${postingId}`)}
+                            onClick={() => goToPosting(postingId)}
                             className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors"
                         >
                             상세보기 →
@@ -113,7 +106,7 @@ const ApplyingViewPage: React.FC = () => {
                     
                     <div 
                         className="cursor-pointer hover:bg-gray-50 rounded-lg p-4 border border-gray-200 transition-colors"
-                        onClick={() => navigate(`/posting/${postingId}`)}
+                        onClick={() => goToPosting(postingId)}
                     >
                         <h4 className="font-bold text-lg text-gray-900 mb-2">{postingInfo.title}</h4>
                         
@@ -198,12 +191,15 @@ const ApplyingViewPage: React.FC = () => {
 
             {/* 하단 고정 버튼 */}
             <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-20">
-                <button className="w-full bg-gradient-to-r from-pink-400 to-red-400 text-white py-4 rounded-xl font-semibold text-lg hover:shadow-lg transition-all">
+                <button 
+                    onClick={goToEditApplying}
+                    className="w-full bg-gradient-to-r from-pink-400 to-red-400 text-white py-4 rounded-xl font-semibold text-lg hover:shadow-lg transition-all"
+                >
                     신청 수정하기
                 </button>
             </div>
         </div>
     );
-}
+};
 
 export default ApplyingViewPage; 

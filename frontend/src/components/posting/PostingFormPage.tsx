@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from "react-router-dom";
 import { usePostingForm } from './hooks/usePostingForm';
 import AddressSearch from '../common/AddressSearch';
@@ -33,17 +33,7 @@ const PostingFormPage: React.FC = () => {
         isEditMode,
     } = usePostingForm();
 
-    useEffect(() => {
-        const localToken = localStorage.getItem('authToken');
-        const sessionToken = sessionStorage.getItem('authToken');
-        const accessToken = localStorage.getItem('accessToken');
-        const jwtToken = localStorage.getItem('jwtToken');
-        
-        const token = localToken || sessionToken || jwtToken;
-        if (token && !accessToken) {
-            localStorage.setItem('accessToken', token);
-        }
-    }, []);
+
 
     // 폼 제출 핸들러 (커스텀 훅의 handleSubmit을 사용하고, 추가적인 navigation 로직을 여기에 둡니다)
     const handleFormSubmit = () => {

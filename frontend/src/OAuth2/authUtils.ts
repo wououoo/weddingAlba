@@ -10,6 +10,35 @@ export const setAccessToken = (token: string): void => {
   localStorage.setItem('accessToken', token);
 };
 
+// JWT 토큰에서 사용자 ID 추출
+export const getUserIdFromToken = (): number | null => {
+  const token = getAccessToken();
+  
+  if (!token) {
+    return null;
+  }
+  
+  try {
+    // JWT 토큰의 payload 부분을 디코딩
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    
+    // 서버에서 subject(sub)에 userId를 문자열로 저장함
+    const userId = payload.sub;
+    
+    if (!userId) {
+      return null;
+    }
+    
+    // 문자열을 숫자로 변환
+    const numericUserId = parseInt(userId, 10);
+    
+    return isNaN(numericUserId) ? null : numericUserId;
+  } catch (error) {
+    console.error('토큰에서 사용자 ID 추출 중 오류:', error);
+    return null;
+  }
+};
+
 // 토큰 새로고침 (리프레시 토큰을 사용하여 새 액세스 토큰 받기)
 export const refreshAccessToken = async (): Promise<string | null> => {
   try {

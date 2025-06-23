@@ -15,6 +15,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import wedding.alba.function.posting.PostingRequestDTO;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -104,4 +105,26 @@ public class Posting {
         DAILY, HOURLY
     }
 
+    public void toUpdatePosting(PostingRequestDTO postingRequestDTO){
+        this.setPostingId(postingRequestDTO.getPostingId());
+        this.setUserId(postingRequestDTO.getUserId());
+        this.setTitle(postingRequestDTO.getTitle());
+        this.setIsSelf(postingRequestDTO.getIsSelf());
+        this.setPersonName(postingRequestDTO.getPersonName());
+        this.setPersonPhoneNumber(postingRequestDTO.getPersonPhoneNumber());
+        this.setAppointmentDatetime(postingRequestDTO.getAppointmentDatetime());
+        this.setAddress(postingRequestDTO.getAddress());
+        this.setBuildingName(postingRequestDTO.getBuildingName());
+        this.setSidoSigungu(postingRequestDTO.getSidoSigungu());
+        this.setHasMobileInvitation(postingRequestDTO.getHasMobileInvitation());
+        this.setStartTime(postingRequestDTO.getStartTime());
+        this.setEndTime(postingRequestDTO.getEndTime());
+        this.setWorkingHours(postingRequestDTO.getWorkingHours());
+        this.setPayType(PayType.valueOf(postingRequestDTO.getPayType().toUpperCase()));
+        this.setPayAmount(postingRequestDTO.getPayAmount());
+        this.setTargetPersonnel(postingRequestDTO.getTargetPersonnel());
+        this.setGuestMainRole(postingRequestDTO.getGuestMainRole());
+        this.setDetailContent(postingRequestDTO.getDetailContent());
+        this.setTags(postingRequestDTO.getTags() != null ? String.join(",", postingRequestDTO.getTags()) : null);
+    }
 }

@@ -108,8 +108,6 @@ export const usePostingForm = (): UsePostingFormResult => {
                     if (response.success && response.data) {
                         // 불러온 데이터를 formData에 설정
                         const loadedData = response.data;
-                        console.log('수정모드 로드된 데이터:', loadedData);
-                        console.log('isSelf:', loadedData.isSelf, 'hasMobileInvitation:', loadedData.hasMobileInvitation);
                         setFormData({
                             title: loadedData.title || '',
                             isSelf: loadedData.isSelf !== null && loadedData.isSelf !== undefined ? loadedData.isSelf : null,
@@ -140,8 +138,6 @@ export const usePostingForm = (): UsePostingFormResult => {
                         navigate('/posting/list'); // 실패 시 목록 페이지로 이동
                     }
                 } catch (error) {
-                    console.error('Error loading posting:', error);
-                    alert('게시물 로드 중 오류가 발생했습니다.');
                     navigate('/posting/list');
                 }
             };
@@ -316,6 +312,7 @@ export const usePostingForm = (): UsePostingFormResult => {
         }
         
         const newOrUpdatedPostingId = response.data?.postingId;
+        
         if (response.success) {
             navigate(`/posting/${newOrUpdatedPostingId}`);
         } else {

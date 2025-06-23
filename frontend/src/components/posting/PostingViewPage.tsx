@@ -23,13 +23,6 @@ const PostingViewPage: React.FC = () => {
         deletePosting,
     } = usePostingView();
 
-    // 디버깅을 위한 로그
-    React.useEffect(() => {
-        console.log('PostingViewPage - isAuthor:', isAuthor);
-        console.log('PostingViewPage - currentUserId:', currentUserId);
-        console.log('PostingViewPage - postingData.userId:', postingData?.userId);
-    }, [isAuthor, currentUserId, postingData]);
-
     if (isLoading) {
         return <div className="flex justify-center items-center h-screen">로딩 중...</div>;
     }

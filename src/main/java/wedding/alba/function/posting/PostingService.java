@@ -1,5 +1,6 @@
 package wedding.alba.function.posting;
 
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
@@ -12,6 +13,8 @@ import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import wedding.alba.entity.Posting;
 import wedding.alba.entity.Profile;
+import wedding.alba.function.postHistory.PostHistoryDTO;
+import wedding.alba.function.postHistory.PostHistoryService;
 import wedding.alba.function.profile.ProfileRepository;
 
 @Service
@@ -26,6 +29,9 @@ public class PostingService {
 
     @Autowired
     private PostingWrapper postingWrapper;
+
+    @Autowired
+    private PostHistoryService postHistoryService;
 
     // 모집글 작성
     public PostingResponseDTO createPosting(PostingRequestDTO postingDto) {
@@ -42,30 +48,64 @@ public class PostingService {
         return responseDTO;
     }
 
+    // 모집글 수정
+    @Transactional
     public PostingResponseDTO updatePosting(Long userId, Long postingId, PostingRequestDTO postingDto) {
-        // dto -> Posting 엔터티로 변경
-        Posting findPosting = postingRepository.findById(postingId)
+        Posting existPosting = postingRepository.findById(postingId)
                 .orElseThrow(() -> {
                         log.error("존재하지 않는 모집글 {}  수정 시도", postingId);
                          return new IllegalArgumentException("존재하지 않는 모집글입니다.");
                     });
 
         // 본인 게시글인지, 수정할려는 게시글이 맞는지 확인
-        if(!findPosting.getUserId().equals(userId)) {
+        if(!existPosting.getUserId().equals(userId)) {
             log.warn("사용자 {}가 다른 사용자의 모집글 {} 수정 시도", postingDto.getUserId(), postingId);
             throw new IllegalArgumentException("수정 권한이 없습니다.");
         }
 
-        Posting posting = postingWrapper.toEntity(postingDto);
-        posting.setPostingId(postingId);
-        Posting updatePosting = postingRepository.save(posting);
-        log.info("사용자 {}가  모집글 {} 수정완료",
-                updatePosting.getUserId(), updatePosting.getPostingId());
+        postingDto.setUserId(userId);
+        postingDto.setPostingId(postingId);
+        existPosting.toUpdatePosting(postingDto);
+        Posting updatePosting = postingRepository.save(existPosting);
+        log.info("사용자 {}가  모집글 {} 수정완료", updatePosting.getUserId(), updatePosting.getPostingId());
 
         PostingResponseDTO responseDTO = PostingResponseDTO.builder()
                 .postingId(updatePosting.getPostingId())
                 .build();
         return responseDTO;
+    }
+
+    @Transactional
+    public void deletePosting(Long userId, Long postingId) {
+        Posting existPosting = postingRepository.findById(postingId)
+                .orElseThrow(() -> {
+                    log.error("존재하지 않는 모집글 {}  삭제 시도", postingId);
+                    return new IllegalArgumentException("존재하지 않는 모집글입니다.");
+                });
+
+        // 본인 게시글인지, 수정할려는 게시글이 맞는지 확인
+        if(!existPosting.getUserId().equals(userId)) {
+            log.warn("사용자 {}가 다른 사용자의 모집글 {} 삭제 시도", userId, postingId);
+            throw new IllegalArgumentException("삭제 권한이 없습니다.");
+        }
+
+        // 삭제전에 신청글 확인
+        // 확정된 신청글이있는경우, 신청이력테이블로 데이터 이동
+        // 없는경우, 신청글 모두 신청이력테이블로 이동 모집글 이력으로 이동
+
+        // 모집글 히스토리로 데이터 이동 (상태 : -1)
+        // 실패시 삭제 시도안하고 전체 롤백되게
+        PostHistoryDTO historyDTO = postingWrapper.toPostHistoryDTO(existPosting, true);
+        Long postHistoryId = postHistoryService.movePostingToHistory(historyDTO);
+
+        if(postHistoryId == null || postHistoryId == 0L) {
+            log.error("모집글 {}을 모집글 이력으로 데이터 이동 실패", postingId);
+            throw new RuntimeException("모집글 이력 저장에 실패하여 삭제를 중단합니다.");
+        }
+
+    
+        // 모집글 삭제
+        postingRepository.deleteById(postingId);
     }
 
 
@@ -80,7 +120,9 @@ public class PostingService {
             List<PostingResponseDTO> dtoList = new ArrayList<>();
             for(Posting posting : postingPage.getContent()) {
                 Profile profile = profileRepository.findByUserId(posting.getUserId())
-                    .orElseThrow(() -> new NoSuchElementException("사용자 프로필을 찾을 수 없습니다. ID: " + posting.getUserId()));
+                    .orElseGet(() -> {
+                        return null;
+                    });
                 PostingResponseDTO dto = postingWrapper.toDetailDTO(posting, profile);
                 dto.setPayTypeStr();
                 dtoList.add(dto);

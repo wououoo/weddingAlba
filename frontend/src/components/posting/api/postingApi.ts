@@ -32,9 +32,9 @@ export const postingApi = {
     },
 
     // 모집글 삭제
-    deletePosting: async (id: number) => {
+    deletePosting: async (postingId: number) => {
         try {
-            return await del<void>(`${API_BASE_URL}/posting/delete/${id}`);
+            return await del<void>(`${API_BASE_URL}/posting/delete/${postingId}`);
         } catch (error) {
             return {
                 success: false,

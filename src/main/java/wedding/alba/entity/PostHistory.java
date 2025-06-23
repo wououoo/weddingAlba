@@ -97,11 +97,11 @@ public class PostHistory {
 
     @CreationTimestamp
     @Column(name = "registration_datetime", updatable = false)
-    private LocalDateTime registrationDatetime;  // 모집글 등록 일시
+    private LocalDateTime registrationDatetime;  // 모집이력 등록일시
 
     @UpdateTimestamp
     @Column(name = "update_datetime")
-    private LocalDateTime updateDatetime;   // 모집글 수정 일시
+    private LocalDateTime updateDatetime;   // 모집이력 수정 일시
 
     public enum PayType {
         DAILY, HOURLY

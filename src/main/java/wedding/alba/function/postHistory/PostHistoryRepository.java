@@ -1,13 +1,8 @@
-package wedding.alba.repository;
+package wedding.alba.function.postHistory;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import wedding.alba.entity.PostHistory;
-
-import java.time.LocalDateTime;
-import java.util.List;
 
 @Repository
 public interface PostHistoryRepository extends JpaRepository<PostHistory, Long> {

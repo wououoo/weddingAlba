@@ -47,11 +47,7 @@ export const usePostingView = () => {
                 const numericUserId = typeof extractedUserId === 'string' ? parseInt(extractedUserId, 10) : extractedUserId;
                 
                 setCurrentUserId(numericUserId);
-                console.log('토큰 페이로드:', payload);
-                console.log('추출된 사용자 ID (원본):', extractedUserId);
-                console.log('변환된 사용자 ID:', numericUserId);
             } catch (error) {
-                console.error('토큰 파싱 오류:', error);
                 setCurrentUserId(null);
             }
         } else {
@@ -123,7 +119,8 @@ export const usePostingView = () => {
         showToast('정말로 모집을 취소하시겠습니까?', '취소하기', async () => {
             try {
                 // TODO: 모집 취소 API 호출
-                console.log('모집 취소:', id);
+                const postingId = id ? parseInt(id, 10) : 0;
+                postingApi.deletePosting(postingId);
                 hideToast(); // 확인 Toast 닫기
                 showToast('모집이 취소되었습니다.');
                 
@@ -152,14 +149,6 @@ export const usePostingView = () => {
         return currentUserIdNum === postingUserIdNum;
     }, [currentUserId, postingData?.userId]);
     
-    // 디버깅을 위한 로그
-    useEffect(() => {
-        console.log('=== 사용자 권한 확인 ===');
-        console.log('현재 사용자 ID:', currentUserId, typeof currentUserId);
-        console.log('게시물 작성자 ID:', postingData?.userId, typeof postingData?.userId);
-        console.log('작성자 여부:', isAuthor);
-        console.log('====================');
-    }, [currentUserId, postingData, isAuthor]);
 
     // 게시글 삭제 함수
     const deletePosting = async (postingId: number) => {

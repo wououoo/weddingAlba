@@ -1,6 +1,9 @@
-package wedding.alba.function.posting;
+package wedding.alba.function.postHistory;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -9,7 +12,8 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class PostingRequestDTO {
+@Builder
+public class PostHistoryDTO {
     private Long postingId;
     private Long userId;
     private String title;
@@ -29,7 +33,6 @@ public class PostingRequestDTO {
     private Integer targetPersonnel;
     private String guestMainRole;
     private String detailContent;
+    private Integer status;
     private List<String> tags;
 }
-
-

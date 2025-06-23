@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
 import wedding.alba.entity.Profile;
+import wedding.alba.function.postHistory.PostHistoryDTO;
 
 @Component
 public class PostingWrapper {
@@ -34,6 +35,40 @@ public class PostingWrapper {
                 .detailContent(postingDto.getDetailContent())
             .tags(postingDto.getTags() != null ? String.join(",", postingDto.getTags()) : null)
             .build();
+    }
+
+    public PostHistoryDTO toPostHistoryDTO(Posting posting, boolean isCancel) {
+        int status = 0;
+        // 모집 삭제인 경우
+        if(isCancel) status = -1;
+        else status = 1;
+        return PostHistoryDTO.builder()
+                .postingId(posting.getPostingId())
+                .userId(posting.getUserId())
+                .title(posting.getTitle())
+                .isSelf(posting.getIsSelf())
+                .personName(posting.getPersonName())
+                .personPhoneNumber(posting.getPersonPhoneNumber())
+                .appointmentDatetime(posting.getAppointmentDatetime())
+                .address(posting.getAddress())
+                .buildingName(posting.getBuildingName())
+                .sidoSigungu(posting.getSidoSigungu())
+                .hasMobileInvitation(posting.getHasMobileInvitation())
+                .workingHours(posting.getWorkingHours())
+                .startTime(posting.getStartTime())
+                .endTime(posting.getEndTime())
+                .payType(String.valueOf(posting.getPayType()))
+                .payAmount(posting.getPayAmount())
+                .targetPersonnel(posting.getTargetPersonnel())
+                .guestMainRole(posting.getGuestMainRole())
+                .detailContent(posting.getDetailContent())
+                .status(status)
+                .tags(posting.getTags() != null && !posting.getTags().isEmpty() ?
+                        java.util.Arrays.stream(posting.getTags().split(","))
+                                .filter(tag -> !tag.trim().isEmpty())
+                                .collect(Collectors.toList()) :
+                        Collections.emptyList())
+                .build();
     }
 
     public PostingResponseDTO toResponseDTO(Posting posting) {

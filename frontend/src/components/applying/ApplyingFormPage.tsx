@@ -2,17 +2,21 @@ import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useApplyingForm } from "./hooks/useApplyingForm";
 import { getUserIdFromToken, isAuthenticated } from "../../OAuth2/authUtils";
+import { Toast } from "../common/toast";
 
 const ApplyingFormPage: React.FC = () => {
     const navigate = useNavigate();
-    const { postingId: postingIdParam } = useParams<{ postingId: string }>();
+    const { postingId: postingIdParam, applyingId: applyingIdParam } = useParams<{ 
+        postingId?: string; 
+        applyingId?: string; 
+    }>();
     
-    // URL에서 postingId 파라미터 가져오기
+    // URL에서 파라미터 가져오기
     const postingId = postingIdParam ? parseInt(postingIdParam, 10) : undefined;
+    const applyingId = applyingIdParam ? parseInt(applyingIdParam, 10) : undefined;
     
     // 토큰에서 사용자 ID 가져오기
     const userId = getUserIdFromToken();
-    const isEditMode = false; // 임시값
     
     const {
         isLoading,
@@ -20,10 +24,14 @@ const ApplyingFormPage: React.FC = () => {
         prContent,
         handlePrContentChange,
         handleSubmit,
-        handleCancel
-    } = useApplyingForm({
+        handleCancel,
+        toastState,
+        showToast,
+        hideToast,
         isEditMode,
+    } = useApplyingForm({
         postingId,
+        applyingId,
         userId: userId || undefined,
         initialPrContent: ''
     });
@@ -54,13 +62,13 @@ const ApplyingFormPage: React.FC = () => {
         );
     }
 
-    // postingId가 없거나 유효하지 않은 경우 처리
-    if (!postingId || isNaN(postingId)) {
+    // 필수 ID 검증
+    if ((!postingId && !applyingId) || (postingId && isNaN(postingId)) || (applyingId && isNaN(applyingId))) {
         return (
             <div className="bg-gray-50 min-h-screen flex items-center justify-center">
                 <div className="bg-white rounded-xl shadow-sm p-6 text-center">
                     <h2 className="text-lg font-bold text-gray-900 mb-2">잘못된 접근입니다</h2>
-                    <p className="text-gray-600 mb-4">유효하지 않은 공고입니다.</p>
+                    <p className="text-gray-600 mb-4">유효하지 않은 {isEditMode ? '신청' : '공고'}입니다.</p>
                     <button
                         onClick={() => navigate(-1)}
                         className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
@@ -94,7 +102,9 @@ const ApplyingFormPage: React.FC = () => {
             <div className="px-4 py-6 space-y-4">
                 {/* 신청서 정보 */}
                 <div className="bg-white rounded-xl shadow-sm p-6">
-                    <h2 className="text-lg font-bold text-gray-900 mb-4">신청서 작성</h2>
+                    <h2 className="text-lg font-bold text-gray-900 mb-4">
+                        {isEditMode ? '신청서 수정' : '신청서 작성'}
+                    </h2>
 
                     {/* 자기소개 (PR 내용) */}
                     <div className="mb-4">
@@ -155,25 +165,46 @@ const ApplyingFormPage: React.FC = () => {
 
                 {/* 신청 안내사항 */}
                 <div className="bg-white rounded-xl shadow-sm p-6">
-                    <h2 className="text-lg font-bold text-gray-900 mb-4">신청 안내사항</h2>
+                    <h2 className="text-lg font-bold text-gray-900 mb-4">
+                        {isEditMode ? '수정 안내사항' : '신청 안내사항'}
+                    </h2>
                     
                     <div className="space-y-3 text-sm text-gray-600">
-                        <div className="flex items-start">
-                            <span className="inline-block w-2 h-2 bg-blue-400 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                            <span>신청서 제출 후 모집자가 검토하여 개별 연락드립니다.</span>
-                        </div>
-                        <div className="flex items-start">
-                            <span className="inline-block w-2 h-2 bg-blue-400 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                            <span>신청서는 제출 후 24시간 내에 수정 가능합니다.</span>
-                        </div>
-                        <div className="flex items-start">
-                            <span className="inline-block w-2 h-2 bg-blue-400 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                            <span>허위 정보 기재 시 신청이 취소될 수 있습니다.</span>
-                        </div>
-                        <div className="flex items-start">
-                            <span className="inline-block w-2 h-2 bg-blue-400 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                            <span>선정 결과는 마이페이지에서 확인할 수 있습니다.</span>
-                        </div>
+                        {isEditMode ? (
+                            <>
+                                <div className="flex items-start">
+                                    <span className="inline-block w-2 h-2 bg-blue-400 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                                    <span>신청서 수정 후 다시 검토가 진행됩니다.</span>
+                                </div>
+                                <div className="flex items-start">
+                                    <span className="inline-block w-2 h-2 bg-blue-400 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                                    <span>승인/거절된 신청서는 수정할 수 없습니다.</span>
+                                </div>
+                                <div className="flex items-start">
+                                    <span className="inline-block w-2 h-2 bg-blue-400 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                                    <span>수정 내용은 즉시 반영됩니다.</span>
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                <div className="flex items-start">
+                                    <span className="inline-block w-2 h-2 bg-blue-400 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                                    <span>신청서 제출 후 모집자가 검토하여 개별 연락드립니다.</span>
+                                </div>
+                                <div className="flex items-start">
+                                    <span className="inline-block w-2 h-2 bg-blue-400 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                                    <span>신청서는 제출 후 24시간 내에 수정 가능합니다.</span>
+                                </div>
+                                <div className="flex items-start">
+                                    <span className="inline-block w-2 h-2 bg-blue-400 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                                    <span>허위 정보 기재 시 신청이 취소될 수 있습니다.</span>
+                                </div>
+                                <div className="flex items-start">
+                                    <span className="inline-block w-2 h-2 bg-blue-400 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                                    <span>선정 결과는 마이페이지에서 확인할 수 있습니다.</span>
+                                </div>
+                            </>
+                        )}
                     </div>
                 </div>
 
@@ -218,8 +249,17 @@ const ApplyingFormPage: React.FC = () => {
                     </button>
                 </div>
             </div>
+
+            {/* 토스트 */}
+            <Toast
+                isVisible={toastState.isVisible}
+                message={toastState.message}
+                actionText={toastState.actionText}
+                onAction={toastState.onAction}
+                onClose={hideToast}
+            />
         </div>
     );
 }
 
-export default ApplyingFormPage; 
+export default ApplyingFormPage;

@@ -6,7 +6,7 @@ import { getUserIdFromToken } from '../../../OAuth2/authUtils';
 
 export const useApplyingView = () => {
     const navigate = useNavigate();
-    const { id } = useParams<{ id: string }>();
+    const { applyingId } = useParams<{ applyingId: string }>();
     
     // 상태 관리
     const [applyingData, setApplyingData] = useState<ApplyingResponseDTO | null>(null);
@@ -21,11 +21,11 @@ export const useApplyingView = () => {
 
     // 신청 데이터 가져오기
     useEffect(() => {
-        if (id) {
+        if (applyingId) {
             const fetchApplying = async () => {
                 try {
                     setIsLoading(true);
-                    const response = await applyingApi.getApplyingDetail(id);
+                    const response = await applyingApi.getApplyingDetail(applyingId);
                     console.log(response.data);
 
                     if (response.success && response.data) {
@@ -43,7 +43,7 @@ export const useApplyingView = () => {
             };
             fetchApplying();
         }
-    }, [id]);
+    }, [applyingId]);
 
     // 상태 텍스트 변환
     const getStatusText = (statusCode: number) => {
@@ -85,8 +85,8 @@ export const useApplyingView = () => {
 
     // 신청 수정 페이지로 이동
     const goToEditApplying = () => {
-        if (id) {
-            navigate(`/applying/edit/${id}`);
+        if (applyingId) {
+            navigate(`/applying/edit/${applyingId}`);
         }
     };
 

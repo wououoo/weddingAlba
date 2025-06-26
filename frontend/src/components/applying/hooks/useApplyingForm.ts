@@ -1,18 +1,19 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { applyingApi } from '../api/applyingApi';
 import { ApplyingRequestDTO } from '../dto/ApplyinhRequestDTO';
+import { useToast } from '../../common/toast';
 
 interface UseApplyingFormProps {
-    isEditMode?: boolean;
     postingId?: number;
+    applyingId?: number;
     userId?: number;
     initialPrContent?: string;
 }
 
 export const useApplyingForm = ({ 
-    isEditMode = false, 
-    postingId, 
+    postingId,
+    applyingId,
     userId, 
     initialPrContent = '' 
 }: UseApplyingFormProps = {}) => {
@@ -20,6 +21,34 @@ export const useApplyingForm = ({
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [prContent, setPrContent] = useState<string>(initialPrContent);
+    const { toastState, showToast, hideToast } = useToast();
+    
+    // 수정 모드 여부 판단
+    const isEditMode = !!applyingId;
+
+    // 수정 모드일 때 기존 데이터 로드
+    useEffect(() => {
+        if (isEditMode && applyingId) {
+            const fetchApplyingDetail = async () => {
+                try {
+                    setIsLoading(true);
+                    const response = await applyingApi.getApplyingDetail(applyingId.toString());
+                    
+                    if (response.success && response.data) {
+                        setPrContent(response.data.prContent || '');
+                    } else {
+                        showToast('신청 내역을 불러오는데 실패했습니다.');
+                    }
+                } catch (error) {
+                    showToast('신청 내역을 불러오는데 실패했습니다.');
+                } finally {
+                    setIsLoading(false);
+                }
+            };
+            
+            fetchApplyingDetail();
+        }
+    }, [isEditMode, applyingId, showToast]);
 
     const handlePrContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         setPrContent(e.target.value);
@@ -27,12 +56,12 @@ export const useApplyingForm = ({
 
     const validateForm = (): boolean => {
         if (!prContent.trim()) {
-            alert('자기소개 내용을 입력해주세요.');
+            showToast('자기소개 내용을 입력해주세요.');
             return false;
         }
 
         if (prContent.length < 50) {
-            alert('자기소개는 최소 50자 이상 입력해주세요.');
+            showToast('자기소개는 최소 50자 이상 입력해주세요.');
             return false;
         }
 
@@ -53,16 +82,47 @@ export const useApplyingForm = ({
                     message: '신청이 완료되었습니다.'
                 };
             } else {
-                setError(response.message || '신청에 실패했습니다.');
                 return {
                     success: false,
                     data: null,
                     message: response.message || '신청에 실패했습니다.'
                 };
             }
-        } catch (error) {
-            const errorMessage = '신청 중 오류가 발생했습니다.';
-            setError(errorMessage);
+        } catch (error: any) {
+            let errorMessage = '신청 중 오류가 발생했습니다.';
+            if(error.response?.data?.message) {
+                errorMessage = error.response.data.message;
+            }
+            return {
+                success: false,
+                data: null,
+                message: errorMessage
+            };
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const updateApplying = async (applyingData: { prContent: string }) => {
+        if (!applyingId) return { success: false, message: '신청 ID가 없습니다.' };
+        
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            // TODO: 수정 API 호출 (현재는 임시로 성공 처리)
+            console.log("신청 수정: ", applyingData);
+            
+            return {
+                success: true,
+                data: { applyingId },
+                message: '신청이 수정되었습니다.'
+            };
+        } catch (error: any) {
+            let errorMessage = '신청 수정 중 오류가 발생했습니다.';
+            if(error.response?.data?.message) {
+                errorMessage = error.response.data.message;
+            }
             return {
                 success: false,
                 data: null,
@@ -79,21 +139,31 @@ export const useApplyingForm = ({
             return;
         }
 
-        if (!postingId || !userId) {
-            alert('필수 정보가 누락되었습니다.');
+        if (!userId) {
+            showToast('사용자 정보가 누락되었습니다.');
+            return;
+        }
+
+        if (!isEditMode && !postingId) {
+            showToast('모집글 정보가 누락되었습니다.');
             return;
         }
 
         try {
             if (isEditMode) {
-                // 수정 함수 (나중에 구현)
-                console.log("신청 수정: ", prContent);
-                // TODO: 수정 API 호출
-                navigate(-1);
+                // 수정 함수
+                const result = await updateApplying({ prContent });
+                
+                if (result.success) {
+                    showToast('신청이 수정되었습니다.');
+                    navigate(`/applying/${applyingId}`);
+                } else {
+                    showToast(result.message);
+                }
             } else {
                 // 등록 함수
                 const applyingData: ApplyingRequestDTO = {
-                    postingId,
+                    postingId: postingId!,
                     userId,
                     prContent
                 };
@@ -101,14 +171,14 @@ export const useApplyingForm = ({
                 const result = await applyToPosting(applyingData);
                 
                 if (result.success) {
-                    alert('신청이 완료되었습니다.');
-                    navigate(-1);
+                    showToast('신청이 완료되었습니다.');
+                    navigate(`/applying/${result.data?.applyingId}`);
                 } else {
-                    alert(result.message);
+                    showToast(result.message);
                 }
             }
         } catch (error) {
-            alert('처리 중 오류가 발생했습니다.');
+            showToast('처리 중 오류가 발생했습니다.');
         }
     };
 
@@ -131,6 +201,11 @@ export const useApplyingForm = ({
         // 액션
         handleSubmit,
         handleCancel,
-        applyToPosting
+        applyToPosting,
+
+        // 토스트
+        toastState,
+        showToast,
+        hideToast
     };
 };

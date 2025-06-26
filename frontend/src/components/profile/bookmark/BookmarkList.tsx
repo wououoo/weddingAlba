@@ -366,7 +366,7 @@ const BookmarkList: React.FC<BookmarkListProps> = ({ className = '' }) => {
 
   // 메모 삭제
   const handleDeleteMemo = async (bookmarkId: number) => {
-    if (!confirm('메모를 삭제하시겠습니까?')) return;
+    if (!window.confirm('메모를 삭제하시겠습니까?')) return;
 
     try {
       const response = await del<any>(`/bookmarks/${bookmarkId}/memo`);

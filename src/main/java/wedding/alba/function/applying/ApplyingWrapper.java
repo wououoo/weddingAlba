@@ -24,11 +24,12 @@ public class ApplyingWrapper {
     public ApplyingResponseDTO toResponseDTO (Applying applying) {
         return ApplyingResponseDTO.builder()
                 .userId(applying.getUserId())
-                .applyId(applying.getApplyId())
+                .applyId(applying.getApplyingId())
                 .applyDatetime(applying.getApplyDatetime())
                 .confirmationDatetime(applying.getConfirmationDatetime())
                 .prContent(applying.getPrContent())
                 .status(applying.getStatus())
+                .postingId(applying.getPostingId())
                 .posting(postingWrapper.toResponseDTO(applying.getPosting()))
                 .build();
     }

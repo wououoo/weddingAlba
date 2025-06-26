@@ -11,6 +11,7 @@ const PostingViewPage: React.FC = () => {
         isLoading,
         isAuthor,
         currentUserId,
+        hasApplied,
         toastState,
         hideToast,
         toggleFavorite,
@@ -18,6 +19,7 @@ const PostingViewPage: React.FC = () => {
         goBack,
         goToUserProfile,
         goToApplyPage,
+        goToApplyingDetail,
         goToEditPage,
         cancelPosting,
         deletePosting,
@@ -279,7 +281,7 @@ const PostingViewPage: React.FC = () => {
                                 onClick={cancelPosting}
                                 className="flex-1 bg-gray-200 text-gray-700 py-4 rounded-xl font-semibold text-lg hover:bg-gray-300 transition-all"
                             >
-                                취소하기
+                                모집 취소
                             </button>
                             <button
                                 onClick={goToEditPage}
@@ -289,7 +291,7 @@ const PostingViewPage: React.FC = () => {
                             </button>
                         </>
                     ) : (
-                        // 일반 사용자인 경우: 찜하기, 신청하기
+                        // 일반 사용자인 경우: 찜하기, 신청하기/신청글 확인하기
                         <>
                             <button
                                 onClick={toggleFavorite}
@@ -301,12 +303,21 @@ const PostingViewPage: React.FC = () => {
                             >
                                 찜하기
                             </button>
-                            <button
-                                onClick={goToApplyPage}
-                                className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white py-4 rounded-xl font-semibold text-lg hover:shadow-lg transition-all"
-                            >
-                                신청하기
-                            </button>
+                            {hasApplied ? (
+                                <button
+                                    onClick={goToApplyingDetail}
+                                    className="flex-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white py-4 rounded-xl font-semibold text-lg hover:shadow-lg transition-all"
+                                >
+                                    신청글 확인하기
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={goToApplyPage}
+                                    className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white py-4 rounded-xl font-semibold text-lg hover:shadow-lg transition-all"
+                                >
+                                    신청하기
+                                </button>
+                            )}
                         </>
                     )}
                 </div>

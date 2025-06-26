@@ -117,8 +117,8 @@ public class Posting {
         this.setBuildingName(postingRequestDTO.getBuildingName());
         this.setSidoSigungu(postingRequestDTO.getSidoSigungu());
         this.setHasMobileInvitation(postingRequestDTO.getHasMobileInvitation());
-        this.setStartTime(postingRequestDTO.getStartTime());
-        this.setEndTime(postingRequestDTO.getEndTime());
+        this.setStartTime(LocalTime.parse(postingRequestDTO.getStartTime()));
+        this.setEndTime(LocalTime.parse(postingRequestDTO.getEndTime()));
         this.setWorkingHours(postingRequestDTO.getWorkingHours());
         this.setPayType(PayType.valueOf(postingRequestDTO.getPayType().toUpperCase()));
         this.setPayAmount(postingRequestDTO.getPayAmount());

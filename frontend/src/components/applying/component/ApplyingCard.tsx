@@ -3,7 +3,7 @@ import { ApplyingResponseDTO } from "../dto/ApplyingResponseDTO";
 import { useNavigate } from "react-router-dom";
 
 const ApplyingCard: React.FC<ApplyingResponseDTO> = ({
-    applyId,
+    applyingId,
     status,
     applyDatetime,
     prContent,
@@ -27,14 +27,14 @@ const ApplyingCard: React.FC<ApplyingResponseDTO> = ({
 
     return (
         <div 
-            onClick={() => navigate(`/applying/${applyId}`)}
+            onClick={() => navigate(`/applying/${applyingId}`)}
             className="bg-white rounded-xl p-4 mb-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
         >
             {/* 상단 정보 */}
             <div className="flex items-start justify-between mb-3">
                 <div className="flex-1">
                     <div className="flex items-center space-x-2 mb-1">
-                        <span className="text-xs text-gray-500">신청 ID: {applyId}</span>
+                        <span className="text-xs text-gray-500">신청 ID: {applyingId}</span>
                     </div>
                     <h3 className="font-semibold text-gray-900 mb-1">하객 신청서</h3>
                 </div>

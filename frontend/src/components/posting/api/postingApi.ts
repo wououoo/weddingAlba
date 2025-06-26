@@ -10,6 +10,7 @@ export const postingApi = {
         try {
             return await post<PostingResponseDTO>(`${API_BASE_URL}/posting/create`, postingData);
         } catch (error) {
+            console.error('모집글 등록 에러:', error);
             return {
                 success: false,
                 data: null,

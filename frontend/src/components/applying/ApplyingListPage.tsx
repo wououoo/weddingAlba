@@ -5,7 +5,7 @@ import { ApplyingResponseDTO } from "./dto/ApplyingResponseDTO";
 // 샘플 신청 리스트 데이터
 const sampleApplyingList: ApplyingResponseDTO[] = [
     {
-        applyId: 1,
+        applyingId: 1,
         userId: 100,
         postingId: 1,
         posting: {
@@ -39,7 +39,7 @@ const sampleApplyingList: ApplyingResponseDTO[] = [
         confirmationDatetime: null
     },
     {
-        applyId: 2,
+        applyingId: 2,
         userId: 100,
         postingId: 2,
         posting: {
@@ -73,7 +73,7 @@ const sampleApplyingList: ApplyingResponseDTO[] = [
         confirmationDatetime: "2025년 05월 19일 09시 15분"
     },
     {
-        applyId: 3,
+        applyingId: 3,
         userId: 100,
         postingId: 3,
         posting: {
@@ -163,7 +163,7 @@ const ApplyingListPage: React.FC = () => {
                 {getFilteredApplyings().length > 0 ? (
                     getFilteredApplyings().map((applying: ApplyingResponseDTO) => (
                         <ApplyingCard
-                            key={applying.applyId}
+                            key={applying.applyingId}
                             {...applying}
                         />
                     ))

@@ -1,7 +1,7 @@
 import { PostingResponseDTO } from "../../posting/dto";
 
 export interface ApplyingResponseDTO {
-    applyId: number;
+    applyingId: number;
     userId: number;
     postingId: number;
     posting: PostingResponseDTO;

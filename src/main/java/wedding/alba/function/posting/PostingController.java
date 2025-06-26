@@ -14,6 +14,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import wedding.alba.config.JwtConfig;
 import wedding.alba.dto.ApiResponse;
@@ -29,8 +30,18 @@ public class PostingController {
     private JwtConfig jwtConfig;
 
     @PostMapping("/create")
-    public ResponseEntity<ApiResponse<PostingResponseDTO>> createPosting(@RequestBody @Valid PostingRequestDTO postingDto) {
+    public ResponseEntity<ApiResponse<PostingResponseDTO>> createPosting(@RequestBody @Valid PostingRequestDTO postingDto, BindingResult bindingResult) {
         try {
+            // 유효성 검사 실패 시 구체적인 오류 메시지 반환
+            if (bindingResult.hasErrors()) {
+                StringBuilder errorMessage = new StringBuilder();
+                bindingResult.getFieldErrors().forEach(error -> {
+                    errorMessage.append(error.getDefaultMessage()).append(" ");
+                });
+                log.warn("모집글 생성 유효성 검사 실패: {}", errorMessage.toString());
+                return ResponseEntity.badRequest().body(ApiResponse.error(errorMessage.toString().trim()));
+            }
+
             Long userId = getCurrentUserId();
             postingDto.setUserId(userId);
             PostingResponseDTO responseDTO = postingService.createPosting(postingDto);
@@ -39,6 +50,7 @@ public class PostingController {
             log.error("모집글 생성 실패: {}", e.getMessage());
             return ResponseEntity.ok(ApiResponse.error(e.getMessage()));
         } catch(Exception e) {
+            log.error("모집글 생성 중 예외 발생", e);
             return ResponseEntity.ok(ApiResponse.error("모집글 생성에 실패했습니다. 다시 확인해주세요."));
         }
     }

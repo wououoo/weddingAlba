@@ -1,6 +1,8 @@
 package wedding.alba.function.posting;
 
 import wedding.alba.entity.Posting;
+
+import java.time.LocalTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -26,8 +28,8 @@ public class PostingWrapper {
                 .hasMobileInvitation(postingDto.getHasMobileInvitation())
                 .workingHours(postingDto.getWorkingHours())
                 .targetPersonnel(postingDto.getTargetPersonnel())
-                .startTime(postingDto.getStartTime())
-                .endTime(postingDto.getEndTime())
+                .startTime(LocalTime.parse(postingDto.getStartTime()))
+                .endTime(LocalTime.parse(postingDto.getEndTime()))
                 .payType(Posting.PayType.valueOf(postingDto.getPayType().toUpperCase()))
                 .payAmount(postingDto.getPayAmount())
                 .targetPersonnel(postingDto.getTargetPersonnel())

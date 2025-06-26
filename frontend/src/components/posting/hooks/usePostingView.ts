@@ -4,6 +4,7 @@ import { postingApi } from '../api/postingApi';
 import { PostingResponseDTO } from '../dto';
 import { getUserIdFromToken } from '../../../OAuth2/authUtils';
 import { useToast } from '../../common/toast/useToast';
+import { applyingApi } from '../../applying/api/applyingApi';
 
 export const usePostingView = () => {
     const navigate = useNavigate();
@@ -16,6 +17,8 @@ export const usePostingView = () => {
     const [postingData, setPostingData] = useState<PostingResponseDTO | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+    const [hasApplied, setHasApplied] = useState(false);
+    const [userApplyingId, setUserApplyingId] = useState<number | null>(null);
 
     // 현재 사용자 ID 추출 (JWT 토큰에서)
     useEffect(() => {
@@ -48,6 +51,42 @@ export const usePostingView = () => {
         }
     }, [id]);
 
+    // 현재 사용자가 작성자인지 확인 (타입을 통일하여 비교)
+    const isAuthor = useMemo(() => {
+        if (!currentUserId || !postingData?.userId) {
+            return false;
+        }
+        
+        // 둘 다 숫자로 변환하여 비교
+        const currentUserIdNum = typeof currentUserId === 'string' ? parseInt(currentUserId, 10) : currentUserId;
+        const postingUserIdNum = typeof postingData.userId === 'string' ? parseInt(postingData.userId, 10) : postingData.userId;
+        
+        return currentUserIdNum === postingUserIdNum;
+    }, [currentUserId, postingData?.userId]);
+
+    // 사용자의 신청 여부 확인
+    useEffect(() => {
+        if (postingData?.postingId && currentUserId && !isAuthor) {
+            const checkApplyingStatus = async () => {
+                try {
+                    // postingId가 확실히 존재하는지 다시 한번 확인
+                    if (!postingData.postingId) return;
+                    
+                    const response = await applyingApi.checkUserApplying(postingData.postingId, currentUserId);
+                    
+                    if (response.success && response.data) {
+                        setHasApplied(response.data.hasApplied);
+                        setUserApplyingId(response.data.applyingId);
+                    }
+                } catch (error) {
+                    console.error("Error checking applying status:", error);
+                }
+            };
+            
+            checkApplyingStatus();
+        }
+    }, [postingData?.postingId, currentUserId, isAuthor]);
+
     // 찜하기 토글 함수 
     const toggleFavorite = () => {
         setIsFavorite(!isFavorite);
@@ -71,6 +110,13 @@ export const usePostingView = () => {
     // 신청 페이지로 이동
     const goToApplyPage = () => {
         navigate(`/applying/create/${postingData?.postingId}`);
+    };
+
+    // 신청글 확인하기 페이지로 이동
+    const goToApplyingDetail = () => {
+        if (userApplyingId) {
+            navigate(`/applying/${userApplyingId}`);
+        }
     };
 
     // 수정 페이지로 이동
@@ -103,20 +149,6 @@ export const usePostingView = () => {
         });
     };
 
-    // 현재 사용자가 작성자인지 확인 (타입을 통일하여 비교)
-    const isAuthor = useMemo(() => {
-        if (!currentUserId || !postingData?.userId) {
-            return false;
-        }
-        
-        // 둘 다 숫자로 변환하여 비교
-        const currentUserIdNum = typeof currentUserId === 'string' ? parseInt(currentUserId, 10) : currentUserId;
-        const postingUserIdNum = typeof postingData.userId === 'string' ? parseInt(postingData.userId, 10) : postingData.userId;
-        
-        return currentUserIdNum === postingUserIdNum;
-    }, [currentUserId, postingData?.userId]);
-    
-
     // 게시글 삭제 함수
     const deletePosting = async (postingId: number) => {
         if (window.confirm('정말로 이 게시글을 삭제하시겠습니까?')) {
@@ -143,6 +175,8 @@ export const usePostingView = () => {
         isLoading,
         isAuthor,
         currentUserId,
+        hasApplied,
+        userApplyingId,
         
         // Toast 상태
         toastState,
@@ -154,6 +188,7 @@ export const usePostingView = () => {
         goBack,
         goToUserProfile,
         goToApplyPage,
+        goToApplyingDetail,
         goToEditPage,
         cancelPosting,
         deletePosting

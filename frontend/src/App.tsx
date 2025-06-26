@@ -121,7 +121,7 @@ const App: React.FC = () => {
         } />
 
         {/*  신청글 상세보기 */}
-        <Route path="/applying/:id" element={
+        <Route path="/applying/:applyingId" element={
           <SimplePrivateRoute>
           <WithLayout>
             <ApplyingViewPage />
@@ -131,6 +131,15 @@ const App: React.FC = () => {
 
         {/* 신청글 작성하기 */}
         <Route path="/applying/create/:postingId" element={
+          <SimplePrivateRoute>
+          <WithLayout>
+            <ApplyingFormPage />
+          </WithLayout>
+        </SimplePrivateRoute>
+        } />
+
+        {/* 신청글 작성하기 */}
+        <Route path="/applying/edit/:applyingId" element={
           <SimplePrivateRoute>
           <WithLayout>
             <ApplyingFormPage />

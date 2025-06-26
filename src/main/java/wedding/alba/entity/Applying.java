@@ -15,6 +15,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+import wedding.alba.function.applying.ApplyingRequestDTO;
 
 import java.time.LocalDateTime;
 
@@ -28,8 +29,8 @@ public class Applying {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "apply_id")
-    private Long applyId;                // 신청 고유 식별자
+    @Column(name = "applying_id")
+    private Long applyingId;                // 신청 고유 식별자
     
     @Column(name = "user_id")
     private Long userId;                 // 신청자 ID
@@ -55,4 +56,9 @@ public class Applying {
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "posting_id", insertable = false, updatable = false)
     private Posting posting;
+
+    public void toUpdateApplying(ApplyingRequestDTO applyingRequestDTO) {
+        this.setStatus(applyingRequestDTO.getStatus());
+        this.setPrContent(applyingRequestDTO.getPrContent());
+    }
 }

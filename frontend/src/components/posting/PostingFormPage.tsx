@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from "react-router-dom";
 import { usePostingForm } from './hooks/usePostingForm';
 import AddressSearch from '../common/AddressSearch';
+import Toast from '../common/toast/Toast';
 import { convertDatetime } from '../common/base';
 
 const PostingFormPage: React.FC = () => {
@@ -31,6 +32,9 @@ const PostingFormPage: React.FC = () => {
         closeAddressSearch,
         handleAddressComplete,
         isEditMode,
+        toastState,
+        showToast,
+        hideToast,
     } = usePostingForm();
 
 
@@ -527,6 +531,23 @@ const PostingFormPage: React.FC = () => {
                     )}
                 </div>
             </div>
+
+            {/* Toast 컴포넌트 */}
+            <Toast
+                isVisible={toastState.isVisible}
+                message={toastState.message}
+                onClose={hideToast}
+                actionText={toastState.actionText}
+                onAction={toastState.onAction}
+            />
+
+            {/* 주소 검색 모달 */}
+            {isAddressSearchOpen && (
+                <AddressSearch
+                    onComplete={handleAddressComplete}
+                    onClose={closeAddressSearch}
+                />
+            )}
         </div>
     );
 };

@@ -6,6 +6,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { PostingRequestDTO } from '../dto';
 import { postingApi } from '../api/postingApi';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useToast } from '../../common/toast/useToast';
 
 // Daum Postcode API에서 반환되는 데이터의 최소한의 인터페이스 정의
 // (daum-postcode.d.ts 파일이 없으므로 여기에 포함)
@@ -56,6 +57,11 @@ interface UsePostingFormResult {
     closeAddressSearch: () => void; // 주소 검색 모달을 닫는 함수
     handleAddressComplete: (data: DaumPostcodeData) => void; // 주소 검색 완료 시 호출될 콜백 함수
     isEditMode: boolean; // 수정 모드 여부
+    
+    // Toast 관련 추가
+    toastState: any;
+    showToast: (message: string, actionText?: string, onAction?: () => void) => void;
+    hideToast: () => void;
 }
 
 /**
@@ -66,6 +72,8 @@ export const usePostingForm = (): UsePostingFormResult => {
     const navigate = useNavigate();
     const { postingId } = useParams<{ postingId: string }>();
     const isEditMode = !!postingId;
+    const { toastState, showToast, hideToast } = useToast();
+    
     // 태그 관련 상태 관리
     const [tags, setTags] = useState<string[]>([]);
     const [tagInput, setTagInput] = useState<string>('');
@@ -134,16 +142,17 @@ export const usePostingForm = (): UsePostingFormResult => {
                         setEndTime(loadedData.endTime || '');
                         setTags(loadedData.tags || []);
                     } else {
-                        alert('게시물 로드에 실패했습니다.');
+                        showToast('게시물 로드에 실패했습니다.');
                         navigate('/posting/list'); // 실패 시 목록 페이지로 이동
                     }
                 } catch (error) {
+                    showToast('게시물 로드 중 오류가 발생했습니다.');
                     navigate('/posting/list');
                 }
             };
             loadPosting();
         }
-    }, [isEditMode, postingId, navigate]);
+    }, [isEditMode, postingId, navigate, showToast]);
 
     // 주소 검색 관련 상태 추가
     const [isAddressSearchOpen, setIsAddressSearchOpen] = useState<boolean>(false);
@@ -298,7 +307,7 @@ export const usePostingForm = (): UsePostingFormResult => {
     const handleSubmit = useCallback(async () => {
         // 필수 항목 유효성 검사
         if (!formData.title || !formData.appointmentDatetime || !startTime || !endTime || payAmount <= 0) {
-            alert('필수 항목을 입력해주세요.');
+            showToast('필수 항목을 입력해주세요.');
             return;
         }
 
@@ -314,12 +323,15 @@ export const usePostingForm = (): UsePostingFormResult => {
         const newOrUpdatedPostingId = response.data?.postingId;
         
         if (response.success) {
+            showToast('모집글 등록이 완료되었습니다.');
             navigate(`/posting/${newOrUpdatedPostingId}`);
         } else {
-            alert(isEditMode ? '모집글 수정에 실패했습니다.' : '모집글 생성에 실패했습니다.');
+            // 서버에서 응답한 메시지가 있으면 그것을 사용, 없으면 기본 메시지
+            const errorMessage = response.message || (isEditMode ? '모집글 수정에 실패했습니다.' : '모집글 생성에 실패했습니다.');
+            showToast(errorMessage);
         }
 
-    }, [formData, startTime, endTime, payAmount, uploadedFile, isEditMode, postingId, navigate]);
+    }, [formData, startTime, endTime, payAmount, uploadedFile, isEditMode, postingId, navigate, showToast]);
 
     // 훅이 외부로 노출할 상태와 함수들을 반환합니다.
     return {
@@ -342,6 +354,9 @@ export const usePostingForm = (): UsePostingFormResult => {
         openAddressSearch,
         closeAddressSearch,
         handleAddressComplete,
-        isEditMode
+        isEditMode,
+        toastState,
+        showToast,
+        hideToast
     };
 }; 

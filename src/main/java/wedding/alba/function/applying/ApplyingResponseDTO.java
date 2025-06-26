@@ -24,8 +24,10 @@ public class ApplyingResponseDTO {
     private String statusStr;
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime applyDatetime;
+
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime confirmationDatetime;
+
 
     public void setStatusStr() {
         if(this.status == 0) {

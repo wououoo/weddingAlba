@@ -38,8 +38,8 @@ public class Applying {
     @Column(name = "posting_id", nullable = false)
     private Long postingId;
 
-    @Column(name = "status")
-    private Integer status;              // 신청 상태 (0: 대기, 1: 승인, -1: 거절)
+    @Column(name = "status", nullable = false)
+    private Integer status = 0;              // 신청 상태 (0: 대기, 1: 승인, -1: 거절)
     
     @CreationTimestamp
     @Column(name = "apply_datetime", updatable = false)

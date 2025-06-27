@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { applyingApi } from '../api/applyingApi';
-import { ApplyingRequestDTO } from '../dto/ApplyinhRequestDTO';
+import { ApplyingRequestDTO } from '../dto/ApplyingRequestDTO';
 import { useToast } from '../../common/toast';
 
 interface UseApplyingFormProps {
@@ -103,21 +103,22 @@ export const useApplyingForm = ({
         }
     };
 
-    const updateApplying = async (applyingData: { prContent: string }) => {
+    const updateApplying = async (applyingData: ApplyingRequestDTO, applyingId: number) => {
         if (!applyingId) return { success: false, message: '신청 ID가 없습니다.' };
         
         setIsLoading(true);
         setError(null);
 
         try {
-            // TODO: 수정 API 호출 (현재는 임시로 성공 처리)
-            console.log("신청 수정: ", applyingData);
-            
-            return {
-                success: true,
-                data: { applyingId },
-                message: '신청이 수정되었습니다.'
-            };
+            const response = await applyingApi.updateApplying(applyingData, applyingId);
+            console.log(response);
+            if (response.success) {
+                return {
+                    success: true,
+                    data: response.data,
+                    message: '신청이 수정되었습니다.'
+                };
+            }
         } catch (error: any) {
             let errorMessage = '신청 수정 중 오류가 발생했습니다.';
             if(error.response?.data?.message) {
@@ -152,13 +153,12 @@ export const useApplyingForm = ({
         try {
             if (isEditMode) {
                 // 수정 함수
-                const result = await updateApplying({ prContent });
-                
-                if (result.success) {
+                const result = await updateApplying({ prContent, userId, postingId }, applyingId);
+                if (result?.success) {
                     showToast('신청이 수정되었습니다.');
                     navigate(`/applying/${applyingId}`);
                 } else {
-                    showToast(result.message);
+                    showToast(result?.message || '신청 수정에 실패했습니다.');
                 }
             } else {
                 // 등록 함수
@@ -169,10 +169,10 @@ export const useApplyingForm = ({
                 };
 
                 const result = await applyToPosting(applyingData);
-                
+                console.log(result);
                 if (result.success) {
                     showToast('신청이 완료되었습니다.');
-                    navigate(`/applying/${result.data?.applyingId}`);
+                    navigate(`/applying/${result.data}`);
                 } else {
                     showToast(result.message);
                 }

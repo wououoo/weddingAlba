@@ -23,7 +23,7 @@ public class ApplyingService {
         return applyId;
     }
 
-    public Long updateApplying(Long userId, Long applyingId, ApplyingRequestDTO requestDTO) {
+    public Long updateApplying(Long userId, Long applyingId, String prContent) {
         Applying existApplying = applyingRepository.findById(applyingId)                
                 .orElseThrow(() -> {
                     log.error("존재하지 않는 신청글 {}  수정 시도", applyingId);
@@ -34,10 +34,13 @@ public class ApplyingService {
             log.warn("사용자 {}가 다른 사용자의 신청글 {} 수정 시도", userId, applyingId);
             throw new IllegalArgumentException("수정 권한이 없습니다.");
         }
-
+        ApplyingRequestDTO requestDTO = new ApplyingRequestDTO();
         requestDTO.setUserId(userId);
         requestDTO.setApplyingId(applyingId);
+        requestDTO.setPrContent(prContent);
+        log.info(requestDTO.toString());
         existApplying.toUpdateApplying(requestDTO);
+
         Long updateApplyingId = applyingRepository.save(existApplying).getApplyingId();
         return updateApplyingId;
     }

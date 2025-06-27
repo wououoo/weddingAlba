@@ -7,7 +7,6 @@ const ApplyingViewPage: React.FC = () => {
         applyingData,
         isLoading,
         currentUserId,
-        getStatusText,
         getStatusColor,
         goBack,
         goToPosting,
@@ -28,6 +27,7 @@ const ApplyingViewPage: React.FC = () => {
         postingId,
         posting,
         status,
+        statusText,
         applyDatetime,
         prContent,
         confirmationDatetime
@@ -62,7 +62,7 @@ const ApplyingViewPage: React.FC = () => {
                     <div className="flex items-center justify-between mb-4">
                         <h1 className="text-2xl font-bold text-gray-900">신청 #{applyingId}</h1 >
                         <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(status)}`}>
-                            {getStatusText(status)}
+                            {statusText}
                         </span>
                     </div>
 

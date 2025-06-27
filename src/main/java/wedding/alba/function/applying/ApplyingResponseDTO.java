@@ -15,13 +15,13 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Builder
 public class ApplyingResponseDTO {
-    private Long applyId;
+    private Long applyingId;
     private Long postingId;
     private PostingResponseDTO posting;
     private Long userId;
     private String prContent;
     private Integer status;
-    private String statusStr;
+    private String statusText;
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime applyDatetime;
 
@@ -31,11 +31,13 @@ public class ApplyingResponseDTO {
 
     public void setStatusStr() {
         if(this.status == 0) {
-            this.statusStr = "대기";
+            this.statusText = "대기";
         } else if(this.status == 1) {
-            this.statusStr = "승인";
+            this.statusText = "승인";
         } else if(this.status == -1) {
-            this.statusStr = "거절";
+            this.statusText = "거절";
+        } else {
+            this.statusText = "알수없음";
         }
     }
 

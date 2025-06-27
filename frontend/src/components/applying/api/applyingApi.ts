@@ -1,6 +1,6 @@
-import { post, get } from "../../../utils/httpClient";
+import { post, get, put } from "../../../utils/httpClient";
 import { ApplyingResponseDTO } from "../dto/ApplyingResponseDTO";
-import { ApplyingRequestDTO } from "../dto/ApplyinhRequestDTO";
+import { ApplyingRequestDTO } from "../dto/ApplyingRequestDTO";
 
 // API 기본 URL
 const API_BASE_URL = process.env.REACT_APP_API_URL || '';
@@ -14,6 +14,18 @@ export const applyingApi = {
                 success: false,
                 data: null,
                 message: '신청에 실패했습니다.'
+            };
+        }
+    },
+
+    updateApplying: async (applyingData: ApplyingRequestDTO, applyingId: number) => {
+        try {
+            return await put<ApplyingResponseDTO>(`${API_BASE_URL}/applying/update/${applyingId}`, applyingData);
+        } catch (error) {
+            return {
+                success: false,
+                data: null,
+                message: '신청 수정에 실패했습니다.'
             };
         }
     },

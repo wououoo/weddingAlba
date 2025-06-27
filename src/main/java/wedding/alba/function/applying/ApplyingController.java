@@ -33,8 +33,8 @@ public class ApplyingController {
 
             Long userId = getCurrentUserId();
             requestDTO.setUserId(userId);
-            Long applyId = applyingService.createApplying(requestDTO);
-            return ResponseEntity.ok(ApiResponse.success(applyId));
+            Long applyingId = applyingService.createApplying(requestDTO);
+            return ResponseEntity.ok(ApiResponse.success(applyingId));
         } catch(RuntimeException e) {
             log.error("신청글 생성 실패: {}", e.getMessage());
             return ResponseEntity.ok(ApiResponse.error(e.getMessage()));
@@ -44,10 +44,10 @@ public class ApplyingController {
     }
 
     @PutMapping("/update/{applyingId}")
-    public ResponseEntity<ApiResponse<Long>> updateApplying(@PathVariable Long applyingId, @RequestBody ApplyingRequestDTO requestDTO) {
+    public ResponseEntity<ApiResponse<Long>> updateApplying(@PathVariable Long applyingId, @RequestBody String prContent) {
         try {
             Long userId = getCurrentUserId();
-            Long updateApplyingId = applyingService.updateApplying(userId, applyingId, requestDTO);
+            Long updateApplyingId = applyingService.updateApplying(userId, applyingId, prContent);
             return ResponseEntity.ok(ApiResponse.success(updateApplyingId));
         } catch(RuntimeException e) {
             log.error("신청글 수정 실패: {}", e.getMessage());

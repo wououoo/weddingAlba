@@ -6,6 +6,7 @@ export interface ApplyingResponseDTO {
     postingId: number;
     posting: PostingResponseDTO;
     status: number; // 0: 대기, 1: 승인, -1: 거절
+    statusText: string;
     applyDatetime: string;
     prContent: string;
     confirmationDatetime: string | null;

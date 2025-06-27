@@ -26,7 +26,6 @@ export const useApplyingView = () => {
                 try {
                     setIsLoading(true);
                     const response = await applyingApi.getApplyingDetail(applyingId);
-                    console.log(response.data);
 
                     if (response.success && response.data) {
                         setApplyingData(response.data);
@@ -44,20 +43,6 @@ export const useApplyingView = () => {
             fetchApplying();
         }
     }, [applyingId]);
-
-    // 상태 텍스트 변환
-    const getStatusText = (statusCode: number) => {
-        switch (statusCode) {
-            case 0:
-                return "대기";
-            case 1:
-                return "승인";
-            case -1:
-                return "거절";
-            default:
-                return "알 수 없음";
-        }
-    };
 
     // 상태 색상 변환
     const getStatusColor = (statusCode: number) => {
@@ -96,8 +81,6 @@ export const useApplyingView = () => {
         isLoading,
         currentUserId,
         
-        // 함수
-        getStatusText,
         getStatusColor,
         goBack,
         goToPosting,

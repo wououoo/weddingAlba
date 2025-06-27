@@ -34,6 +34,7 @@ const sampleApplyingList: ApplyingResponseDTO[] = [
             targetPersonnel: 2
         },
         status: 0, // 대기
+        statusText: "대기",
         applyDatetime: "2025년 05월 19일 14시 30분",
         prContent: "안녕하세요! 결혼식 도우미 경험이 있고, 밝고 적극적인 성격입니다. 꼼꼼하게 도와드리겠습니다.",
         confirmationDatetime: null
@@ -68,6 +69,7 @@ const sampleApplyingList: ApplyingResponseDTO[] = [
             targetPersonnel: 1
         },
         status: 1, // 승인
+        statusText: "승인",
         applyDatetime: "2025년 05월 18일 11시 45분",
         prContent: "부산 거주자로 직장동료 역할 경험 있습니다. 성실하게 참여하겠습니다.",
         confirmationDatetime: "2025년 05월 19일 09시 15분"
@@ -102,6 +104,7 @@ const sampleApplyingList: ApplyingResponseDTO[] = [
             targetPersonnel: 3
         },
         status: -1, // 거절
+        statusText: "거절",
         applyDatetime: "2025년 05월 17일 20시 30분",
         prContent: "대학교 동기 역할 경험이 많습니다. 자연스럽게 참여할 수 있어요.",
         confirmationDatetime: "2025년 05월 18일 10시 00분"

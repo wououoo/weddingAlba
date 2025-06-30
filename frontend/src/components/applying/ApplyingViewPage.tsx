@@ -114,7 +114,7 @@ const ApplyingViewPage: React.FC = () => {
                             </svg>
                             <span>{posting.sidoSigungu}</span>
                             <span className="mx-2">•</span>
-                            <span>{posting.appointmentDatetime}</span>
+                            <span>{convertDatetime(posting.appointmentDatetime!)}</span>
                         </div>
 
                         <div className="flex flex-wrap gap-1 mb-2">
@@ -127,7 +127,7 @@ const ApplyingViewPage: React.FC = () => {
 
                         <div className="flex items-center justify-between">
                             <div className="text-sm text-gray-600">
-                                <span className="font-medium text-blue-600">{posting.payAmount}</span>
+                                <span className="font-medium text-blue-600">{posting.payTypeStr} {Number(posting.payAmount).toLocaleString()}원</span>
                                 <span className="mx-2">•</span>
                                 <span>{posting.guestMainRole}</span>
                             </div>

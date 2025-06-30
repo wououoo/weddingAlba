@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import PostingCard from "./component/PostingCard";
 import { PostingResponseDTO } from "./dto/PostingResponseDTO";
 import { usePostingList } from "./hooks/usePostingList";
-import { useInfiniteScroll } from "./hooks/useInfiniteScroll";
+import { useInfiniteScroll } from "../common/infiniteScroll/useInfiniteScroll";
 
 const PostingListPage: React.FC = () => {
     const navigate = useNavigate();

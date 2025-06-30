@@ -24,7 +24,7 @@ public class ApplyingWrapper {
     public ApplyingResponseDTO toResponseDTO (Applying applying) {
         return ApplyingResponseDTO.builder()
                 .userId(applying.getUserId())
-                .applyId(applying.getApplyingId())
+                .applyingId(applying.getApplyingId())
                 .applyDatetime(applying.getApplyDatetime())
                 .confirmationDatetime(applying.getConfirmationDatetime())
                 .prContent(applying.getPrContent())

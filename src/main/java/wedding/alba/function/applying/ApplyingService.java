@@ -2,6 +2,10 @@ package wedding.alba.function.applying;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import wedding.alba.entity.Applying;
 
@@ -19,11 +23,11 @@ public class ApplyingService {
 
     public Long createApplying(ApplyingRequestDTO requestDTO) {
         Applying applying = applyingWrapper.toEntity(requestDTO);
-        Long applyId = applyingRepository.save(applying).getApplyingId();
-        return applyId;
+        Long applyingId = applyingRepository.save(applying).getApplyingId();
+        return applyingId;
     }
 
-    public Long updateApplying(Long userId, Long applyingId, String prContent) {
+    public Long updateApplying(Long userId, Long applyingId, ApplyingRequestDTO rquestDto) {
         Applying existApplying = applyingRepository.findById(applyingId)                
                 .orElseThrow(() -> {
                     log.error("존재하지 않는 신청글 {}  수정 시도", applyingId);
@@ -34,12 +38,7 @@ public class ApplyingService {
             log.warn("사용자 {}가 다른 사용자의 신청글 {} 수정 시도", userId, applyingId);
             throw new IllegalArgumentException("수정 권한이 없습니다.");
         }
-        ApplyingRequestDTO requestDTO = new ApplyingRequestDTO();
-        requestDTO.setUserId(userId);
-        requestDTO.setApplyingId(applyingId);
-        requestDTO.setPrContent(prContent);
-        log.info(requestDTO.toString());
-        existApplying.toUpdateApplying(requestDTO);
+        existApplying.setPrContent(rquestDto.getPrContent());
 
         Long updateApplyingId = applyingRepository.save(existApplying).getApplyingId();
         return updateApplyingId;
@@ -59,10 +58,8 @@ public class ApplyingService {
                 statusDTO.setHasApplied(false);
             }
         }
-
         return statusDTO;
     }
-
 
     public ApplyingResponseDTO getApplyingDetail(Long applyingId) {
         Applying applying = applyingRepository.findById(applyingId).orElseThrow(() -> {
@@ -71,8 +68,37 @@ public class ApplyingService {
         });
         ApplyingResponseDTO responseDTO = applyingWrapper.toResponseDTO(applying);
         responseDTO.setStatusStr();
+        responseDTO.getPosting().setPayTypeStr();
 
         return responseDTO;
+    }
+
+    public Page<ApplyingResponseDTO> getMyApplyingList(int page, int size, Integer status, Long userId) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "applyDatetime"));
+        Page<Applying> applyingPage;
+        if (status == null) {
+            applyingPage = applyingRepository.findAllByUserId(pageable, userId);
+        } else {
+            applyingPage = applyingRepository.findMyPageByStatus(pageable, status, userId);
+        }
+        Page<ApplyingResponseDTO> myApplyingPage = applyingPage.map(applying -> applyingWrapper.toResponseDTO(applying));
+        return myApplyingPage;
+    }
+
+    public Long changeStatus (Integer status, Long applyingId, Long userId) {
+        Applying existApplying = applyingRepository.findById(applyingId).orElseThrow(() -> {
+                log.error("존재하지 않는 신청글 {} ", applyingId);
+                return new IllegalArgumentException("존재하지 않는 신청글입니다.");
+            }
+        );
+
+        if(!existApplying.getUserId().equals(userId)) {
+            log.warn("사용자 {}가 다른 사용자의 신청글 {} 수정 시도", userId, applyingId);
+            throw new IllegalArgumentException("수정 권한이 없습니다.");
+        }
+        existApplying.setStatus(status);
+        Long updateApplyingId = applyingRepository.save(existApplying).getApplyingId();
+        return updateApplyingId;
     }
 
 }

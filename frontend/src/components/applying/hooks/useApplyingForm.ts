@@ -111,7 +111,6 @@ export const useApplyingForm = ({
 
         try {
             const response = await applyingApi.updateApplying(applyingData, applyingId);
-            console.log(response);
             if (response.success) {
                 return {
                     success: true,
@@ -150,10 +149,14 @@ export const useApplyingForm = ({
             return;
         }
 
-        try {
+        try {       
+            const applyingData: ApplyingRequestDTO = {
+                postingId: postingId!,
+                prContent
+            };
             if (isEditMode) {
                 // 수정 함수
-                const result = await updateApplying({ prContent, userId, postingId }, applyingId);
+                const result = await updateApplying(applyingData, applyingId);
                 if (result?.success) {
                     showToast('신청이 수정되었습니다.');
                     navigate(`/applying/${applyingId}`);
@@ -162,14 +165,8 @@ export const useApplyingForm = ({
                 }
             } else {
                 // 등록 함수
-                const applyingData: ApplyingRequestDTO = {
-                    postingId: postingId!,
-                    userId,
-                    prContent
-                };
 
                 const result = await applyToPosting(applyingData);
-                console.log(result);
                 if (result.success) {
                     showToast('신청이 완료되었습니다.');
                     navigate(`/applying/${result.data}`);

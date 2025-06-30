@@ -3,6 +3,7 @@ package wedding.alba.function.applying;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -44,10 +45,10 @@ public class ApplyingController {
     }
 
     @PutMapping("/update/{applyingId}")
-    public ResponseEntity<ApiResponse<Long>> updateApplying(@PathVariable Long applyingId, @RequestBody String prContent) {
+    public ResponseEntity<ApiResponse<Long>> updateApplying(@PathVariable Long applyingId, @RequestBody ApplyingRequestDTO requestDTO) {
         try {
             Long userId = getCurrentUserId();
-            Long updateApplyingId = applyingService.updateApplying(userId, applyingId, prContent);
+            Long updateApplyingId = applyingService.updateApplying(userId, applyingId, requestDTO);
             return ResponseEntity.ok(ApiResponse.success(updateApplyingId));
         } catch(RuntimeException e) {
             log.error("신청글 수정 실패: {}", e.getMessage());
@@ -84,6 +85,42 @@ public class ApplyingController {
         }
     }
 
+    @GetMapping("/page/byMe")
+    public ResponseEntity<ApiResponse<Page<ApplyingResponseDTO>>> getMyApplyingPage(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) Integer status) {
+        Long userId = getCurrentUserId();
+        try {
+            Page<ApplyingResponseDTO> applyingResponseDTOPage = applyingService.getMyApplyingList(page,size,status,userId);
+            return ResponseEntity.ok(
+                    ApiResponse.success(applyingResponseDTOPage)
+            );
+        } catch(RuntimeException e) {
+            log.error("내 신청글 리스트 조회 실패: {}", e.getMessage());
+            return ResponseEntity.ok(ApiResponse.error(e.getMessage()));
+        } catch(Exception e) {
+            return ResponseEntity.ok(ApiResponse.error("내 신청글 리스트 조회에 실패했습니다. 다시 확인해주세요."));
+        }
+
+    }
+
+    @PutMapping("/change/status")
+    public ResponseEntity<ApiResponse<Long>> changeStatus(
+            @RequestParam Long applyingId,
+            @RequestParam Integer status) {
+        Long userId = getCurrentUserId();
+        try {
+            Long updateApplyingId = applyingService.changeStatus(status, applyingId, userId);
+            return ResponseEntity.ok(ApiResponse.success(updateApplyingId));
+        } catch(RuntimeException e) {
+            log.error("신청글 상태 수정 실패: {}", e.getMessage());
+            return ResponseEntity.ok(ApiResponse.error(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.ok(ApiResponse.error("신청글 상태 업데이트에 실패했습니다. 다시 확인해주세요."));
+        }
+
+    }
 
 
     private Long getCurrentUserId() {

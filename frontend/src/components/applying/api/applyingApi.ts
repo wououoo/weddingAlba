@@ -55,5 +55,24 @@ export const applyingApi = {
         }
     },
 
+    getMyApplyingList: async (page: number, size: number, status?: string) => {
+        try {
+            const queryParams = new URLSearchParams();
+            queryParams.append('page', page.toString());
+            queryParams.append('size', size.toString());
+            if (status && status !== "전체") {
+                queryParams.append('status', status);
+            }
+            console.log(queryParams.toString());
+            return await get<{ content: ApplyingResponseDTO[], last: boolean }>(`${API_BASE_URL}/applying/page/byMe?${queryParams.toString()}`);
+        } catch (error) {
+            return {
+                success: false,
+                data: { content: [], last: true },
+                message: '내 신청 목록 조회에 실패했습니다.'
+            };
+        }
+    },
+
 }
 

@@ -56,9 +56,4 @@ public class Applying {
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "posting_id", insertable = false, updatable = false)
     private Posting posting;
-
-    public void toUpdateApplying(ApplyingRequestDTO applyingRequestDTO) {
-        this.setStatus(applyingRequestDTO.getStatus());
-        this.setPrContent(applyingRequestDTO.getPrContent());
-    }
 }

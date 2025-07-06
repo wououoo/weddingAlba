@@ -24,9 +24,9 @@ public class ApiResponse<T> {
     }
 
     /**
-     * 성공 응답 생성 (메시지 포함)
+     * 성공 응답 생성 (데이터와 메시지 포함)
      */
-    public static <T> ApiResponse<T> success(String message, T data) {
+    public static <T> ApiResponse<T> success(T data, String message) {
         return new ApiResponse<>(true, message, data);
     }
 
@@ -35,5 +35,12 @@ public class ApiResponse<T> {
      */
     public static <T> ApiResponse<T> error(String message) {
         return new ApiResponse<>(false, message, null);
+    }
+    
+    /**
+     * 실패 응답 생성 (데이터 포함)
+     */
+    public static <T> ApiResponse<T> error(String message, T data) {
+        return new ApiResponse<>(false, message, data);
     }
 }

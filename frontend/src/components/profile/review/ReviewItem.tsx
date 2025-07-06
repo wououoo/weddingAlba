@@ -1,10 +1,11 @@
 import React from 'react';
+import { type GuestReview, type HostReview } from './api/reviewApi';
 
 // 리뷰 타입 정의
 type ReviewType = 'guest' | 'host';
 
 interface ReviewItemProps {
-  review: any;
+  review: GuestReview | HostReview;
   reviewType: ReviewType;
   onPostingClick: (postingId: number) => void;
 }
@@ -15,24 +16,23 @@ const ReviewItem: React.FC<ReviewItemProps> = ({
   onPostingClick
 }) => {
   
-  // 날짜 포맷팅 함수
+  // 날짜 포맷팅 함수 - 백엔드에서 ISO 문자열로 전송되는 것을 처리
   const formatDate = (dateData: any) => {
     try {
-      let date;
+      let date: Date;
       
-      // 배열 형태의 날짜 데이터 처리 [year, month, day, hour, minute]
+      // 배열 형태의 날짜 데이터 처리 (LocalDateTime -> 배열)
       if (Array.isArray(dateData) && dateData.length >= 5) {
         // Java LocalDateTime 배열: [year, month, day, hour, minute, second?, nano?]
         // JavaScript Date는 month가 0부터 시작하므로 -1 해야 함
         const [year, month, day, hour, minute, second = 0] = dateData;
         date = new Date(year, month - 1, day, hour, minute, second);
       } else if (typeof dateData === 'string') {
-        // 문자열 형태의 날짜 처리
-        let dateString = dateData;
-        if (dateString.includes(' ') && !dateString.includes('T')) {
-          dateString = dateString.replace(' ', 'T');
-        }
-        date = new Date(dateString);
+        // ISO 문자열 형태의 날짜 처리 (추천되는 방식)
+        date = new Date(dateData);
+      } else if (typeof dateData === 'number') {
+        // 타임스탬프 형태
+        date = new Date(dateData);
       } else {
         // 기본 Date 생성자 사용
         date = new Date(dateData);
@@ -51,6 +51,7 @@ const ReviewItem: React.FC<ReviewItemProps> = ({
         minute: '2-digit'
       });
     } catch (error) {
+      console.error('날짜 포맷팅 에러:', error, dateData);
       return '날짜 형식 오류';
     }
   };
@@ -58,12 +59,14 @@ const ReviewItem: React.FC<ReviewItemProps> = ({
   // 별점 렌더링 함수
   const renderStars = (score: number) => {
     const stars = [];
+    const validScore = Math.max(0, Math.min(5, score || 0)); // 0-5 범위로 제한
+    
     for (let i = 1; i <= 5; i++) {
       stars.push(
         <svg
           key={i}
           xmlns="http://www.w3.org/2000/svg"
-          className={`h-4 w-4 ${i <= score ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
+          className={`h-4 w-4 ${i <= validScore ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
           viewBox="0 0 24 24"
           stroke="currentColor"
         >
@@ -93,6 +96,42 @@ const ReviewItem: React.FC<ReviewItemProps> = ({
     return 'bg-red-50';
   };
 
+  // 타입 가드 함수
+  const isGuestReview = (review: GuestReview | HostReview): review is GuestReview => {
+    return reviewType === 'guest' && 'guestInfo' in review;
+  };
+
+  const isHostReview = (review: GuestReview | HostReview): review is HostReview => {
+    return reviewType === 'host' && 'hostInfo' in review;
+  };
+
+  // 리뷰 대상 정보 가져오기
+  const getReviewTargetInfo = () => {
+    if (isGuestReview(review)) {
+      return {
+        nickname: review.guestInfo?.nickname || '게스트',
+        profileImageUrl: review.guestInfo?.profileImageUrl,
+        power: review.guestInfo?.guestPower || 0,
+        powerLabel: '하객력'
+      };
+    } else if (isHostReview(review)) {
+      return {
+        nickname: review.hostInfo?.nickname || '호스트',
+        profileImageUrl: review.hostInfo?.profileImageUrl,
+        power: review.hostInfo?.hostPower || 0,
+        powerLabel: '호스트력'
+      };
+    }
+    return {
+      nickname: '사용자',
+      profileImageUrl: undefined,
+      power: 0,
+      powerLabel: '파워'
+    };
+  };
+
+  const targetInfo = getReviewTargetInfo();
+
   return (
     <div className="border border-gray-200 rounded-xl p-5 hover:shadow-lg transition-all duration-300 bg-white">
       <div className="flex justify-between items-start">
@@ -103,31 +142,31 @@ const ReviewItem: React.FC<ReviewItemProps> = ({
               {/* 리뷰 대상 정보 */}
               <div className="flex items-center space-x-3">
                 <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
-                  {/* 게스트 리뷰인 경우 게스트 정보, 호스트 리뷰인 경우 호스트 정보 */}
-                  {(reviewType === 'guest' ? review.guestInfo?.profileImageUrl : review.hostInfo?.profileImageUrl) ? (
+                  {targetInfo.profileImageUrl ? (
                     <img 
-                      src={reviewType === 'guest' ? review.guestInfo.profileImageUrl : review.hostInfo.profileImageUrl} 
+                      src={targetInfo.profileImageUrl} 
                       alt={`${reviewType === 'guest' ? '게스트' : '호스트'} 프로필`} 
                       className="w-full h-full object-cover"
+                      onError={(e) => {
+                        // 이미지 로드 실패 시 기본 아이콘으로 대체
+                        e.currentTarget.style.display = 'none';
+                        const nextSibling = e.currentTarget.nextElementSibling as HTMLElement;
+                        if (nextSibling) {
+                          nextSibling.classList.remove('hidden');
+                        }
+                      }}
                     />
-                  ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                  )}
+                  ) : null}
+                  <svg xmlns="http://www.w3.org/2000/svg" className={`h-7 w-7 text-gray-400 ${targetInfo.profileImageUrl ? 'hidden' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
                 </div>
                 <div>
                   <div className="font-semibold text-gray-800">
-                    {reviewType === 'guest' 
-                      ? (review.guestInfo?.nickname || '게스트') 
-                      : (review.hostInfo?.nickname || '호스트')
-                    }
+                    {targetInfo.nickname}
                   </div>
                   <div className="text-xs text-gray-500 mt-0.5">
-                    {reviewType === 'guest' 
-                      ? `하객력 ${review.guestInfo?.guestPower || 0}`
-                      : `호스트력 ${review.hostInfo?.hostPower || 0}`
-                    }
+                    {targetInfo.powerLabel} {targetInfo.power}
                   </div>
                 </div>
               </div>
@@ -141,7 +180,7 @@ const ReviewItem: React.FC<ReviewItemProps> = ({
                   ? 'bg-blue-100 text-blue-700' 
                   : 'bg-green-100 text-green-700'
               }`}>
-                {reviewType === 'guest' ? '게스트 리뷰' : '호스트 리뷰'}
+                {reviewType === 'guest' ? '받은 게스트 리뷰' : '받은 호스트 리뷰'}
               </div>
               
               {/* 점수와 별점 */}
@@ -161,7 +200,7 @@ const ReviewItem: React.FC<ReviewItemProps> = ({
             <div className="text-xs text-gray-500 mb-2 font-medium">
               {reviewType === 'guest' 
                 ? '모집자가 나에게 작성한 리뷰:' 
-                : '내가 모집자에게 작성한 리뷰:'
+                : '게스트가 나에게 작성한 리뷰:'
               }
             </div>
             <p className="text-gray-800 leading-relaxed text-sm">
@@ -175,25 +214,29 @@ const ReviewItem: React.FC<ReviewItemProps> = ({
             onClick={() => onPostingClick(review.postingId)}
           >
             <h4 className="font-semibold text-purple-600 mb-2 hover:text-purple-700 transition-colors">
-              {review.postingInfo?.title}
+              {review.postingInfo?.title || '결혼식 제목 없음'}
             </h4>
             
             {/* 장소 정보 */}
-            <div className="flex items-center text-sm text-gray-600 mb-2">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              {review.postingInfo?.location}
-            </div>
+            {review.postingInfo?.location && (
+              <div className="flex items-center text-sm text-gray-600 mb-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                {review.postingInfo.location}
+              </div>
+            )}
             
             {/* 결혼식 날짜 */}
-            <div className="flex items-center text-sm text-gray-600">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a1 1 0 012 0v4m4-4v4m-6 4h8m-8 0V9a1 1 0 011-1h6a1 1 0 011 1v6m-8 0h8" />
-              </svg>
-              {formatDate(review.postingInfo?.appointmentDatetime)}
-            </div>
+            {review.postingInfo?.appointmentDatetime && (
+              <div className="flex items-center text-sm text-gray-600">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                {formatDate(review.postingInfo.appointmentDatetime)}
+              </div>
+            )}
           </div>
 
           {/* 리뷰 작성 일시 */}
@@ -206,7 +249,7 @@ const ReviewItem: React.FC<ReviewItemProps> = ({
             </div>
             
             {/* 게시글 보기 힌트 */}
-            <div className="text-xs text-gray-400 flex items-center">
+            <div className="text-xs text-gray-400 flex items-center cursor-pointer hover:text-gray-600 transition-colors">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -214,6 +257,16 @@ const ReviewItem: React.FC<ReviewItemProps> = ({
               클릭하여 게시글 보기
             </div>
           </div>
+
+          {/* 디버깅 정보 (개발 환경에서만 표시) */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="mt-2 p-2 bg-gray-100 rounded text-xs text-gray-500">
+              <div>리뷰 ID: {reviewType === 'guest' ? (review as GuestReview).guestReviewId : (review as HostReview).hostReviewId}</div>
+              <div>신청 ID: {review.applyId}</div>
+              <div>모집글 ID: {review.postingId}</div>
+              <div>대상 사용자 ID: {review.userId}</div>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -21,6 +21,8 @@ import { ApplyingListPage, ApplyingFormPage } from './components/applying';
 import ApplyingViewPage from './components/applying/ApplyingViewPage';
 import { PostingFormPage,  PostingListByHost,  PostingListPage,  PostingViewPage} from './components/posting';
 import MainPage from './components/main/MainPage';
+import SockJSIframe from './components/sockjs/SockJSIframe';
+import ErrorBoundary from './components/errorBoundary/ErrorBoundary';
 
 
 
@@ -46,6 +48,11 @@ const App: React.FC = () => {
   return (
     <Router>
       <Routes>
+        {/* SockJS iframe 경로들 (버뺄 방지) */}
+        <Route path="/ws/iframe.html" element={<SockJSIframe />} />
+        <Route path="/ws/:id/:transport/iframe.html" element={<SockJSIframe />} />
+        <Route path="/ws/:id/:transport/htmlfile" element={<SockJSIframe />} />
+        
         {/* 로그인 화면에는 Layout 적용 안함 */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/oauth2/redirect" element={<OAuth2RedirectHandler />} />
@@ -158,7 +165,9 @@ const App: React.FC = () => {
 
         <Route path="/chat/private/:roomId" element={
           <SimplePrivateRoute>
-            <PrivateChatRoom />
+            <ErrorBoundary>
+              <PrivateChatRoom />
+            </ErrorBoundary>
           </SimplePrivateRoute>
         } />
 

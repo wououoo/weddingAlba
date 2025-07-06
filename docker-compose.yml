@@ -1,0 +1,110 @@
+# Docker Compose for Wedding Alba Development Environment
+version: '3.8'
+
+services:
+  # Zookeeper
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    hostname: zookeeper
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - wedding-network
+
+  # Kafka Broker
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    hostname: kafka
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - "9101:9101"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_JMX_PORT: 9101
+      KAFKA_JMX_HOSTNAME: localhost
+    networks:
+      - wedding-network
+
+  # Kafka UI (관리용)
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    depends_on:
+      - kafka
+    ports:
+      - "8090:8080"  # 포트 충돌 방지를 위해 8090으로 변경
+    environment:
+      KAFKA_CLUSTERS_0_NAME: wedding-local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+      # UI 설정
+      DYNAMIC_CONFIG_ENABLED: 'true'
+      AUTH_TYPE: "disabled"
+      MANAGEMENT_HEALTH_LDAP_ENABLED: 'false'
+      # 웨딩알바 프로젝트 커스텀 설정
+      KAFKA_CLUSTERS_0_READONLY: 'false'
+      KAFKA_CLUSTERS_0_KAFKACONNECT_0_NAME: wedding-connect
+      KAFKA_CLUSTERS_0_KAFKACONNECT_0_ADDRESS: http://kafka-connect:8083
+    networks:
+      - wedding-network
+    restart: unless-stopped
+
+  # Kafka Topic 초기화
+  kafka-init:
+    image: confluentinc/cp-kafka:7.4.0
+    depends_on:
+      - kafka
+    volumes:
+      - ./kafka-setup:/scripts
+    command: ["/scripts/create-topics.sh"]
+    networks:
+      - wedding-network
+    restart: "no"
+
+  # Redis (채팅 세션 관리용)
+  redis:
+    image: redis:7-alpine
+    container_name: wedding-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - wedding-network
+
+  # PostgreSQL (기존)
+  postgres:
+    image: postgres:15
+    container_name: wedding-postgres
+    ports:
+      - "5433:5432"  # 기존 PostgreSQL과 충돌 방지
+    environment:
+      POSTGRES_DB: wedding_alba
+      POSTGRES_USER: alba_user
+      POSTGRES_PASSWORD: alba_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - wedding-network
+
+networks:
+  wedding-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:

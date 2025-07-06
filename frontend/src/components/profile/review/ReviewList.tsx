@@ -6,10 +6,10 @@ import { get } from '../../../utils/httpClient';
 /**
  * 리뷰 목록 컴포넌트
  * 
- * 백엔드 API 연결 가이드:
- * 1. 게스트 리뷰 API: GET /api/guest-reviews?page=1&limit=10
- * 2. 호스트 리뷰 API: GET /api/host-reviews?page=1&limit=10
- * 3. 리뷰 카운트 API: GET /api/guest-reviews/count, GET /api/host-reviews/count
+ * 백엔드 API 연결:
+ * 1. 게스트 리뷰 API: GET /api/review/guest-reviews?page=1&limit=10
+ * 2. 호스트 리뷰 API: GET /api/review/host-reviews?page=1&limit=10
+ * 3. 리뷰 카운트 API: GET /api/review/guest-reviews/count, GET /api/review/host-reviews/count
  * 
  * API 응답 형식:
  * {
@@ -31,8 +31,8 @@ interface GuestReview {
   userId: number; // 게스트(신청자) ID
   content: string;
   score: number;
-  createdAt: number[];
-  updatedAt: number[];
+  createdAt: string; // ISO 문자열로 받음
+  updatedAt: string;
   guestInfo: {
     nickname: string;
     profileImageUrl?: string;
@@ -40,7 +40,7 @@ interface GuestReview {
   };
   postingInfo: {
     title: string;
-    appointmentDatetime: number[];
+    appointmentDatetime: string; // ISO 문자열로 받음
     location: string;
   };
 }
@@ -53,8 +53,8 @@ interface HostReview {
   userId: number; // 호스트(모집자) ID
   content: string;
   score: number;
-  createdAt: number[];
-  updatedAt: number[];
+  createdAt: string;
+  updatedAt: string;
   hostInfo: {
     nickname: string;
     profileImageUrl?: string;
@@ -62,9 +62,21 @@ interface HostReview {
   };
   postingInfo: {
     title: string;
-    appointmentDatetime: number[];
+    appointmentDatetime: string;
     location: string;
   };
+}
+
+// API 응답 인터페이스
+interface ReviewListResponse<T> {
+  data: T[];
+  totalCount: number;
+  hasMore: boolean;
+  currentPage: number;
+}
+
+interface ReviewCountResponse {
+  count: number;
 }
 
 interface ReviewListProps {
@@ -84,153 +96,32 @@ const ReviewList: React.FC<ReviewListProps> = ({ className = '' }) => {
 
   const itemsPerPage = 10;
 
-  // 게스트 리뷰 더미 데이터 생성 (모집자가 게스트에게 작성한 리뷰)
-  const generateDummyGuestReviews = () => {
-    const dummyData = [
-      {
-        guestReviewId: 1,
-        applyId: 101,
-        postingId: 201,
-        userId: 301,
-        content: '정말 좋은 하객이었습니다. 시간도 정확하게 지키고 매너도 훌륭했어요. 다음에도 꼭 함께하고 싶습니다!',
-        score: 5,
-        createdAt: [2025, 6, 8, 14, 30],
-        updatedAt: [2025, 6, 8, 14, 30],
-        guestInfo: {
-          nickname: '김하객',
-          profileImageUrl: null,
-          guestPower: 85
-        },
-        postingInfo: {
-          title: '따뜻한 봄날 결혼식 하객 모집',
-          appointmentDatetime: [2025, 6, 5, 15, 0],
-          location: '서울 강남구 웨딩홀'
-        }
-      },
-      {
-        guestReviewId: 2,
-        applyId: 102,
-        postingId: 202,
-        userId: 302,
-        content: '성실하고 예의바른 하객이었습니다. 결혼식 분위기를 한층 더 좋게 만들어주셨어요.',
-        score: 4,
-        createdAt: [2025, 6, 7, 10, 15],
-        updatedAt: [2025, 6, 7, 10, 15],
-        guestInfo: {
-          nickname: '박예의',
-          profileImageUrl: 'https://via.placeholder.com/40',
-          guestPower: 92
-        },
-        postingInfo: {
-          title: '가을 야외 결혼식 하객 구합니다',
-          appointmentDatetime: [2025, 6, 3, 16, 30],
-          location: '경기도 파주시 정원'
-        }
-      },
-      {
-        guestReviewId: 3,
-        applyId: 103,
-        postingId: 203,
-        userId: 303,
-        content: '조금 늦게 도착하셨지만 그 외에는 모든 면에서 만족스러웠습니다. 친근하고 밝은 성격이 인상적이었어요.',
-        score: 3,
-        createdAt: [2025, 6, 6, 16, 45],
-        updatedAt: [2025, 6, 6, 16, 45],
-        guestInfo: {
-          nickname: '이밝음',
-          profileImageUrl: null,
-          guestPower: 78
-        },
-        postingInfo: {
-          title: '소중한 사람들과 함께하는 결혼식',
-          appointmentDatetime: [2025, 6, 1, 14, 0],
-          location: '부산시 해운대구 컨벤션홀'
-        }
-      }
-    ];
-
-    return dummyData;
-  };
-
-  // 호스트 리뷰 더미 데이터 생성 (게스트가 호스트에게 작성한 리뷰)
-  const generateDummyHostReviews = () => {
-    const dummyData = [
-      {
-        hostReviewId: 1,
-        applyId: 201,
-        postingId: 301,
-        userId: 401,
-        content: '정말 좋은 결혼식이었습니다. 주최자분이 매우 친절하시고 행사 진행도 완벽했어요!',
-        score: 5,
-        createdAt: [2025, 6, 8, 16, 30],
-        updatedAt: [2025, 6, 8, 16, 30],
-        hostInfo: {
-          nickname: '신랑김씨',
-          profileImageUrl: 'https://via.placeholder.com/40',
-          hostPower: 95
-        },
-        postingInfo: {
-          title: '따뜻한 봄날 결혼식 하객 모집',
-          appointmentDatetime: [2025, 6, 5, 15, 0],
-          location: '서울 강남구 웨딩홀'
-        }
-      },
-      {
-        hostReviewId: 2,
-        applyId: 202,
-        postingId: 302,
-        userId: 402,
-        content: '음식도 맛있고 분위기도 좋았어요. 다만 시간이 조금 길어서 아쉬웠습니다.',
-        score: 4,
-        createdAt: [2025, 6, 7, 18, 15],
-        updatedAt: [2025, 6, 7, 18, 15],
-        hostInfo: {
-          nickname: '신부박씨',
-          profileImageUrl: null,
-          hostPower: 88
-        },
-        postingInfo: {
-          title: '가을 야외 결혼식 하객 구합니다',
-          appointmentDatetime: [2025, 6, 3, 16, 30],
-          location: '경기도 파주시 정원'
-        }
-      }
-    ];
-
-    return dummyData;
-  };
-
   // 리뷰 목록 가져오기
   const fetchReviews = async (reviewType: ReviewType, page: number = 1, append: boolean = false) => {
     setIsLoading(true);
     try {
       // 실제 API 호출
-      const endpoint = reviewType === 'guest' ? '/api/guest-reviews' : '/api/host-reviews';
-      // const response = await get<any>(`${endpoint}?page=${page}&limit=${itemsPerPage}`);
-      // const { data, totalCount: total, hasMore: more } = response;
+      const endpoint = reviewType === 'guest' ? '/review/guest-reviews' : '/review/host-reviews';
+      const response = await get<ReviewListResponse<GuestReview | HostReview>>(
+        `${endpoint}?page=${page}&limit=${itemsPerPage}`
+      );
       
-      // 더미 데이터 사용 (실제 배포 시 삭제 예정)
-      const dummyData = reviewType === 'guest' ? generateDummyGuestReviews() : generateDummyHostReviews();
-      const startIndex = (page - 1) * itemsPerPage;
-      const endIndex = startIndex + itemsPerPage;
-      const pageData = dummyData.slice(startIndex, endIndex);
+      // ApiResponse 래퍼에서 실제 데이터 추출
+      if (!response.success || !response.data) {
+        throw new Error(response.message || '데이터를 불러올 수 없습니다.');
+      }
+      
+      const { data, totalCount: total, hasMore: more, currentPage: current } = response.data;
       
       if (append && page > 1) {
-        setReviewItems(prev => [...prev, ...pageData]);
+        setReviewItems(prev => [...prev, ...data]);
       } else {
-        setReviewItems(pageData);
+        setReviewItems(data);
       }
 
-      setTotalCount(dummyData.length);
-      setHasMore(endIndex < dummyData.length);
-      setCurrentPage(page);
-
-      // 리뷰 카운트 설정 (실제 API에서는 별도 엔드포인트로 처리)
-      if (reviewType === 'guest') {
-        setGuestReviewCount(dummyData.length);
-      } else {
-        setHostReviewCount(dummyData.length);
-      }
+      setTotalCount(total);
+      setHasMore(more);
+      setCurrentPage(current);
 
     } catch (error) {
       console.error('리뷰 목록 로드 실패:', error);
@@ -251,19 +142,22 @@ const ReviewList: React.FC<ReviewListProps> = ({ className = '' }) => {
   const fetchReviewCounts = async () => {
     try {
       // 실제 API 호출
-      // const guestResponse = await get<{ count: number }>('/api/guest-reviews/count');
-      // const hostResponse = await get<{ count: number }>('/api/host-reviews/count');
-      // setGuestReviewCount(guestResponse.count);
-      // setHostReviewCount(hostResponse.count);
+      const guestResponse = await get<ReviewCountResponse>('/review/guest-reviews/count');
+      const hostResponse = await get<ReviewCountResponse>('/review/host-reviews/count');
       
-      // 더미 데이터 사용 (실제 배포 시 삭제 예정)
-      const guestData = generateDummyGuestReviews();
-      const hostData = generateDummyHostReviews();
+      // ApiResponse 래퍼에서 실제 데이터 추출
+      if (guestResponse.success && guestResponse.data) {
+        setGuestReviewCount(guestResponse.data.count);
+      }
       
-      setGuestReviewCount(guestData.length);
-      setHostReviewCount(hostData.length);
+      if (hostResponse.success && hostResponse.data) {
+        setHostReviewCount(hostResponse.data.count);
+      }
     } catch (error) {
       console.error('리뷰 카운트 로드 실패:', error);
+      // 에러가 발생해도 카운트는 0으로 유지
+      setGuestReviewCount(0);
+      setHostReviewCount(0);
     }
   };
 
@@ -337,7 +231,7 @@ const ReviewList: React.FC<ReviewListProps> = ({ className = '' }) => {
                 : 'bg-white text-gray-700 border border-gray-200 hover:border-purple-300 hover:bg-purple-50'
             }`}
           >
-            게스트 리뷰
+            게스트 리뷰 ({guestReviewCount})
           </button>
           <button
             onClick={() => handleReviewTypeChange('host')}
@@ -347,7 +241,7 @@ const ReviewList: React.FC<ReviewListProps> = ({ className = '' }) => {
                 : 'bg-white text-gray-700 border border-gray-200 hover:border-purple-300 hover:bg-purple-50'
             }`}
           >
-            호스트 리뷰
+            호스트 리뷰 ({hostReviewCount})
           </button>
         </div>
       </div>

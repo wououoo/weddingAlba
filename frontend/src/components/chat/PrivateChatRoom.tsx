@@ -1,72 +1,218 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useChatRoom } from './hooks/useChatRoom';
+import { ChatMessage } from './api/chatApi';
 
-// 샘플 채팅 데이터
-interface Message {
-  id: number;
-  sender: string;
-  content: string;
-  time: string;
-  isMe: boolean;
-}
-
-interface ChatRoomInfo {
-  id: number;
-  title: string;
-  role: string;
-  postingTitle: string;
-}
-
-const sampleChatRooms: Record<string, ChatRoomInfo> = {
-  '2': {
-    id: 2,
-    title: '김모집자',
-    role: '모집자',
-    postingTitle: '송파 L호텔 하객 구함'
-  },
-  '4': {
-    id: 4,
-    title: '이하객',
-    role: '신청자',
-    postingTitle: '강남 S웨딩홀 하객 모집'
-  }
+// 임시 사용자 정보 (실제로는 AuthContext에서 가져와야 함)
+const getCurrentUser = () => {
+  return {
+    id: 1,
+    name: '사용자',
+    profileImage: null
+  };
 };
 
-const sampleMessages: Record<string, Message[]> = {
-  '2': [
-    { id: 1, sender: '김모집자', content: '안녕하세요, 송파 L호텔 하객 모집 관련 문의드립니다.', time: '오전 10:30', isMe: false },
-    { id: 2, sender: '나', content: '네, 안녕하세요! 무엇을 도와드릴까요?', time: '오전 10:35', isMe: true },
-    { id: 3, sender: '김모집자', content: '모임 시간은 몇 시인가요?', time: '오전 10:40', isMe: false },
-    { id: 4, sender: '나', content: '오전 11시에 호텔 로비에서 만나기로 했습니다.', time: '오전 10:45', isMe: true },
-    { id: 5, sender: '김모집자', content: '알겠습니다. 그럼 복장은 어떻게 준비하면 될까요?', time: '오전 11:00', isMe: false },
-    { id: 6, sender: '나', content: '정장이나 세미정장으로 준비해주시면 됩니다!', time: '오전 11:10', isMe: true },
-    { id: 7, sender: '김모집자', content: '감사합니다. 당일에 어디로 가면 될까요?', time: '오전 11:45', isMe: false }
-  ],
-  '4': [
-    { id: 1, sender: '나', content: '안녕하세요, 강남 S웨딩홀 하객 모집에 신청한 이하객님인가요?', time: '오전 9:30', isMe: true },
-    { id: 2, sender: '이하객', content: '네, 맞습니다! 안녕하세요.', time: '오전 9:35', isMe: false },
-    { id: 3, sender: '나', content: '혹시 몇 분이서 참석하실 예정인가요?', time: '오전 9:40', isMe: true },
-    { id: 4, sender: '이하객', content: '저 혼자 참석할 예정입니다.', time: '오전 9:45', isMe: false },
-    { id: 5, sender: '나', content: '알겠습니다. 당일에는 1시까지 오시면 됩니다!', time: '오전 10:00', isMe: true },
-    { id: 6, sender: '이하객', content: '넵, 제가 먼저 가있겠습니다.', time: '오전 10:05', isMe: false }
-  ]
+const formatTime = (timestamp: string): string => {
+  const date = new Date(timestamp);
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+};
+
+const MessageItem: React.FC<{
+  message: ChatMessage;
+  isMe: boolean;
+  showSender: boolean;
+  onMarkAsRead: (messageId: string) => void;
+}> = ({ message, isMe, showSender, onMarkAsRead }) => {
+  const messageRef = useRef<HTMLDivElement>(null);
+
+  // 메시지가 화면에 보이면 읽음 처리
+  useEffect(() => {
+    if (!isMe && messageRef.current) {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          if (entries[0].isIntersecting) {
+            onMarkAsRead(message.messageId);
+            observer.disconnect();
+          }
+        },
+        { threshold: 0.5 }
+      );
+
+      observer.observe(messageRef.current);
+      return () => observer.disconnect();
+    }
+  }, [isMe, message.messageId, onMarkAsRead]);
+
+  const renderMessageContent = () => {
+    switch (message.messageType) {
+      case 'IMAGE':
+        return (
+          <div className="max-w-xs">
+            <img 
+              src={message.attachmentUrl} 
+              alt="이미지" 
+              className="rounded-lg max-w-full h-auto"
+              onError={(e) => {
+                e.currentTarget.src = '/placeholder-image.png';
+              }}
+            />
+            {message.content && (
+              <p className="mt-2">{message.content}</p>
+            )}
+          </div>
+        );
+      
+      case 'FILE':
+        return (
+          <div className="flex items-center space-x-2 p-2 bg-gray-100 rounded-lg">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>
+            <div className="flex-1">
+              <p className="font-medium">{message.content || '파일'}</p>
+              <p className="text-xs text-gray-500">{message.attachmentType}</p>
+            </div>
+            <a 
+              href={message.attachmentUrl} 
+              download 
+              className="text-purple-600 hover:text-purple-700"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </a>
+          </div>
+        );
+      
+      case 'JOIN':
+      case 'LEAVE':
+      case 'SYSTEM':
+        return (
+          <div className="text-center text-gray-500 text-sm py-2">
+            {message.content}
+          </div>
+        );
+      
+      default:
+        return <span>{message.content}</span>;
+    }
+  };
+
+  // JOIN, LEAVE, SYSTEM 메시지는 화면에 표시하지 않음 (실제 채팅만 표시)
+  if (message.messageType === 'JOIN' || message.messageType === 'LEAVE' || message.messageType === 'SYSTEM') {
+    return null; // 아무것도 렌더링하지 않음
+  }
+
+  return (
+    <div
+      ref={messageRef}
+      className={`mb-4 flex ${isMe ? 'justify-end' : 'justify-start'}`}
+    >
+      {!isMe && (
+        <div className="mr-2 flex-shrink-0">
+          <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+            {message.senderProfileImage ? (
+              <img 
+                src={message.senderProfileImage} 
+                alt={message.senderName}
+                className="w-8 h-8 rounded-full object-cover"
+              />
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            )}
+          </div>
+        </div>
+      )}
+      
+      <div className="max-w-[70%]">
+        {!isMe && showSender && (
+          <div className="text-xs text-gray-600 mb-1">{message.senderName}</div>
+        )}
+        <div className="flex items-end">
+          {isMe && <div className="text-xs text-gray-500 mr-2">{formatTime(message.timestamp)}</div>}
+          <div className={`rounded-lg py-2 px-3 ${isMe ? 'bg-purple-600 text-white' : 'bg-white border'}`}>
+            {renderMessageContent()}
+          </div>
+          {!isMe && <div className="text-xs text-gray-500 ml-2">{formatTime(message.timestamp)}</div>}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const TypingIndicator: React.FC<{ typingUsers: Set<number>; currentUserId: number }> = ({ 
+  typingUsers, 
+  currentUserId 
+}) => {
+  const otherTypingUsers = Array.from(typingUsers).filter(id => id !== currentUserId);
+  
+  if (otherTypingUsers.length === 0) return null;
+
+  return (
+    <div className="flex items-center space-x-2 p-2 text-gray-500 text-sm">
+      <div className="flex space-x-1">
+        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+      </div>
+      <span>상대방이 입력 중...</span>
+    </div>
+  );
 };
 
 const PrivateChatRoom: React.FC = () => {
   const navigate = useNavigate();
   const { roomId } = useParams<{ roomId: string }>();
   const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [roomInfo, setRoomInfo] = useState<ChatRoomInfo | null>(null);
+  const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // 채팅방 및 메시지 로드
+  // 디버깅: 컴포넌트 마운트 추적 (개선된 버전)
+  const mountCountRef = useRef(0);
+  const isMountedRef = useRef(false);
+  
   useEffect(() => {
-    if (roomId && sampleChatRooms[roomId]) {
-      setRoomInfo(sampleChatRooms[roomId]);
-      setMessages(sampleMessages[roomId] || []);
+    if (isMountedRef.current) {
+      console.warn(`🔴 PrivateChatRoom 중복 마운트 방지!`, { roomId });
+      return;
     }
-  }, [roomId]);
+    
+    isMountedRef.current = true;
+    mountCountRef.current += 1;
+    const mountId = mountCountRef.current;
+    console.log(`🟢 PrivateChatRoom 마운트 #${mountId}`, { roomId });
+    
+    return () => {
+      console.log(`🔴 PrivateChatRoom 언마운트 #${mountId}`, { roomId });
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  const currentUser = getCurrentUser();
+  const chatRoomId = roomId ? parseInt(roomId) : 0;
+  
+  // useChatRoom 호출 (로그 제거로 깨끗하게)
+
+  const {
+    chatRoom,
+    messages,
+    isLoadingMessages,
+    hasMoreMessages,
+    loadMoreMessages,
+    sendMessage,
+    typingUsers,
+    startTyping,
+    stopTyping,
+    markAsRead,
+    unreadCount,
+    isConnected,
+    error,
+    clearError
+  } = useChatRoom(chatRoomId, currentUser.id, currentUser.name);
 
   // 메시지 스크롤 자동 이동
   useEffect(() => {
@@ -74,35 +220,123 @@ const PrivateChatRoom: React.FC = () => {
   }, [messages]);
 
   // 메시지 전송 핸들러
-  const handleSendMessage = () => {
-    if (message.trim() === '') return;
+  const handleSendMessage = useCallback(() => {
+    if (!message.trim() || !isConnected) return;
     
-    const newMessage: Message = {
-      id: messages.length + 1,
-      sender: '나',
-      content: message,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      isMe: true
-    };
-    
-    setMessages([...messages, newMessage]);
+    sendMessage(message.trim());
     setMessage('');
-  };
+    stopTyping();
+  }, [message, isConnected, sendMessage, stopTyping]);
 
   // 엔터키로 메시지 전송
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
+  const handleKeyPress = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
       handleSendMessage();
     }
-  };
+  }, [handleSendMessage]);
 
-  if (!roomInfo) {
+  // 타이핑 상태 처리
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setMessage(value);
+
+    if (value.trim() && !isTyping) {
+      setIsTyping(true);
+      startTyping();
+    }
+
+    // 타이핑 중지 타이머 리셋
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    typingTimeoutRef.current = setTimeout(() => {
+      setIsTyping(false);
+      stopTyping();
+    }, 1000);
+  }, [isTyping, startTyping, stopTyping]);
+
+  // 메시지 읽음 처리
+  const handleMarkAsRead = useCallback((messageId: string) => {
+    markAsRead(messageId);
+  }, [markAsRead]);
+
+  // 스크롤 상단에서 더 많은 메시지 로드
+  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.currentTarget;
+    if (target.scrollTop === 0 && hasMoreMessages && !isLoadingMessages) {
+      loadMoreMessages();
+    }
+  }, [hasMoreMessages, isLoadingMessages, loadMoreMessages]);
+
+  // 파일 첨부 (구현 예정)
+  const handleFileAttach = useCallback(() => {
+    // TODO: 파일 선택 및 업로드 로직 구현
+    console.log('파일 첨부 기능 구현 예정');
+  }, []);
+
+  // 컴포넌트 언마운트 시 정리
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // 에러 상태
+  if (error) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <p>로딩 중...</p>
+      <div className="flex flex-col h-screen">
+        <div className="bg-white p-4 border-b border-gray-200 flex items-center">
+          <button onClick={() => navigate('/chat', { replace: true })} className="mr-4">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+          </button>
+          <h1 className="font-bold">채팅</h1>
+        </div>
+        
+        <div className="flex-1 flex flex-col items-center justify-center p-4">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-red-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+          </svg>
+          <p className="text-gray-600 text-center mb-4">{error}</p>
+          <button 
+            onClick={clearError}
+            className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700"
+          >
+            다시 시도
+          </button>
+        </div>
       </div>
     );
   }
+
+  // 로딩 상태
+  if (!chatRoom) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mb-4"></div>
+        <p className="text-gray-500 ml-4">채팅방을 불러오는 중...</p>
+      </div>
+    );
+  }
+
+  // 상대방 정보 계산
+  const getOtherUserInfo = () => {
+    if (chatRoom.type === 'PERSONAL') {
+      if (chatRoom.hostUserId === currentUser.id) {
+        return { name: '게스트', role: '신청자' };
+      } else {
+        return { name: '호스트', role: '모집자' };
+      }
+    }
+    return { name: chatRoom.roomName, role: '' };
+  };
+
+  const otherUser = getOtherUserInfo();
 
   return (
     <div className="flex flex-col h-screen">
@@ -114,75 +348,114 @@ const PrivateChatRoom: React.FC = () => {
           </svg>
         </button>
         <div className="flex-1">
-          <h1 className="font-bold">{roomInfo.title}</h1>
+          <div className="flex items-center space-x-2">
+            <h1 className="font-bold">{otherUser.name}</h1>
+            {!isConnected && (
+              <span className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded">연결 끊김</span>
+            )}
+          </div>
           <p className="text-xs text-gray-500">
-            {roomInfo.role} • {roomInfo.postingTitle}
+            {otherUser.role} • {chatRoom.description || '1:1 채팅'}
           </p>
         </div>
-        <button className="p-2">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-          </svg>
-        </button>
+        <div className="flex items-center space-x-2">
+          {unreadCount > 0 && (
+            <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+              {unreadCount}
+            </span>
+          )}
+          <button className="p-2">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       {/* 메시지 목록 */}
-      <div className="flex-1 overflow-auto p-4 bg-gray-100">
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`mb-4 flex ${msg.isMe ? 'justify-end' : 'justify-start'}`}
-          >
-            {!msg.isMe && (
-              <div className="mr-2 flex-shrink-0">
-                <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                </div>
-              </div>
-            )}
-            <div className={`max-w-[70%]`}>
-              {!msg.isMe && <div className="text-xs text-gray-600 mb-1">{msg.sender}</div>}
-              <div className="flex items-end">
-                {msg.isMe && <div className="text-xs text-gray-500 mr-2">{msg.time}</div>}
-                <div className={`rounded-lg py-2 px-3 ${msg.isMe ? 'bg-purple-600 text-white' : 'bg-white'}`}>
-                  {msg.content}
-                </div>
-                {!msg.isMe && <div className="text-xs text-gray-500 ml-2">{msg.time}</div>}
-              </div>
-            </div>
+      <div 
+        className="flex-1 overflow-auto p-4 bg-gray-100" 
+        onScroll={handleScroll}
+      >
+        {/* 로딩 인디케이터 (상단) */}
+        {isLoadingMessages && (
+          <div className="flex justify-center py-4">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600"></div>
           </div>
-        ))}
+        )}
+
+        {/* 메시지 목록 - JOIN/LEAVE 메시지 필터링 */}
+        {messages
+          .filter(msg => msg.messageType !== 'JOIN' && msg.messageType !== 'LEAVE' && msg.messageType !== 'SYSTEM')
+          .map((msg, index) => {
+            const isMe = msg.senderId === currentUser.id;
+            const filteredMessages = messages.filter(m => m.messageType !== 'JOIN' && m.messageType !== 'LEAVE' && m.messageType !== 'SYSTEM');
+            const prevMessage = index > 0 ? filteredMessages[index - 1] : null;
+            const showSender = !isMe && (!prevMessage || prevMessage.senderId !== msg.senderId);
+            
+            return (
+              <MessageItem
+                key={msg.messageId}
+                message={msg}
+                isMe={isMe}
+                showSender={showSender}
+                onMarkAsRead={handleMarkAsRead}
+              />
+            );
+          })}
+
+        {/* 타이핑 인디케이터 */}
+        <TypingIndicator typingUsers={typingUsers} currentUserId={currentUser.id} />
+        
         <div ref={messagesEndRef} />
       </div>
 
       {/* 입력 영역 */}
       <div className="bg-white border-t border-gray-200 p-4">
-        <div className="flex">
-          <button className="p-2 text-gray-500">
+        <div className="flex items-end space-x-2">
+          <button 
+            onClick={handleFileAttach}
+            className="p-2 text-gray-500 hover:text-gray-700"
+          >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
             </svg>
           </button>
-          <input
-            type="text"
-            className="flex-1 border-0 focus:ring-0 px-3"
-            placeholder="메시지 입력..."
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyPress={handleKeyPress}
-          />
+          
+          <div className="flex-1 flex items-end">
+            <input
+              ref={inputRef}
+              type="text"
+              className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              placeholder={isConnected ? "메시지 입력..." : "연결 중..."}
+              value={message}
+              onChange={handleInputChange}
+              onKeyPress={handleKeyPress}
+              disabled={!isConnected}
+            />
+          </div>
+          
           <button 
-            className={`p-2 rounded-full ${message.trim() ? 'text-purple-600' : 'text-gray-400'}`}
+            className={`p-2 rounded-full transition-colors ${
+              message.trim() && isConnected
+                ? 'text-purple-600 hover:bg-purple-50' 
+                : 'text-gray-400'
+            }`}
             onClick={handleSendMessage}
-            disabled={!message.trim()}
+            disabled={!message.trim() || !isConnected}
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
             </svg>
           </button>
         </div>
+        
+        {/* 연결 상태 표시 */}
+        {!isConnected && (
+          <div className="mt-2 text-center">
+            <span className="text-xs text-red-500">채팅 서버와 연결이 끊어졌습니다. 재연결 중...</span>
+          </div>
+        )}
       </div>
     </div>
   );

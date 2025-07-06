@@ -44,6 +44,12 @@ public class WebSecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // 공개 리소스
                         .requestMatchers("/api/auth/**", "/oauth2/**", "/login/**").permitAll()
+                        // 채팅 API (임시로 인증 제외 - 개발용)
+                        .requestMatchers("/api/chat/**").permitAll()
+                        // WebSocket 연결 허용
+                        .requestMatchers("/ws/**").permitAll()
+                        // Kafka 테스트 경로 인증 제외
+                        .requestMatchers("/api/kafka/**").permitAll()
                         // 업로드된 파일들 (정적 리소스) 접근 허용
                         .requestMatchers("/uploads/**").permitAll()
                         // Swagger UI 등의 개발 도구 접근 허용

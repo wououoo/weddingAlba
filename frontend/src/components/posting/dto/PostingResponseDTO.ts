@@ -30,7 +30,9 @@ export interface PostingResponseDTO {
     // 모집자 정보
     userId?: number;                    // 모집자 ID
     nickname?: string;                  // 모집자 닉네임
+    applyCount?: number;
+    confirmationCount?: number;
+    applyingIdList ?: number[];
 }
-
 
 

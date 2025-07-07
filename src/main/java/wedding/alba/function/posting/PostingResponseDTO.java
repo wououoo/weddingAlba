@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import wedding.alba.entity.Posting;
+import wedding.alba.function.applying.ApplyingResponseDTO;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -56,6 +57,7 @@ public class PostingResponseDTO {
     
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime updateDatetime;
+
 
     public void setPayTypeStr() {
         if(this.payType == null) {

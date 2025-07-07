@@ -26,6 +26,6 @@ public interface PostingRepository extends JpaRepository<Posting, Long> {
                                   @Param("address") String address,
                                   @Param("guestMainRole") String guestMainRole);
 
-
+    Page<Posting> findPostingPageByUserId(Pageable pageable, Long userId);
 
 }

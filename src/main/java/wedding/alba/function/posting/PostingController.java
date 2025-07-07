@@ -100,20 +100,20 @@ public class PostingController {
     }
 
     // 내가작성한 모집글 리스트 (모집글, 모집취소, 모집이력)
-//    @GetMapping("/list/paged/userId")
-//    public ResponseEntity<ApiResponse<Page<PostingResponseDTO>>> getPostingListByUserId(
-//            @RequestParam(defaultValue = "0") int page,
-//            @RequestParam(defaultValue = "10") int size) {
-//        Long userId = getCurrentUserId();
-//
-//        try {
-//            Page<PostingResponseDTO> postingPage = postingService.getAllPostingList(page, size);
-//            return ResponseEntity.ok(ApiResponse.success(postingPage));
-//        } catch (Exception e) {
-//            log.error("공개 페이징 모집글 조회 중 예외 발생: {}", e.getMessage());
-//            return ResponseEntity.ok(ApiResponse.error("모집글 조회에 실패했습니다."));
-//        }
-//    }
+    @GetMapping("/my-list/paged")
+    public ResponseEntity<ApiResponse<Page<MyPostingReponseDTO>>> getPostingListByUserId(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Long userId = getCurrentUserId();
+
+        try {
+            Page<MyPostingReponseDTO> postingPage = postingService.getMyPostingPage(page, size, userId);
+            return ResponseEntity.ok(ApiResponse.success(postingPage));
+        } catch (Exception e) {
+            log.error("내 모집글 조회 중 예외 발생: {}", e.getMessage());
+            return ResponseEntity.ok(ApiResponse.error("모집글 조회에 실패했습니다."));
+        }
+    }
 
 
     @GetMapping("/detail/{postingId}")

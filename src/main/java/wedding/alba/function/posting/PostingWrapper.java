@@ -100,7 +100,7 @@ public class PostingWrapper {
             .build();
     }
 
-    public PostingResponseDTO toDetailDTO (Posting posting, Profile profile) {
+    public PostingResponseDTO toDetailDTO (Posting posting) {
         return PostingResponseDTO.builder()
                 .postingId(posting.getPostingId())
                 .userId(posting.getUserId())
@@ -128,7 +128,44 @@ public class PostingWrapper {
                     Collections.emptyList())
                 .registrationDatetime(posting.getRegistrationDatetime())
                 .updateDatetime(posting.getUpdateDatetime())
-                .nickname(profile.getNickname())
+                .nickname(posting.getProfile().getNickname())
+                .build();
+    }
+
+    public MyPostingReponseDTO toMyPostingReponseDTO (Posting posting, int applyCount, int confirmationCount, List<Long> applyingIdList) {
+        return MyPostingReponseDTO.builder()
+                .posting(PostingResponseDTO.builder()
+                        .postingId(posting.getPostingId())
+                        .userId(posting.getUserId())
+                        .isSelf(posting.getIsSelf())
+                        .personName(posting.getPersonName())
+                        .personPhoneNumber(posting.getPersonPhoneNumber())
+                        .title(posting.getTitle())
+                        .appointmentDatetime(posting.getAppointmentDatetime())
+                        .address(posting.getAddress())
+                        .buildingName(posting.getBuildingName())
+                        .sidoSigungu(posting.getSidoSigungu())
+                        .hasMobileInvitation(posting.getHasMobileInvitation())
+                        .workingHours(posting.getWorkingHours())
+                        .startTime(posting.getStartTime())
+                        .endTime(posting.getEndTime())
+                        .payType(posting.getPayType())
+                        .payAmount(posting.getPayAmount())
+                        .guestMainRole(posting.getGuestMainRole())
+                        .targetPersonnel(posting.getTargetPersonnel())
+                        .detailContent(posting.getDetailContent())
+                        .tags(posting.getTags() != null && !posting.getTags().isEmpty() ?
+                                java.util.Arrays.stream(posting.getTags().split(","))
+                                        .filter(tag -> !tag.trim().isEmpty())
+                                        .collect(Collectors.toList()) :
+                                Collections.emptyList())
+                        .registrationDatetime(posting.getRegistrationDatetime())
+                        .updateDatetime(posting.getUpdateDatetime())
+                        .nickname(posting.getProfile().getNickname())
+                        .build())
+                .applyCount(applyCount)
+                .confirmationCount(confirmationCount)
+                .applyingIdList(applyingIdList)
                 .build();
     }
 

@@ -7,12 +7,17 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.stream.Collectors;
 
+import org.checkerframework.checker.units.qual.A;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
+import wedding.alba.entity.Applying;
 import wedding.alba.entity.Posting;
 import wedding.alba.entity.Profile;
+import wedding.alba.function.applying.ApplyingRepository;
+import wedding.alba.function.applying.ApplyingWrapper;
 import wedding.alba.function.postHistory.PostHistoryDTO;
 import wedding.alba.function.postHistory.PostHistoryService;
 import wedding.alba.function.profile.ProfileRepository;
@@ -26,6 +31,12 @@ public class PostingService {
 
     @Autowired
     private ProfileRepository profileRepository;
+
+    @Autowired
+    private ApplyingRepository applyingRepository;
+
+    @Autowired
+    private ApplyingWrapper applyingWrapper;
 
     @Autowired
     private PostingWrapper postingWrapper;
@@ -108,7 +119,6 @@ public class PostingService {
         postingRepository.deleteById(postingId);
     }
 
-
     // 전체 모집글 리스트 조회
     public Page<PostingResponseDTO> getAllPostingList(int page, int size, String address, String guestMainRole) {
         try {
@@ -116,14 +126,10 @@ public class PostingService {
             // 페이징으로 Posting 엔터티 조회
             Page<Posting> postingPage = postingRepository.findPostingPageByKeyword(pageable, LocalDateTime.now(), address,guestMainRole);
             
-            // 각 Posting에 대해 프로필 정보와 함께 DTO로 변환
+            // 각 Posting에  DTO로 변환
             List<PostingResponseDTO> dtoList = new ArrayList<>();
             for(Posting posting : postingPage.getContent()) {
-                Profile profile = profileRepository.findByUserId(posting.getUserId())
-                    .orElseGet(() -> {
-                        return null;
-                    });
-                PostingResponseDTO dto = postingWrapper.toDetailDTO(posting, profile);
+                PostingResponseDTO dto = postingWrapper.toDetailDTO(posting);
                 dto.setPayTypeStr();
                 dtoList.add(dto);
             }
@@ -137,11 +143,41 @@ public class PostingService {
         }
     }
 
+
+    public Page<MyPostingReponseDTO> getMyPostingPage(int page, int size, Long userId) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "registrationDatetime"));
+        Page<Posting> myPostingPage = postingRepository.findPostingPageByUserId(pageable,userId);
+        List<MyPostingReponseDTO> myPostingList = new ArrayList<>();
+        for(Posting posting : myPostingPage.getContent()) {
+            // 신청글 ID만 추출
+            List<Applying> applyingList = applyingRepository.findByPostingId(posting.getPostingId());
+
+            // 신청글 ID 리스트 추출
+            List<Long> applyingIdList = applyingList.stream()
+                    .map(Applying::getApplyingId)
+                    .collect(Collectors.toList());
+
+            // 신청 개수
+            int applyCount = applyingList.size();
+
+            // 확정된 신청 개수 (status == 1)
+            int confirmationCount = (int) applyingList.stream()
+                    .filter(applying -> applying.getStatus() == 1)
+                    .count();
+
+            MyPostingReponseDTO postingReponseDTO = postingWrapper.toMyPostingReponseDTO(posting, applyCount, confirmationCount, applyingIdList);
+            postingReponseDTO.getPosting().setPayTypeStr();
+            myPostingList.add(postingReponseDTO);
+        }
+
+        return new PageImpl<>(myPostingList, pageable, myPostingPage.getTotalElements());
+    }
+
     // 상세페이지
     public PostingResponseDTO getPostingDetail(Long postingId) {
         Posting posting = postingRepository.findById(postingId).orElseThrow(() -> new NoSuchElementException("모집글을 찾을 수 없습니다. ID: " + postingId));
         Profile profile = profileRepository.findByUserId(posting.getUserId()).orElseThrow(() -> new NoSuchElementException("사용자 프로필을 찾을 수 없습니다. ID: " + postingId));
-        PostingResponseDTO dto = postingWrapper.toDetailDTO(posting, profile);
+        PostingResponseDTO dto = postingWrapper.toDetailDTO(posting);
         dto.setPayTypeStr();
         return dto;
     }

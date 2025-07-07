@@ -18,7 +18,7 @@ import GroupChatRoom from './components/chat/GroupChatRoom';
 import PrivateChatRoom from './components/chat/PrivateChatRoom';
 import { ApplyingListPage, ApplyingFormPage } from './components/applying';
 import ApplyingViewPage from './components/applying/ApplyingViewPage';
-import { PostingFormPage,  PostingListByHost,  PostingListPage,  PostingViewPage} from './components/posting';
+import { PostingFormPage,  MyPostingListPage,  PostingListPage,  PostingViewPage} from './components/posting';
 import MainPage from './components/main/MainPage';
 // import { useAuthStore } from './stores/authStore'; // 주석 처리
 
@@ -78,7 +78,7 @@ const App: React.FC = () => {
         <Route path="/posting/list/:hostId" element={
           <SimplePrivateRoute>
             <WithLayout>
-              <PostingListByHost />
+              <MyPostingListPage />
             </WithLayout>
           </SimplePrivateRoute>
         } />

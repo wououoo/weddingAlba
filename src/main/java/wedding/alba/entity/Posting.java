@@ -36,6 +36,11 @@ public class Posting {
     @Column(name = "user_id")
     private Long userId;              // 모집글 작성자 ID
 
+    // Profile과의 관계 추가 (자주 사용되므로 연결)
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", referencedColumnName = "user_id", insertable = false, updatable = false)
+    private Profile profile;
+
     // 기본정보
     @Column(name = "title")
     private String title;              // 모집글 제목

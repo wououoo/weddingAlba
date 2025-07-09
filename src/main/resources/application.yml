@@ -12,30 +12,47 @@ spring:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: Asia/Seoul
 
-  # Kafka 설정
+  # 🚀 Kafka 성능 최적화 설정
   kafka:
     bootstrap-servers: localhost:9092
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
-      acks: all
+      acks: 1  # all -> 1로 변경 (성능 향상)
       retries: 3
       enable-idempotence: true
+      batch-size: 16384  # 배치 크기 증가
+      linger-ms: 5  # 지연 시간 추가 (배치 처리 향상)
+      buffer-memory: 33554432  # 버퍼 메모리 증가
+      compression-type: lz4  # 압축 사용
+      max-request-size: 1048576  # 최대 요청 크기
     consumer:
-      group-id: wedding-alba-group
+      group-id: chat-group  # 채팅 전용 그룹 ID
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      auto-offset-reset: earliest
+      auto-offset-reset: latest  # earliest -> latest로 변경
       enable-auto-commit: false
+      fetch-min-bytes: 1024  # 최소 가져올 바이트
+      fetch-max-wait: 500  # 최대 대기 시간
+      max-poll-records: 50  # 한번에 가져올 레코드 수 증가
+      session-timeout-ms: 30000  # 세션 타임아웃
+      heartbeat-interval-ms: 10000  # 하트비트 간격
     listener:
       ack-mode: manual_immediate
+      concurrency: 3  # 컨슈머 스레드 수 (CPU 코어 수에 맞게 조정)
+      missing-topics-fatal: false
+      type: batch  # 배치 처리 모드
 
   # Redis 설정
   redis:
     host: localhost
     port: 6379
-    # password: your-password  # 비밀번호가 설정된 경우 주석 해제
     timeout: 3000
+    lettuce:
+      pool:
+        max-active: 8
+        max-idle: 8
+        min-idle: 0
 
   # PostgreSQL 데이터베이스 설정
   datasource:
@@ -45,26 +62,31 @@ spring:
     driver-class-name: org.postgresql.Driver
     hikari:
       connection-timeout: 20000
-      maximum-pool-size: 10
+      maximum-pool-size: 20  # 풀 크기 증가
+      minimum-idle: 5
+      idle-timeout: 300000
+      max-lifetime: 1800000
       connection-init-sql: SET NAMES 'UTF8'
 
   # JPA/Hibernate 설정
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQL10Dialect
     hibernate:
-      ddl-auto: create  # 기존 데이터 유지하면서 새로 생성
-    show-sql: true
+      ddl-auto: update
+    show-sql: false  # 성능을 위해 false로 변경
     properties:
       hibernate:
-        format_sql: true
+        format_sql: false
         connection:
           charSet: UTF-8
         dialect: org.hibernate.dialect.PostgreSQL10Dialect
-        # PostgreSQL 호환성 개선
         globally_quoted_identifiers: false
         jdbc:
           lob:
             non_contextual_creation: true
+          batch_size: 20  # 배치 처리 크기
+        order_inserts: true
+        order_updates: true
 
   # OAuth2 설정
   security:
@@ -87,12 +109,17 @@ spring:
             token-uri: https://kauth.kakao.com/oauth/token
             user-info-uri: https://kapi.kakao.com/v2/user/me
             user-name-attribute: id
+        # 토큰 갱신 최적화 설정
+        http-client:
+          connect-timeout: 30s
+          read-timeout: 30s
+          write-timeout: 30s
 
 # JWT 설정
 jwt:
   secret: ${JWT_SECRET:wedding-service-jwt-secret-key-which-needs-to-be-at-least-32-bytes-long}
-  token-validity-in-seconds: 86400 # 24시간
-  refresh-token-validity-in-seconds: 604800 # 7일
+  token-validity-in-seconds: 86400
+  refresh-token-validity-in-seconds: 604800
 
 # 네이버 지도 API 설정
 naver:
@@ -103,13 +130,12 @@ naver:
 # 애플리케이션 커스텀 설정
 app:
   cors:
-    allowed-origins: "http://localhost:3000"  # React 프론트엔드 URL
+    allowed-origins: "http://localhost:3000"
     allowed-methods: GET,POST,PUT,DELETE,OPTIONS
     allowed-headers: "*"
     max-age: 3600
 
   oauth2:
-    # 프론트엔드 리다이렉트 URL 수정
     redirect-uri: "http://localhost:3000/oauth2/redirect"
 
 # 서버 설정
@@ -119,6 +145,9 @@ server:
     relaxed-query-chars: 
       - '['
       - ']'
+    threads:
+      max: 200  # 최대 스레드 수 증가
+      min-spare: 10
   error:
     include-message: always
     include-binding-errors: always
@@ -130,7 +159,8 @@ logging:
     wedding: DEBUG
     org.springframework.web: INFO
     org.springframework.data: INFO
-    org.springframework.security: DEBUG
-    org.springframework.security.oauth2: DEBUG
-    org.springframework.web.client.RestTemplate: DEBUG
-    org.hibernate.SQL: DEBUG
+    org.springframework.security: INFO  # DEBUG -> INFO로 변경
+    org.springframework.security.oauth2: INFO
+    org.springframework.web.client.RestTemplate: INFO
+    org.hibernate.SQL: INFO  # DEBUG -> INFO로 변경
+    org.apache.kafka: INFO

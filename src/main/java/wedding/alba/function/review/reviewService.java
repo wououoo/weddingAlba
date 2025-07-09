@@ -59,7 +59,7 @@ public class ReviewService {
             log.error("게스트 리뷰 목록 조회 실패 - userId: {}, error: {}", userId, e.getMessage());
             return ReviewListResponseDto.builder()
                 .data(List.of())
-                .totalCount(0)
+                .totalCount(0L)
                 .hasMore(false)
                 .currentPage(page)
                 .success(false)
@@ -97,7 +97,7 @@ public class ReviewService {
             log.error("호스트 리뷰 목록 조회 실패 - userId: {}, error: {}", userId, e.getMessage());
             return ReviewListResponseDto.builder()
                 .data(List.of())
-                .totalCount(0)
+                .totalCount(0L)
                 .hasMore(false)
                 .currentPage(page)
                 .success(false)
@@ -122,7 +122,7 @@ public class ReviewService {
         } catch (Exception e) {
             log.error("게스트 리뷰 카운트 조회 실패 - userId: {}, error: {}", userId, e.getMessage());
             return ReviewCountResponseDto.builder()
-                .count(0)
+                .count(0L)
                 .success(false)
                 .message("게스트 리뷰 카운트 조회에 실패했습니다.")
                 .build();
@@ -145,7 +145,7 @@ public class ReviewService {
         } catch (Exception e) {
             log.error("호스트 리뷰 카운트 조회 실패 - userId: {}, error: {}", userId, e.getMessage());
             return ReviewCountResponseDto.builder()
-                .count(0)
+                .count(0L)
                 .success(false)
                 .message("호스트 리뷰 카운트 조회에 실패했습니다.")
                 .build();

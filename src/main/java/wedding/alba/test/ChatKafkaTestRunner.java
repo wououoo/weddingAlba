@@ -3,7 +3,8 @@ package wedding.alba.test;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.stereotype.Component;
+// import org.springframework.context.annotation.Profile; // 필요 시 활성화
+// import org.springframework.stereotype.Component; // 필요 시 활성화
 import wedding.alba.kafka.service.ChatProducer;
 
 /**
@@ -15,7 +16,8 @@ import wedding.alba.kafka.service.ChatProducer;
  * 3. 브라우저에서 http://localhost:8090 (카프카 UI) 접속
  * 4. wedding-chat-messages 토픽에서 실시간 메시지 확인
  */
-@Component
+// @Component // 테스트용이므로 주석 처리
+// @Profile("test") // 테스트 프로파일에서만 활성화
 @RequiredArgsConstructor
 @Slf4j
 public class ChatKafkaTestRunner implements CommandLineRunner {

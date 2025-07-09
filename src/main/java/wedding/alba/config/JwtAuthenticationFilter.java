@@ -35,6 +35,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain
     ) throws ServletException, IOException {
+        
+        // 요청 URL 로깅
+        String requestURI = request.getRequestURI();
+        String method = request.getMethod();
+        log.debug("JWT 필터 처리: {} {}", method, requestURI);
+        
         try {
             // HTTP 요청에서 JWT 토큰 추출
             String jwt = extractJwtFromRequest(request);
@@ -54,7 +60,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 log.debug("JWT 토큰으로 인증 정보 설정 완료. 사용자 ID: {}", userId);
             }
         } catch (Exception e) {
-            log.error("JWT 토큰 처리 중 오류 발생", e);
+            log.error("JWT 토큰 처리 중 오류 발생: {} {}", method, requestURI, e);
             // 인증 실패 시 SecurityContext를 비움
             SecurityContextHolder.clearContext();
         }

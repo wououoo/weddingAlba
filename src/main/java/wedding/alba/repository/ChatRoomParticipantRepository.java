@@ -73,7 +73,15 @@ public interface ChatRoomParticipantRepository extends JpaRepository<ChatRoomPar
     boolean isUserAdminOrModerator(@Param("chatRoomId") Long chatRoomId, @Param("userId") Long userId);
 
     /**
-     * 비활성 참여자 정리용
+     * 채팅방의 활성 참여자 ID 목록 조회 (안읽은 메시지 카운트용)
+     */
+    @Query("SELECT crp.userId FROM ChatRoomParticipant crp " +
+           "WHERE crp.chatRoomId = :chatRoomId " +
+           "AND crp.isActive = true")
+    List<Long> findUserIdsByChatRoomId(@Param("chatRoomId") Long chatRoomId);
+
+    /**
+     * 비활성 참여자 정리용용
      */
     @Query("SELECT crp FROM ChatRoomParticipant crp " +
            "WHERE crp.isActive = false " +

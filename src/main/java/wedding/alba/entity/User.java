@@ -40,7 +40,9 @@ public class User {
     private String name;            // 사용자 이름
     
     @Enumerated(EnumType.STRING)
-    private Gender gender;           // 성별 (MALE, FEMALE, OTHER)
+    @Column(nullable = false)
+    @Builder.Default
+    private Gender gender = Gender.OTHER;  // 성별 (MALE, FEMALE, OTHER)
     
     private String phoneNumber;      // 휴대폰 번호 (신원 확인 및 연락수단)
     
@@ -52,10 +54,13 @@ public class User {
     private LocalDate birth;          // 생년월일 (나이 계산용)
     
     @Enumerated(EnumType.STRING)
-    private AuthLevel authLevel;     // 권한 레벨 (USER, ADMIN, SUPER_ADMIN)
+    @Column(name = "auth_level", nullable = false)
+    @Builder.Default
+    private AuthLevel authLevel = AuthLevel.USER;  // 권한 레벨 (USER, ADMIN, SUPER_ADMIN)
     
-    @Column(columnDefinition = "SMALLINT DEFAULT 0")
-    private Integer blackList;       // 블랙리스트 상태 (0: 아님, 1: 블랙리스트)
+    @Column(name = "black_list", nullable = false)
+    @Builder.Default
+    private Integer blackList = 0;   // 블랙리스트 상태 (0: 아님, 1: 블랙리스트)
     
     @CreationTimestamp
     @Column(updatable = false)
@@ -63,7 +68,9 @@ public class User {
     
     // 회원 상태 (활성/비활성)
     @Enumerated(EnumType.STRING)
-    private UserStatus status;       // 사용자 상태 (ACTIVE, INACTIVE, DELETED)
+    @Column(nullable = false)
+    @Builder.Default
+    private UserStatus status = UserStatus.ACTIVE;  // 사용자 상태 (ACTIVE, INACTIVE, DELETED)
     
     // 성별 열거형
     public enum Gender {

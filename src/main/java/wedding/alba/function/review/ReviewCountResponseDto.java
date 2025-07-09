@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ReviewCountResponseDto {
-    private long count;
-    private boolean success;
+    private Long count;
+    private Boolean success;
     private String message;
 }

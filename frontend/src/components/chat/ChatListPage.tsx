@@ -4,48 +4,90 @@ import { AppFooter } from '../common';
 import { useChatRooms } from './hooks/useChatRoom';
 import { ChatRoom } from './api/chatApi';
 
-// 임시 사용자 정보 (실제로는 AuthContext에서 가져와야 함)
-const getCurrentUserId = (): number => {
-  // 실제 구현에서는 AuthContext나 localStorage에서 가져오기
-  return 1; // 임시값
-};
-
 const formatTimeAgo = (timestamp: string): string => {
-  const now = new Date();
-  const messageTime = new Date(timestamp);
-  const diffInMinutes = Math.floor((now.getTime() - messageTime.getTime()) / (1000 * 60));
+  // timestamp 유효성 검사
+  if (!timestamp || timestamp === 'Invalid Date') {
+    return '';
+  }
   
-  if (diffInMinutes < 1) return '방금 전';
-  if (diffInMinutes < 60) return `${diffInMinutes}분 전`;
-  
-  const diffInHours = Math.floor(diffInMinutes / 60);
-  if (diffInHours < 24) return `${diffInHours}시간 전`;
-  
-  const diffInDays = Math.floor(diffInHours / 24);
-  if (diffInDays < 7) return `${diffInDays}일 전`;
-  
-  return messageTime.toLocaleDateString();
+  try {
+    const now = new Date();
+    const messageTime = new Date(timestamp);
+    
+    // 날짜가 유효한지 확인
+    if (isNaN(messageTime.getTime())) {
+      console.warn('Invalid timestamp:', timestamp);
+      return '';
+    }
+    
+    const diffInMs = now.getTime() - messageTime.getTime();
+    
+    // 미래 시간인 경우 (서버 시간과 클라이언트 시간 차이)
+    if (diffInMs < 0) {
+      return '방금 전';
+    }
+    
+    const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+    
+    if (diffInMinutes < 1) return '방금 전';
+    if (diffInMinutes < 60) return `${diffInMinutes}분 전`;
+    
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `${diffInHours}시간 전`;
+    
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays < 7) return `${diffInDays}일 전`;
+    
+    // 1주일 이상인 경우 날짜 형식으로 표시
+    return messageTime.toLocaleDateString('ko-KR', {
+      month: 'short',
+      day: 'numeric'
+    });
+  } catch (error) {
+    console.error('Date formatting error:', error, 'timestamp:', timestamp);
+    return '시간 미상';
+  }
 };
 
 const ChatRoomItem: React.FC<{ 
   room: ChatRoom; 
   onClick: (roomId: number, type: string) => void;
-  currentUserId: number;
-}> = ({ room, onClick, currentUserId }) => {
+}> = ({ room, onClick }) => {
   const isGroup = room.type === 'GROUP' || room.type === 'PUBLIC';
-  const lastMessageTime = room.lastMessageAt || room.createdAt;
   
-  // 개인 채팅방의 경우 상대방 이름 표시
+  // JWT 토큰에서 사용자 ID 추출 (실제로는 hook이나 context에서)
+  // 서버에서 토큰으로 처리하므로 더 이상 필요 없음
+  const getCurrentUserId = () => {
+    // 토큰 기반에서는 서버가 알아서 처리
+    return 0; // 임시값
+  };
+  
+  const currentUserId = getCurrentUserId();
+  
+  // 안전한 날짜 처리 - lastActiveAt 기준으로 변경
+  const getLastActiveTime = () => {
+    // lastActiveAt > lastMessageAt > createdAt 순으로 우선순위
+    const timestamp = room.lastActiveAt || room.lastMessageAt || room.createdAt;
+    if (!timestamp) {
+      return ''; // 빈 문자열로 변경 (시간 미상 제거)
+    }
+    return formatTimeAgo(timestamp);
+  };
+  
+  // 개인 채팅방의 경우 상대방 이름 표시 (프로필 이름 우선)
   const getDisplayName = () => {
     if (isGroup) {
       return room.roomName;
     } else {
       // 1:1 채팅방에서 상대방 이름 반환
-      // 실제로는 사용자 정보를 조회해야 함
       if (room.hostUserId === currentUserId) {
-        return `게스트`; // 실제로는 guestUserId로 사용자 이름 조회
+        // 내가 호스트인 경우 -> 게스트 정보 표시
+        const displayName = room.guestNickname || room.guestName;
+        return displayName || '게스트';
       } else {
-        return `호스트`; // 실제로는 hostUserId로 사용자 이름 조회
+        // 내가 게스트인 경우 -> 호스트 정보 표시
+        const displayName = room.hostNickname || room.hostName;
+        return displayName || '호스트';
       }
     }
   };
@@ -56,6 +98,23 @@ const ChatRoomItem: React.FC<{
     } else {
       return room.type === 'PERSONAL' ? '1:1 채팅' : '개인 채팅';
     }
+  };
+
+  // 디버깅: 안읽은 메시지 개수 로그
+  console.log('ChatRoom unreadMessageCount:', {
+    chatRoomId: room.chatRoomId,
+    unreadMessageCount: room.unreadMessageCount,
+    type: typeof room.unreadMessageCount,
+    condition: (room.unreadMessageCount ?? 0) > 0
+  });
+
+  // 안전한 안읽은 메시지 개수 처리
+  const hasUnreadMessages = () => {
+    const count = room.unreadMessageCount;
+    if (count === undefined || count === null) return false;
+    if (typeof count === 'string') return parseInt(count, 10) > 0;
+    if (typeof count === 'number') return count > 0;
+    return false;
   };
 
   return (
@@ -76,20 +135,31 @@ const ChatRoomItem: React.FC<{
             </svg>
           )}
         </div>
-        {room.unreadMessageCount && room.unreadMessageCount > 0 && (
-          <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-            {room.unreadMessageCount > 99 ? '99+' : room.unreadMessageCount}
-          </div>
-        )}
       </div>
       
       {/* 채팅방 정보 */}
       <div className="flex-1 min-w-0">
         <div className="flex justify-between items-start">
-          <h3 className="font-semibold truncate">{getDisplayName()}</h3>
-          <span className="text-xs text-gray-500 ml-2 whitespace-nowrap">
-            {formatTimeAgo(lastMessageTime)}
-          </span>
+          <h3 className={`font-semibold truncate ${
+            hasUnreadMessages() ? 'text-gray-900' : 'text-gray-700'
+          }`}>
+            {getDisplayName()}
+          </h3>
+          <div className="flex items-center ml-2 flex-shrink-0">
+            {/* 시간 표시 - 시간이 있을 때만 표시 */}
+            {getLastActiveTime() && (
+              <span className="text-xs text-gray-400">
+                {getLastActiveTime()}
+              </span>
+            )}
+            
+            {/* 안읽은 메시지 배지 - 크기 증가 */}
+            {hasUnreadMessages() && (
+              <div className="ml-2 bg-red-500 text-white text-sm font-bold rounded-full min-w-[24px] h-6 flex items-center justify-center px-2">
+                {(room.unreadMessageCount! > 99) ? '99+' : room.unreadMessageCount}
+              </div>
+            )}
+          </div>
         </div>
         
         <p className="text-xs text-gray-500 mt-1">
@@ -97,7 +167,9 @@ const ChatRoomItem: React.FC<{
         </p>
         
         {room.lastMessage && (
-          <p className="text-sm text-gray-600 mt-1 truncate">
+          <p className={`text-sm mt-1 truncate ${
+            hasUnreadMessages() ? 'text-gray-900 font-medium' : 'text-gray-600'
+          }`}>
             {room.lastMessageSender && room.lastMessageSender !== '나' && (
               <span className="font-medium">{room.lastMessageSender}: </span>
             )}
@@ -112,9 +184,9 @@ const ChatRoomItem: React.FC<{
 const ChatListPage: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'all' | 'group' | 'private'>('all');
-  const currentUserId = getCurrentUserId();
   
-  const { chatRooms, isLoading, error, refresh } = useChatRooms(currentUserId);
+  // 토큰 기반 인증으로 수정된 후 - 사용자 ID 불필요
+  const { chatRooms, isLoading, error, refresh } = useChatRooms();
   
   // 활성화된 탭에 따라 채팅방 필터링
   const filteredChatRooms = chatRooms.filter(room => {
@@ -242,7 +314,6 @@ const ChatListPage: React.FC = () => {
                 key={room.chatRoomId}
                 room={room}
                 onClick={handleChatRoomClick}
-                currentUserId={currentUserId}
               />
             ))}
           </div>

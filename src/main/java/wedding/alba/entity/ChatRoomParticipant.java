@@ -10,7 +10,10 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "chat_room_participants")
+@Table(name = "chat_room_participants",
+       uniqueConstraints = {
+           @UniqueConstraint(columnNames = {"chat_room_id", "user_id"})
+       })
 @Data
 @Builder
 @NoArgsConstructor
@@ -60,25 +63,6 @@ public class ChatRoomParticipant {
         ADMIN,      // 관리자 (채팅방 생성자, 초대/강퇴 권한)
         MODERATOR,  // 중재자 (메시지 삭제 권한)
         MEMBER      // 일반 멤버
-    }
-
-    // 복합 유니크 키 (한 사용자는 한 채팅방에 한 번만 참여)
-    @Table(uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"chat_room_id", "user_id"})
-    })
-    public static class UniqueConstraints {}
-
-    @PrePersist
-    public void prePersist() {
-        if (this.isActive == null) {
-            this.isActive = true;
-        }
-        if (this.isNotificationEnabled == null) {
-            this.isNotificationEnabled = true;
-        }
-        if (this.role == null) {
-            this.role = ParticipantRole.MEMBER;
-        }
     }
 
     // 편의 메서드

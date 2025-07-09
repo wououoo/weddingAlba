@@ -3,6 +3,7 @@ package wedding.alba.kafka.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import wedding.alba.entity.ChatMessage;
 import wedding.alba.entity.ChatRoom;
@@ -26,6 +27,9 @@ public class ChatOptimizationService {
     private final ChatRoomRepository chatRoomRepository;
     private final ChatMessageRepository chatMessageRepository;
     private final ChatRoomParticipantRepository participantRepository;
+    // Circular dependency 회피를 위해 Lazy 로딩 사용
+    @Lazy
+    private final ChatMessageService chatMessageService;
 
     /**
      * 채팅방 정보 빠른 조회 (캐시 적용)
@@ -56,15 +60,6 @@ public class ChatOptimizationService {
     }
 
     /**
-     * 읽지 않은 메시지 수 빠른 조회
-     */
-    @Cacheable(value = "unreadCount", key = "#chatRoomId + '_' + #userId")
-    public int getUnreadCountFast(Long chatRoomId, Long userId) {
-        log.debug("읽지 않은 메시지 수 조회: chatRoomId={}, userId={}", chatRoomId, userId);
-        return chatMessageRepository.countUnreadMessages(chatRoomId, userId);
-    }
-
-    /**
      * 채팅방 마지막 메시지 빠른 조회
      */
     @Cacheable(value = "lastMessage", key = "#chatRoomId")
@@ -84,7 +79,11 @@ public class ChatOptimizationService {
         // 병렬로 데이터 조회
         ChatRoom chatRoom = getChatRoomFast(chatRoomId).orElse(null);
         List<ChatMessage> recentMessages = getRecentMessagesFast(chatRoomId, 20);
-        int unreadCount = getUnreadCountFast(chatRoomId, userId);
+        
+        // 채팅방 입장 시 활동 시간 업데이트
+        if (chatRoom != null) {
+            chatMessageService.updateChatRoomActivity(chatRoomId);
+        }
         
         long endTime = System.currentTimeMillis();
         log.info("채팅방 초기화 데이터 조회 완료: {}ms", endTime - startTime);
@@ -92,7 +91,6 @@ public class ChatOptimizationService {
         return ChatRoomInitData.builder()
             .chatRoom(chatRoom)
             .recentMessages(recentMessages)
-            .unreadCount(unreadCount)
             .build();
     }
 
@@ -104,6 +102,5 @@ public class ChatOptimizationService {
     public static class ChatRoomInitData {
         private ChatRoom chatRoom;
         private List<ChatMessage> recentMessages;
-        private int unreadCount;
     }
 }

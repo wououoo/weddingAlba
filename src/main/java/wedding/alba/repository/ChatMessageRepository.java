@@ -76,7 +76,7 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, String
     ChatMessage findLastMessageByChatRoomId(@Param("chatRoomId") Long chatRoomId);
 
     /**
-     * 특정 사용자의 읽지 않은 메시지 수
+     * 특정 사용자의 읽지 않은 메시지 수 (서브쿼리 최적화)
      */
     @Query("SELECT COUNT(cm) FROM ChatMessage cm " +
            "WHERE cm.chatRoomId = :chatRoomId " +
@@ -84,9 +84,25 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, String
            "AND cm.isDeleted = false " +
            "AND cm.type NOT IN ('TYPING', 'STOP_TYPING') " +
            "AND cm.timestamp > " +
-           "(SELECT COALESCE(crp.lastReadAt, '1970-01-01') FROM ChatRoomParticipant crp " +
-           " WHERE crp.chatRoomId = :chatRoomId AND crp.userId = :userId)")
+           "(SELECT MAX(COALESCE(crp.lastReadAt, '1970-01-01')) FROM ChatRoomParticipant crp " +
+           " WHERE crp.chatRoomId = :chatRoomId AND crp.userId = :userId AND crp.isActive = true)")
     int countUnreadMessages(@Param("chatRoomId") Long chatRoomId, @Param("userId") Long userId);
+
+    /**
+     * 안전한 읽지 않은 메시지 수 조회 (대체 방법)
+     */
+    @Query("SELECT COUNT(cm) FROM ChatMessage cm " +
+           "WHERE cm.chatRoomId = :chatRoomId " +
+           "AND cm.senderId != :userId " +
+           "AND cm.isDeleted = false " +
+           "AND cm.type NOT IN ('TYPING', 'STOP_TYPING') " +
+           "AND NOT EXISTS (" +
+           "  SELECT 1 FROM ChatRoomParticipant crp " +
+           "  WHERE crp.chatRoomId = :chatRoomId " +
+           "  AND crp.userId = :userId " +
+           "  AND crp.isActive = true " +
+           "  AND crp.lastReadAt >= cm.timestamp)")
+    int countUnreadMessagesSafe(@Param("chatRoomId") Long chatRoomId, @Param("userId") Long userId);
 
     /**
      * 메시지 검색

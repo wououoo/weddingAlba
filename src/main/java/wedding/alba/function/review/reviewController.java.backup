@@ -58,7 +58,7 @@ public class ReviewController {
         
         try {
             ReviewListResponseDto response = reviewService.getGuestReviews(userId, page, limit);
-            return ResponseEntity.ok(ApiResponse.<ReviewListResponseDto>success("게스트 리뷰 목록을 성공적으로 조회했습니다.", response));
+            return ResponseEntity.ok(ApiResponse.success("게스트 리뷰 목록을 성공적으로 조회했습니다.", response));
         } catch (Exception e) {
             log.error("게스트 리뷰 목록 조회 실패 - userId: {}, error: {}", userId, e.getMessage());
             return ResponseEntity.badRequest()
@@ -80,7 +80,7 @@ public class ReviewController {
         
         try {
             ReviewListResponseDto response = reviewService.getHostReviews(userId, page, limit);
-            return ResponseEntity.ok(ApiResponse.<ReviewListResponseDto>success("호스트 리뷰 목록을 성공적으로 조회했습니다.", response));
+            return ResponseEntity.ok(ApiResponse.success("호스트 리뷰 목록을 성공적으로 조회했습니다.", response));
         } catch (Exception e) {
             log.error("호스트 리뷰 목록 조회 실패 - userId: {}, error: {}", userId, e.getMessage());
             return ResponseEntity.badRequest()
@@ -99,7 +99,7 @@ public class ReviewController {
         
         try {
             ReviewCountResponseDto response = reviewService.getGuestReviewCount(userId);
-            return ResponseEntity.ok(ApiResponse.<ReviewCountResponseDto>success("게스트 리뷰 카운트를 성공적으로 조회했습니다.", response));
+            return ResponseEntity.ok(ApiResponse.success("게스트 리뷰 카운트를 성공적으로 조회했습니다.", response));
         } catch (Exception e) {
             log.error("게스트 리뷰 카운트 조회 실패 - userId: {}, error: {}", userId, e.getMessage());
             return ResponseEntity.badRequest()
@@ -118,7 +118,7 @@ public class ReviewController {
         
         try {
             ReviewCountResponseDto response = reviewService.getHostReviewCount(userId);
-            return ResponseEntity.ok(ApiResponse.<ReviewCountResponseDto>success("호스트 리뷰 카운트를 성공적으로 조회했습니다.", response));
+            return ResponseEntity.ok(ApiResponse.success("호스트 리뷰 카운트를 성공적으로 조회했습니다.", response));
         } catch (Exception e) {
             log.error("호스트 리뷰 카운트 조회 실패 - userId: {}, error: {}", userId, e.getMessage());
             return ResponseEntity.badRequest()
@@ -137,7 +137,7 @@ public class ReviewController {
         
         try {
             ReviewResponseDto response = reviewService.createGuestReview(requestDto);
-            return ResponseEntity.ok(ApiResponse.<ReviewResponseDto>success("게스트 리뷰가 성공적으로 생성되었습니다.", response));
+            return ResponseEntity.ok(ApiResponse.success("게스트 리뷰가 성공적으로 생성되었습니다.", response));
             
         } catch (Exception e) {
             log.error("게스트 리뷰 생성 실패 - userId: {}, error: {}", currentUserId, e.getMessage());
@@ -157,7 +157,7 @@ public class ReviewController {
         
         try {
             ReviewResponseDto response = reviewService.createHostReview(requestDto);
-            return ResponseEntity.ok(ApiResponse.<ReviewResponseDto>success("호스트 리뷰가 성공적으로 생성되었습니다.", response));
+            return ResponseEntity.ok(ApiResponse.success("호스트 리뷰가 성공적으로 생성되었습니다.", response));
             
         } catch (Exception e) {
             log.error("호스트 리뷰 생성 실패 - userId: {}, error: {}", currentUserId, e.getMessage());
@@ -180,7 +180,7 @@ public class ReviewController {
         
         try {
             ReviewListResponseDto response = reviewService.getGuestReviews(userId, page, limit);
-            return ResponseEntity.ok(ApiResponse.<ReviewListResponseDto>success("게스트 리뷰 목록을 성공적으로 조회했습니다.", response));
+            return ResponseEntity.ok(ApiResponse.success("게스트 리뷰 목록을 성공적으로 조회했습니다.", response));
         } catch (Exception e) {
             log.error("특정 사용자 게스트 리뷰 조회 실패 - targetUserId: {}, error: {}", userId, e.getMessage());
             return ResponseEntity.badRequest()
@@ -202,7 +202,7 @@ public class ReviewController {
         
         try {
             ReviewListResponseDto response = reviewService.getHostReviews(userId, page, limit);
-            return ResponseEntity.ok(ApiResponse.<ReviewListResponseDto>success("호스트 리뷰 목록을 성공적으로 조회했습니다.", response));
+            return ResponseEntity.ok(ApiResponse.success("호스트 리뷰 목록을 성공적으로 조회했습니다.", response));
         } catch (Exception e) {
             log.error("특정 사용자 호스트 리뷰 조회 실패 - targetUserId: {}, error: {}", userId, e.getMessage());
             return ResponseEntity.badRequest()
@@ -225,7 +225,7 @@ public class ReviewController {
         try {
             boolean isWritable = reviewService.checkReviewWritable(applyId, reviewType);
             String message = isWritable ? "리뷰 작성이 가능합니다." : "이미 리뷰가 작성되었습니다.";
-            return ResponseEntity.ok(ApiResponse.<Boolean>success(message, isWritable));
+            return ResponseEntity.ok(ApiResponse.success(message, isWritable));
             
         } catch (Exception e) {
             log.error("리뷰 작성 가능 여부 확인 실패 - userId: {}, applyId: {}, error: {}", currentUserId, applyId, e.getMessage());

@@ -42,20 +42,8 @@ public class WebSecurityConfig {
 
                 // 요청 경로별 인증 설정
                 .authorizeHttpRequests(auth -> auth
-                        // 공개 리소스
-                        .requestMatchers("/api/auth/**", "/oauth2/**", "/login/**").permitAll()
-                        // 채팅 API (임시로 인증 제외 - 개발용)
-                        .requestMatchers("/api/chat/**").permitAll()
-                        // WebSocket 연결 허용
-                        .requestMatchers("/ws/**").permitAll()
-                        // Kafka 테스트 경로 인증 제외
-                        .requestMatchers("/api/kafka/**").permitAll()
-                        // 업로드된 파일들 (정적 리소스) 접근 허용
-                        .requestMatchers("/uploads/**").permitAll()
-                        // Swagger UI 등의 개발 도구 접근 허용
-                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                        // 나머지 모든 요청은 인증 필요
-                        .anyRequest().authenticated())
+                        // 모든 경로를 인증 없이 허용 (개발 중)
+                        .anyRequest().permitAll())
                 
                 // OAuth2 로그인 설정
                 .oauth2Login(oauth2 -> oauth2
@@ -66,7 +54,8 @@ public class WebSecurityConfig {
                         .userInfoEndpoint(endpoint -> endpoint
                                 .userService(customOAuth2UserService))
                         .successHandler(oAuth2SuccessHandler)
-                        .failureHandler(oAuth2FailureHandler));
+                        .failureHandler(oAuth2FailureHandler))
+                ;
 
         return http.build();
     }

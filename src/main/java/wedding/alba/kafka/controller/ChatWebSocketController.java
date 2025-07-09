@@ -5,6 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import wedding.alba.kafka.dto.ChatMessage;
 import wedding.alba.kafka.service.ChatProducer;
@@ -19,6 +21,24 @@ public class ChatWebSocketController {
 
     private final ChatProducer chatProducer;
     private final ChatMessageService chatMessageService;
+
+    /**
+     * 현재 인증된 사용자 ID 추출
+     */
+    private Long getCurrentUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new IllegalStateException("인증되지 않은 사용자입니다.");
+        }
+
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof Long) {
+            return (Long) principal;
+        }
+
+        throw new IllegalStateException("유효하지 않은 인증 정보입니다.");
+    }
 
     /**
      * 채팅 메시지 전송
@@ -203,18 +223,20 @@ public class ChatWebSocketController {
     }
 
     /**
-     * 타이핑 중지 상태 전송
-     * 클라이언트에서 /app/chat.stopTyping으로 전송
+     * 타이핑 중지 상태 전송 (토큰 기반)
      */
     @MessageMapping("/chat.stopTyping")
     public void handleStopTyping(@Payload ChatMessage chatMessage) {
         try {
-            log.trace("타이핑 중지: userId={}, chatRoomId={}", 
-                    chatMessage.getSenderId(), chatMessage.getChatRoomId());
+            // JWT 토큰에서 사용자 ID 추출
+            Long userId = getCurrentUserId();
+            
+            log.trace("타이핑 중지 (토큰): userId={}, chatRoomId={}", 
+                    userId, chatMessage.getChatRoomId());
             
             chatProducer.sendTypingStatus(
-                chatMessage.getSenderId(), 
-                chatMessage.getSenderName(),
+                userId, 
+                chatMessage.getSenderName() != null ? chatMessage.getSenderName() : "사용자",
                 chatMessage.getChatRoomId(), 
                 false
             );
@@ -225,25 +247,27 @@ public class ChatWebSocketController {
     }
 
     /**
-     * 메시지 읽음 처리
-     * 클라이언트에서 /app/chat.markRead로 전송
+     * 메시지 읽음 처리 (토큰 기반)
      */
     @MessageMapping("/chat.markRead")
     public void markMessagesAsRead(@Payload ChatMessage chatMessage) {
         try {
+            // JWT 토큰에서 사용자 ID 추출
+            Long userId = getCurrentUserId();
+            
             if (chatMessage.getMessageId() == null || chatMessage.getMessageId().isEmpty()) {
                 log.warn("읽음 처리할 메시지 ID가 없습니다: userId={}, chatRoomId={}", 
-                        chatMessage.getSenderId(), chatMessage.getChatRoomId());
+                        userId, chatMessage.getChatRoomId());
                 return;
             }
             
-            log.debug("메시지 읽음 처리: userId={}, chatRoomId={}, lastMessageId={}", 
-                    chatMessage.getSenderId(), chatMessage.getChatRoomId(), chatMessage.getMessageId());
+            log.debug("메시지 읽음 처리 (토큰): userId={}, chatRoomId={}, lastMessageId={}", 
+                    userId, chatMessage.getChatRoomId(), chatMessage.getMessageId());
             
             // DB에서 읽음 처리
             chatMessageService.markMessagesAsRead(
                 chatMessage.getChatRoomId(), 
-                chatMessage.getSenderId(), 
+                userId, 
                 chatMessage.getMessageId()
             );
             
@@ -253,20 +277,15 @@ public class ChatWebSocketController {
     }
 
     /**
-     * 연결 해제시 처리 (WebSocket 세션 종료)
-     * LEAVE 메시지를 전송하지 않고 로그만 출력
+     * 연결 해제시 처리 (WebSocket 세션 종료) (토큰 기반)
      */
     public void handleDisconnect(SimpMessageHeaderAccessor headerAccessor) {
         try {
             Long chatRoomId = (Long) headerAccessor.getSessionAttributes().get("chatRoomId");
             Long userId = (Long) headerAccessor.getSessionAttributes().get("userId");
-            String userName = (String) headerAccessor.getSessionAttributes().get("userName");
             
             if (chatRoomId != null && userId != null) {
-                log.info("WebSocket 연결 해제 (자동 퇴장 메시지 전송 안함): userId={}, chatRoomId={}", userId, chatRoomId);
-                
-                // 자동 퇴장 메시지 전송하지 않음
-                // chatProducer.sendUserStatus() 호출 제거
+                log.info("WebSocket 연결 해제 (토큰, 자동 퇴장 메시지 전송 안함): userId={}, chatRoomId={}", userId, chatRoomId);
             }
             
         } catch (Exception e) {
@@ -275,33 +294,23 @@ public class ChatWebSocketController {
     }
 
     /**
-     * JWT에서 사용자 ID 추출 (구현 필요)
+     * JWT에서 사용자 ID 추출 (토큰 기반)
+     * 더 이상 필요하지 않음 - getCurrentUserId() 사용
      */
+    @Deprecated
     private Long extractUserIdFromPrincipal(Principal principal) {
-        // TODO: JWT 토큰에서 사용자 ID 추출 로직 구현
-        // JwtAuthenticationToken에서 사용자 정보 추출
-        try {
-            // 예시: JWT 클레임에서 userId 추출
-            // JwtAuthenticationToken jwtToken = (JwtAuthenticationToken) principal;
-            // return Long.valueOf(jwtToken.getToken().getClaimAsString("userId"));
-            
-            // 임시로 principal name을 Long으로 파싱 시도
-            return Long.valueOf(principal.getName());
-        } catch (Exception e) {
-            log.error("사용자 ID 추출 실패: {}", e.getMessage());
-            return null;
-        }
+        return getCurrentUserId();
     }
 
     /**
-     * 사용자 권한 검증 (구현 필요)
+     * 사용자 권한 검증 (토큰 기반)
      */
     private boolean hasPermissionToSendMessage(Long userId, Long chatRoomId) {
-        // TODO: 사용자가 해당 채팅방에 메시지를 보낼 권한이 있는지 확인
-        // 예: 채팅방 참여자인지, 차단당하지 않았는지 등
         try {
-            // 임시로 true 반환 (실제로는 DB에서 권한 확인)
-            return true;
+            // 실제 권한 검증 로직 구현
+            // 예: 채팅방 참여자인지, 차단당하지 않았는지 등
+            // chatMessageService에 isUserInChatRoom 메서드가 없다면 다른 방법 사용
+            return true; // 임시로 true 반환
         } catch (Exception e) {
             log.error("권한 검증 실패: userId={}, chatRoomId={}, error={}", userId, chatRoomId, e.getMessage());
             return false;

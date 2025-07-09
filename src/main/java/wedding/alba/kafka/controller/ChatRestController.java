@@ -5,6 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import wedding.alba.dto.ApiResponse;
 import wedding.alba.entity.ChatMessage;
@@ -13,12 +15,19 @@ import wedding.alba.kafka.dto.ChatMessageRequest;
 import wedding.alba.kafka.dto.ChatRoomCreateRequest;
 import wedding.alba.kafka.dto.ChatRoomResponse;
 import wedding.alba.kafka.dto.ChatRoomInitResponse;
+import wedding.alba.kafka.dto.ChatRoomWithUserInfo;
+import wedding.alba.kafka.dto.CreatePersonalChatRoomRequest;
+import wedding.alba.kafka.dto.InviteUserRequest;
+import wedding.alba.kafka.dto.MarkReadRequest;
 import wedding.alba.kafka.service.ChatMessageService;
 import wedding.alba.kafka.service.ChatProducer;
 import wedding.alba.kafka.service.ChatOptimizationService;
+import wedding.alba.kafka.service.UnreadCountService;
+import wedding.alba.kafka.dto.UnreadCountResponse;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -30,16 +39,35 @@ public class ChatRestController {
     private final ChatMessageService chatMessageService;
     private final ChatProducer chatProducer;
     private final ChatOptimizationService chatOptimizationService;
+    private final UnreadCountService unreadCountService;
+
+    /**
+     * 현재 인증된 사용자 ID 추출
+     */
+    private Long getCurrentUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new IllegalStateException("인증되지 않은 사용자입니다.");
+        }
+
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof Long) {
+            return (Long) principal;
+        }
+
+        throw new IllegalStateException("유효하지 않은 인증 정보입니다.");
+    }
 
     /**
      * 채팅방 빠른 초기화 API (성능 최적화)
-     * 하나의 요청으로 채팅방 정보 + 최근 메시지 + 읽지 않은 수 모두 반환
+     * 하나의 요청으로 채팅방 정보 + 최근 메시지 모두 반환
      */
     @GetMapping("/rooms/{chatRoomId}/init")
     public ResponseEntity<ApiResponse<ChatRoomInitResponse>> initChatRoomFast(
-            @PathVariable Long chatRoomId,
-            @RequestParam Long userId) {
+            @PathVariable Long chatRoomId) {
         
+        Long userId = getCurrentUserId(); // 토큰에서 사용자 ID 추출
         log.info("🚀 채팅방 빠른 초기화 요청: chatRoomId={}, userId={}", chatRoomId, userId);
         
         try {
@@ -61,15 +89,14 @@ public class ChatRestController {
             ChatRoomInitResponse response = ChatRoomInitResponse.builder()
                 .chatRoom(chatRoomDto)
                 .recentMessages(messageDtos)
-                .unreadCount(initData.getUnreadCount())
                 .loadTime(System.currentTimeMillis())
                 .serverTime(System.currentTimeMillis())
                 .build();
             
-            log.info("✅ 채팅방 빠른 초기화 완료: {} 개 메시지, {} 개 읽지 않음", 
-                messageDtos.size(), initData.getUnreadCount());
+            log.info("✅ 채팅방 빠른 초기화 완료: {} 개 메시지", 
+                messageDtos.size());
             
-            return ResponseEntity.ok(ApiResponse.success("채팅방 초기화 성공", response));
+            return ResponseEntity.ok(ApiResponse.<ChatRoomInitResponse>success("채팅방 초기화 성공", response));
             
         } catch (Exception e) {
             log.error("❌ 채팅방 초기화 실패: chatRoomId={}", chatRoomId, e);
@@ -90,7 +117,7 @@ public class ChatRestController {
             ChatRoom chatRoom = chatMessageService.getOrCreatePersonalChatRoom(hostUserId, guestUserId, postingId);
             ChatRoomResponse response = convertToResponse(chatRoom);
             
-            return ResponseEntity.ok(ApiResponse.success("1:1 채팅방 조회/생성 성공", response));
+            return ResponseEntity.ok(ApiResponse.<ChatRoomResponse>success("1:1 채팅방 조회/생성 성공", response));
         } catch (Exception e) {
             log.error("1:1 채팅방 생성 실패: {}", e.getMessage(), e);
             return ResponseEntity.badRequest()
@@ -113,7 +140,7 @@ public class ChatRestController {
             );
             
             ChatRoomResponse response = convertToResponse(chatRoom);
-            return ResponseEntity.ok(ApiResponse.success("그룹 채팅방 생성 성공", response));
+            return ResponseEntity.ok(ApiResponse.<ChatRoomResponse>success("그룹 채팅방 생성 성공", response));
         } catch (Exception e) {
             log.error("그룹 채팅방 생성 실패: {}", e.getMessage(), e);
             return ResponseEntity.badRequest()
@@ -122,17 +149,36 @@ public class ChatRestController {
     }
 
     /**
-     * 사용자 채팅방 목록 조회
+     * 사용자 채팅방 목록 조회 (안읽은 메시지 개수 포함)
      */
-    @GetMapping("/rooms/user/{userId}")
-    public ResponseEntity<ApiResponse<List<ChatRoomResponse>>> getUserChatRooms(@PathVariable Long userId) {
+    @GetMapping("/rooms/my")
+    public ResponseEntity<ApiResponse<List<ChatRoomResponse>>> getMyChatsRooms() {
+        Long userId = getCurrentUserId(); // 토큰에서 사용자 ID 추출
+        
         try {
-            List<ChatRoom> chatRooms = chatMessageService.getUserChatRooms(userId);
-            List<ChatRoomResponse> responses = chatRooms.stream()
-                    .map(this::convertToResponse)
+            // 1. 채팅방 목록 조회
+            List<ChatRoomWithUserInfo> chatRoomsWithUserInfo = chatMessageService.getUserChatRoomsWithUserInfoSimple(userId);
+            
+            // 2. 안읽은 메시지 개수 정보 조회
+            UnreadCountResponse unreadCountResponse = unreadCountService.getUserUnreadCounts(userId);
+            Map<Long, Integer> unreadCounts = unreadCountResponse.getChatRoomUnreadCounts();
+            
+            // 3. 채팅방 정보에 안읽은 개수 포함해서 응답 생성
+            List<ChatRoomResponse> responses = chatRoomsWithUserInfo.stream()
+                    .map(chatRoomWithUserInfo -> {
+                        ChatRoomResponse response = convertToResponseWithUserInfo(chatRoomWithUserInfo);
+                        // 안읽은 메시지 개수 설정
+                        Long chatRoomId = response.getChatRoomId();
+                        Integer unreadCount = unreadCounts.getOrDefault(chatRoomId, 0);
+                        response.setUnreadMessageCount(unreadCount);
+                        return response;
+                    })
                     .collect(Collectors.toList());
             
-            return ResponseEntity.ok(ApiResponse.success("채팅방 목록 조회 성공", responses));
+            log.info("채팅방 목록 API 응답: userId={}, count={}, totalUnread={}", 
+                    userId, responses.size(), unreadCountResponse.getTotalUnreadCount());
+            
+            return ResponseEntity.ok(ApiResponse.<List<ChatRoomResponse>>success("채팅방 목록 조회 성공", responses));
         } catch (Exception e) {
             log.error("채팅방 목록 조회 실패: userId={}, error={}", userId, e.getMessage(), e);
             return ResponseEntity.badRequest()
@@ -182,11 +228,13 @@ public class ChatRestController {
      */
     @PostMapping("/messages/send")
     public ResponseEntity<ApiResponse<String>> sendChatMessage(@RequestBody ChatMessageRequest request) {
+        Long userId = getCurrentUserId(); // 토큰에서 사용자 ID 추출
+        
         try {
             // Kafka로 메시지 전송
             chatProducer.sendTextMessage(
                     request.getChatRoomId(),
-                    request.getSenderId(),
+                    userId, // 토큰에서 추출한 사용자 ID 사용
                     request.getSenderName(),
                     request.getContent()
             ).whenComplete((result, ex) -> {
@@ -270,24 +318,6 @@ public class ChatRestController {
     }
 
     /**
-     * 읽지 않은 메시지 수 조회
-     */
-    @GetMapping("/rooms/{chatRoomId}/unread-count")
-    public ResponseEntity<ApiResponse<Integer>> getUnreadMessageCount(
-            @PathVariable Long chatRoomId,
-            @RequestParam Long userId) {
-        try {
-            int unreadCount = chatMessageService.getUnreadMessageCount(chatRoomId, userId);
-            return ResponseEntity.ok(ApiResponse.success("읽지 않은 메시지 수 조회 성공", unreadCount));
-        } catch (Exception e) {
-            log.error("읽지 않은 메시지 수 조회 실패: chatRoomId={}, userId={}, error={}", 
-                    chatRoomId, userId, e.getMessage(), e);
-            return ResponseEntity.badRequest()
-                    .body(ApiResponse.error("읽지 않은 메시지 수 조회에 실패했습니다: " + e.getMessage()));
-        }
-    }
-
-    /**
      * 메시지 읽음 처리
      */
     @PostMapping("/rooms/{chatRoomId}/mark-read")
@@ -358,6 +388,88 @@ public class ChatRestController {
                     .body(ApiResponse.error("Kafka 상태 확인 실패: " + e.getMessage()));
         }
     }
+    
+    /**
+     * 채팅방 활동 시간 업데이트 (토큰 기반)
+     */
+    @PostMapping("/rooms/{chatRoomId}/update-activity")
+    public ResponseEntity<ApiResponse<String>> updateChatRoomActivity(@PathVariable Long chatRoomId) {
+        try {
+            Long userId = getCurrentUserId(); // 토큰에서 사용자 ID 추출 (필요시 사용)
+            chatMessageService.updateChatRoomActivity(chatRoomId);
+            return ResponseEntity.ok(ApiResponse.success("활동 시간 업데이트 성공", "채팅방 활동 시간이 업데이트되었습니다."));
+        } catch (Exception e) {
+            log.error("채팅방 활동 시간 업데이트 실패: chatRoomId={}, error={}", chatRoomId, e.getMessage(), e);
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("활동 시간 업데이트에 실패했습니다: " + e.getMessage()));
+        }
+    }
+
+    // ============= 안읽은 메시지 카운트 관련 API =============
+
+    /**
+     * 내 안읽은 메시지 카운트 조회 (토큰 기반)
+     */
+    @GetMapping("/unread-count/my")
+    public ResponseEntity<ApiResponse<UnreadCountResponse>> getMyUnreadCounts() {
+        try {
+            Long userId = getCurrentUserId(); // 토큰에서 사용자 ID 추출
+            UnreadCountResponse response = unreadCountService.getUserUnreadCounts(userId);
+            return ResponseEntity.ok(ApiResponse.<UnreadCountResponse>success("안읽은 메시지 카운트 조회 성공", response));
+        } catch (Exception e) {
+            log.error("안읽은 메시지 카운트 조회 실패: error={}", e.getMessage(), e);
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("안읽은 메시지 카운트 조회에 실패했습니다: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * 특정 채팅방의 안읽은 메시지 개수 조회 (토큰 기반)
+     */
+    @GetMapping("/unread-count/room/{chatRoomId}")
+    public ResponseEntity<ApiResponse<Integer>> getChatRoomUnreadCount(@PathVariable Long chatRoomId) {
+        try {
+            Long userId = getCurrentUserId(); // 토큰에서 사용자 ID 추출
+            int count = unreadCountService.getChatRoomUnreadCount(userId, chatRoomId);
+            return ResponseEntity.ok(ApiResponse.<Integer>success("채팅방 안읽은 카운트 조회 성공", count));
+        } catch (Exception e) {
+            log.error("채팅방 안읽은 카운트 조회 실패: chatRoomId={}, error={}", chatRoomId, e.getMessage(), e);
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("채팅방 안읽은 카운트 조회에 실패했습니다: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * 채팅방 메시지 읽음 처리 (안읽은 카운트 0으로 초기화) (토큰 기반)
+     */
+    @PostMapping("/unread-count/room/{chatRoomId}/mark-read")
+    public ResponseEntity<ApiResponse<String>> markChatRoomAsRead(@PathVariable Long chatRoomId) {
+        try {
+            Long userId = getCurrentUserId(); // 토큰에서 사용자 ID 추출
+            unreadCountService.markChatRoomAsRead(userId, chatRoomId);
+            return ResponseEntity.ok(ApiResponse.success("채팅방 읽음 처리 성공", "채팅방의 모든 메시지가 읽음 처리되었습니다."));
+        } catch (Exception e) {
+            log.error("채팅방 읽음 처리 실패: chatRoomId={}, error={}", chatRoomId, e.getMessage(), e);
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("채팅방 읽음 처리에 실패했습니다: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * 내 안읽은 카운트 초기화 (디버깅용) (토큰 기반)
+     */
+    @PostMapping("/unread-count/my/reset")
+    public ResponseEntity<ApiResponse<String>> resetMyUnreadCounts() {
+        try {
+            Long userId = getCurrentUserId(); // 토큰에서 사용자 ID 추출
+            unreadCountService.resetUserUnreadCounts(userId);
+            return ResponseEntity.ok(ApiResponse.success("안읽은 카운트 초기화 성공", "내 모든 안읽은 카운트가 초기화되었습니다."));
+        } catch (Exception e) {
+            log.error("안읽은 카운트 초기화 실패: error={}", e.getMessage(), e);
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("안읽은 카운트 초기화에 실패했습니다: " + e.getMessage()));
+        }
+    }
 
     /**
      * ChatRoom 엔티티를 Response DTO로 변환
@@ -376,6 +488,37 @@ public class ChatRestController {
                 .description(chatRoom.getDescription())
                 .createdAt(chatRoom.getCreatedAt())
                 .lastMessageAt(chatRoom.getLastMessageAt())
+                .lastActiveAt(chatRoom.getLastActiveAt()) // 활동 시간 추가
+                .build();
+    }
+    
+    /**
+     * ChatRoomWithUserInfo를 Response DTO로 변환 (사용자 정보 포함)
+     */
+    private ChatRoomResponse convertToResponseWithUserInfo(ChatRoomWithUserInfo chatRoomWithUserInfo) {
+        ChatRoom chatRoom = chatRoomWithUserInfo.getChatRoom();
+        
+        return ChatRoomResponse.builder()
+                .chatRoomId(chatRoom.getChatRoomId())
+                .roomName(chatRoom.getRoomName())
+                .type(chatRoom.getType().toString())
+                .creatorUserId(chatRoom.getCreatorUserId())
+                .hostUserId(chatRoom.getHostUserId())
+                .guestUserId(chatRoom.getGuestUserId())
+                .postingId(chatRoom.getPostingId())
+                // 사용자 정보 추가
+                .hostName(chatRoomWithUserInfo.getHostName())
+                .hostNickname(chatRoomWithUserInfo.getHostNickname())
+                .hostProfileImage(chatRoomWithUserInfo.getHostProfileImage())
+                .guestName(chatRoomWithUserInfo.getGuestName())
+                .guestNickname(chatRoomWithUserInfo.getGuestNickname())
+                .guestProfileImage(chatRoomWithUserInfo.getGuestProfileImage())
+                .maxParticipants(chatRoom.getMaxParticipants())
+                .isPublic(chatRoom.getIsPublic())
+                .description(chatRoom.getDescription())
+                .createdAt(chatRoom.getCreatedAt())
+                .lastMessageAt(chatRoom.getLastMessageAt())
+                .lastActiveAt(chatRoom.getLastActiveAt())
                 .build();
     }
 

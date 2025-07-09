@@ -23,9 +23,6 @@ public class ChatRoomInitResponse {
     // 최근 메시지들 (기본 20개)
     private List<ChatMessage> recentMessages;
     
-    // 읽지 않은 메시지 수
-    private int unreadCount;
-    
     // 온라인 사용자 수 (현재 접속자)
     private int onlineUserCount;
     

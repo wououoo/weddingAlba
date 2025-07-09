@@ -23,6 +23,14 @@ public class ChatRoomResponse {
     private Long guestUserId;
     private Long postingId;
     
+    // 1:1 채팅방 상대방 정보 (새로 추가)
+    private String hostName;           // 호스트 이름
+    private String hostNickname;       // 호스트 닉네임
+    private String hostProfileImage;   // 호스트 프로필 이미지
+    private String guestName;          // 게스트 이름
+    private String guestNickname;      // 게스트 닉네임
+    private String guestProfileImage;  // 게스트 프로필 이미지
+    
     // 그룹 채팅방용 필드들
     private Integer maxParticipants;
     private Boolean isPublic;

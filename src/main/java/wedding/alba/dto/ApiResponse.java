@@ -17,16 +17,17 @@ public class ApiResponse<T> {
     private T data;
 
     /**
-     * 성공 응답 생성 (데이터 포함)
+     * 성공 응답 생성 (데이터만 포함)
      */
     public static <T> ApiResponse<T> success(T data) {
         return new ApiResponse<>(true, "요청이 성공적으로 처리되었습니다.", data);
     }
 
     /**
-     * 성공 응답 생성 (데이터와 메시지 포함)
+     * 성공 응답 생성 (메시지와 데이터 포함)
+     * 사용법: ApiResponse.success("성공 메시지", 데이터객체)
      */
-    public static <T> ApiResponse<T> success(T data, String message) {
+    public static <T> ApiResponse<T> success(String message, T data) {
         return new ApiResponse<>(true, message, data);
     }
 

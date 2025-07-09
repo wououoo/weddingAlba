@@ -8,7 +8,7 @@ const AppFooter: React.FC = () => {
   // 현재 활성화된 메뉴 확인
   const isHome = path === '/' || path.startsWith('/home');
   const isPostings = path.startsWith('/posting') || path === '/postings';
-  const isChat = path.startsWith('/chat');
+  const isChat = path.startsWith('/chat') || path === '/chats';
   const isMypage = path.startsWith('/mypage') || path.startsWith('/profile') || path.startsWith('/settings');
   return (
     <footer className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">

@@ -1,145 +1,28 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useChatRoom } from './hooks/useChatRoom';
-import { ChatMessage } from './api/chatApi';
+import VirtualChatList from './components/VirtualChatList';
+import ChatPerformanceMonitor from './components/ChatPerformanceMonitor';
 
-// 임시 사용자 정보 (실제로는 AuthContext에서 가져와야 함)
+// JWT 토큰에서 사용자 정보를 추출하는 함수 (디버깅 향상)
 const getCurrentUser = () => {
+  // 실제로는 JWT 토큰을 디코딩해서 사용자 정보를 가져와야 함
+  // 현재는 서버에서 토큰으로 사용자를 식별하므로 클라이언트에서는 ID만 필요
+  
+  // 디버깅: 로컬스토리지에서 사용자 ID 확인
+  const token = localStorage.getItem('accessToken');
+  console.log('현재 토큰:', token ? '존재' : '없음');
+  
+  // 임시: 여러 사용자 ID로 테스트
+  // 만약 다른 사용자로 로그인했다면 ID를 바꿀 수 있음
+  const userId = 1; // 임시 - 실제로는 토큰에서 추출
+  
+  console.log('현재 사용자 ID:', userId);
+  
   return {
-    id: 1,
-    name: '사용자',
-    profileImage: null
+    id: userId,
+    name: '이신부', // 사용자 이름 - 실제로는 토큰에서 추출해야 함
   };
-};
-
-const formatTime = (timestamp: string): string => {
-  const date = new Date(timestamp);
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-};
-
-const MessageItem: React.FC<{
-  message: ChatMessage;
-  isMe: boolean;
-  showSender: boolean;
-  onMarkAsRead: (messageId: string) => void;
-}> = ({ message, isMe, showSender, onMarkAsRead }) => {
-  const messageRef = useRef<HTMLDivElement>(null);
-
-  // 메시지가 화면에 보이면 읽음 처리
-  useEffect(() => {
-    if (!isMe && messageRef.current) {
-      const observer = new IntersectionObserver(
-        (entries) => {
-          if (entries[0].isIntersecting) {
-            onMarkAsRead(message.messageId);
-            observer.disconnect();
-          }
-        },
-        { threshold: 0.5 }
-      );
-
-      observer.observe(messageRef.current);
-      return () => observer.disconnect();
-    }
-  }, [isMe, message.messageId, onMarkAsRead]);
-
-  const renderMessageContent = () => {
-    switch (message.messageType) {
-      case 'IMAGE':
-        return (
-          <div className="max-w-xs">
-            <img 
-              src={message.attachmentUrl} 
-              alt="이미지" 
-              className="rounded-lg max-w-full h-auto"
-              onError={(e) => {
-                e.currentTarget.src = '/placeholder-image.png';
-              }}
-            />
-            {message.content && (
-              <p className="mt-2">{message.content}</p>
-            )}
-          </div>
-        );
-      
-      case 'FILE':
-        return (
-          <div className="flex items-center space-x-2 p-2 bg-gray-100 rounded-lg">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-            </svg>
-            <div className="flex-1">
-              <p className="font-medium">{message.content || '파일'}</p>
-              <p className="text-xs text-gray-500">{message.attachmentType}</p>
-            </div>
-            <a 
-              href={message.attachmentUrl} 
-              download 
-              className="text-purple-600 hover:text-purple-700"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </a>
-          </div>
-        );
-      
-      case 'JOIN':
-      case 'LEAVE':
-      case 'SYSTEM':
-        return (
-          <div className="text-center text-gray-500 text-sm py-2">
-            {message.content}
-          </div>
-        );
-      
-      default:
-        return <span>{message.content}</span>;
-    }
-  };
-
-  // JOIN, LEAVE, SYSTEM 메시지는 화면에 표시하지 않음 (실제 채팅만 표시)
-  if (message.messageType === 'JOIN' || message.messageType === 'LEAVE' || message.messageType === 'SYSTEM') {
-    return null; // 아무것도 렌더링하지 않음
-  }
-
-  return (
-    <div
-      ref={messageRef}
-      className={`mb-4 flex ${isMe ? 'justify-end' : 'justify-start'}`}
-    >
-      {!isMe && (
-        <div className="mr-2 flex-shrink-0">
-          <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-            {message.senderProfileImage ? (
-              <img 
-                src={message.senderProfileImage} 
-                alt={message.senderName}
-                className="w-8 h-8 rounded-full object-cover"
-              />
-            ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-            )}
-          </div>
-        </div>
-      )}
-      
-      <div className="max-w-[70%]">
-        {!isMe && showSender && (
-          <div className="text-xs text-gray-600 mb-1">{message.senderName}</div>
-        )}
-        <div className="flex items-end">
-          {isMe && <div className="text-xs text-gray-500 mr-2">{formatTime(message.timestamp)}</div>}
-          <div className={`rounded-lg py-2 px-3 ${isMe ? 'bg-purple-600 text-white' : 'bg-white border'}`}>
-            {renderMessageContent()}
-          </div>
-          {!isMe && <div className="text-xs text-gray-500 ml-2">{formatTime(message.timestamp)}</div>}
-        </div>
-      </div>
-    </div>
-  );
 };
 
 const TypingIndicator: React.FC<{ typingUsers: Set<number>; currentUserId: number }> = ({ 
@@ -167,36 +50,31 @@ const PrivateChatRoom: React.FC = () => {
   const { roomId } = useParams<{ roomId: string }>();
   const [message, setMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  // 디버깅: 컴포넌트 마운트 추적 (개선된 버전)
+  // 🔧 컴포넌트 마운트 추적 (개선된 버전)
   const mountCountRef = useRef(0);
-  const isMountedRef = useRef(false);
   
   useEffect(() => {
-    if (isMountedRef.current) {
-      console.warn(`🔴 PrivateChatRoom 중복 마운트 방지!`, { roomId });
-      return;
-    }
-    
-    isMountedRef.current = true;
     mountCountRef.current += 1;
     const mountId = mountCountRef.current;
-    console.log(`🟢 PrivateChatRoom 마운트 #${mountId}`, { roomId });
+    
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`🟢 PrivateChatRoom 마운트 #${mountId}`, { roomId });
+    }
     
     return () => {
-      console.log(`🔴 PrivateChatRoom 언마운트 #${mountId}`, { roomId });
-      isMountedRef.current = false;
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`🔴 PrivateChatRoom 언마운트 #${mountId}`, { roomId });
+      }
     };
-  }, []);
+  }, [roomId]);
 
   const currentUser = getCurrentUser();
   const chatRoomId = roomId ? parseInt(roomId) : 0;
   
-  // useChatRoom 호출 (로그 제거로 깨끗하게)
-
+  // useChatRoom 호출 - 사용자 정보 전달
   const {
     chatRoom,
     messages,
@@ -208,16 +86,10 @@ const PrivateChatRoom: React.FC = () => {
     startTyping,
     stopTyping,
     markAsRead,
-    unreadCount,
     isConnected,
     error,
     clearError
   } = useChatRoom(chatRoomId, currentUser.id, currentUser.name);
-
-  // 메시지 스크롤 자동 이동
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
 
   // 메시지 전송 핸들러
   const handleSendMessage = useCallback(() => {
@@ -226,6 +98,11 @@ const PrivateChatRoom: React.FC = () => {
     sendMessage(message.trim());
     setMessage('');
     stopTyping();
+    
+    // 🚀 즉시 입력창 포커스 유지
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 10);
   }, [message, isConnected, sendMessage, stopTyping]);
 
   // 엔터키로 메시지 전송
@@ -261,14 +138,6 @@ const PrivateChatRoom: React.FC = () => {
   const handleMarkAsRead = useCallback((messageId: string) => {
     markAsRead(messageId);
   }, [markAsRead]);
-
-  // 스크롤 상단에서 더 많은 메시지 로드
-  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
-    const target = e.currentTarget;
-    if (target.scrollTop === 0 && hasMoreMessages && !isLoadingMessages) {
-      loadMoreMessages();
-    }
-  }, [hasMoreMessages, isLoadingMessages, loadMoreMessages]);
 
   // 파일 첨부 (구현 예정)
   const handleFileAttach = useCallback(() => {
@@ -324,13 +193,17 @@ const PrivateChatRoom: React.FC = () => {
     );
   }
 
-  // 상대방 정보 계산
+  // 상대방 정보 계산 (실제 사용자 정보 사용)
   const getOtherUserInfo = () => {
     if (chatRoom.type === 'PERSONAL') {
       if (chatRoom.hostUserId === currentUser.id) {
-        return { name: '게스트', role: '신청자' };
+        // 내가 호스트인 경우 -> 게스트 정보 표시
+        const displayName = chatRoom.guestNickname || chatRoom.guestName || '게스트';
+        return { name: displayName, role: '신청자' };
       } else {
-        return { name: '호스트', role: '모집자' };
+        // 내가 게스트인 경우 -> 호스트 정보 표시
+        const displayName = chatRoom.hostNickname || chatRoom.hostName || '호스트';
+        return { name: displayName, role: '모집자' };
       }
     }
     return { name: chatRoom.roomName, role: '' };
@@ -339,9 +212,16 @@ const PrivateChatRoom: React.FC = () => {
   const otherUser = getOtherUserInfo();
 
   return (
-    <div className="flex flex-col h-screen">
-      {/* 헤더 */}
-      <div className="bg-white p-4 border-b border-gray-200 flex items-center">
+    <div className="relative h-screen bg-gray-50 overflow-hidden">
+      {/* 성능 모니터 (개발 환경에서만 표시) */}
+      <ChatPerformanceMonitor
+        messageCount={messages.length}
+        isConnected={isConnected}
+        typingUsers={typingUsers.size}
+      />
+      
+      {/* 완전 고정 헤더 */}
+      <div className="absolute top-0 left-0 right-0 z-50 bg-white p-4 border-b border-gray-200 flex items-center shadow-sm h-16">
         <button onClick={() => navigate('/chat', { replace: true })} className="mr-4">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -359,11 +239,6 @@ const PrivateChatRoom: React.FC = () => {
           </p>
         </div>
         <div className="flex items-center space-x-2">
-          {unreadCount > 0 && (
-            <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-              {unreadCount}
-            </span>
-          )}
           <button className="p-2">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
@@ -372,46 +247,35 @@ const PrivateChatRoom: React.FC = () => {
         </div>
       </div>
 
-      {/* 메시지 목록 */}
+      {/* 메시지 영역 (가운데 영역) - 절대 위치 지정 */}
       <div 
-        className="flex-1 overflow-auto p-4 bg-gray-100" 
-        onScroll={handleScroll}
+        className="absolute bg-gray-50"
+        style={{ 
+          top: '64px',    // 헤더 높이
+          bottom: '96px', // 푸터 높이
+          left: '0',
+          right: '0',
+          overflow: 'hidden'
+        }}
       >
-        {/* 로딩 인디케이터 (상단) */}
-        {isLoadingMessages && (
-          <div className="flex justify-center py-4">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600"></div>
-          </div>
-        )}
-
-        {/* 메시지 목록 - JOIN/LEAVE 메시지 필터링 */}
-        {messages
-          .filter(msg => msg.messageType !== 'JOIN' && msg.messageType !== 'LEAVE' && msg.messageType !== 'SYSTEM')
-          .map((msg, index) => {
-            const isMe = msg.senderId === currentUser.id;
-            const filteredMessages = messages.filter(m => m.messageType !== 'JOIN' && m.messageType !== 'LEAVE' && m.messageType !== 'SYSTEM');
-            const prevMessage = index > 0 ? filteredMessages[index - 1] : null;
-            const showSender = !isMe && (!prevMessage || prevMessage.senderId !== msg.senderId);
-            
-            return (
-              <MessageItem
-                key={msg.messageId}
-                message={msg}
-                isMe={isMe}
-                showSender={showSender}
-                onMarkAsRead={handleMarkAsRead}
-              />
-            );
-          })}
-
-        {/* 타이핑 인디케이터 */}
-        <TypingIndicator typingUsers={typingUsers} currentUserId={currentUser.id} />
+        <VirtualChatList
+          messages={messages.filter(msg => msg.messageType !== 'JOIN' && msg.messageType !== 'LEAVE' && msg.messageType !== 'SYSTEM')}
+          currentUserId={currentUser.id}
+          onLoadMore={loadMoreMessages}
+          hasMoreMessages={hasMoreMessages}
+          isLoadingMessages={isLoadingMessages}
+          onMarkAsRead={handleMarkAsRead}
+          containerHeight={Math.max(300, (window?.innerHeight || 600) - 160)} // 고정 값 사용
+        />
         
-        <div ref={messagesEndRef} />
+        {/* 타이핑 인디케이터 */}
+        <div className="absolute bottom-0 left-0 right-0 px-4 py-2 bg-gray-50">
+          <TypingIndicator typingUsers={typingUsers} currentUserId={currentUser.id} />
+        </div>
       </div>
 
-      {/* 입력 영역 */}
-      <div className="bg-white border-t border-gray-200 p-4">
+      {/* 완전 고정 푸터 (입력 영역) */}
+      <div className="absolute bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 p-4">
         <div className="flex items-end space-x-2">
           <button 
             onClick={handleFileAttach}
@@ -432,6 +296,7 @@ const PrivateChatRoom: React.FC = () => {
               onChange={handleInputChange}
               onKeyPress={handleKeyPress}
               disabled={!isConnected}
+              autoFocus
             />
           </div>
           

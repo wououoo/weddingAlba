@@ -6,90 +6,16 @@ import { reviewApi, type GuestReview, type HostReview } from './api/reviewApi';
 /**
  * 리뷰 목록 컴포넌트 - API 모듈 사용 버전
  * 
-<<<<<<< HEAD
- * 백엔드 API 연결:
- * 1. 게스트 리뷰 API: GET /api/review/guest-reviews?page=1&limit=10
- * 2. 호스트 리뷰 API: GET /api/review/host-reviews?page=1&limit=10
- * 3. 리뷰 카운트 API: GET /api/review/guest-reviews/count, GET /api/review/host-reviews/count
- * 
- * API 응답 형식:
- * {
- *   data: Array<GuestReview | HostReview>,
- *   totalCount: number,
- *   hasMore: boolean,
- *   currentPage: number
- * }
-=======
  * API 엔드포인트:
  * 1. 게스트 리뷰 목록: GET /api/review/guest-reviews?page=1&limit=10
  * 2. 호스트 리뷰 목록: GET /api/review/host-reviews?page=1&limit=10
  * 3. 게스트 리뷰 카운트: GET /api/review/guest-reviews/count
  * 4. 호스트 리뷰 카운트: GET /api/review/host-reviews/count
->>>>>>> ac7ebf3176fa2638bce854fe964e7227718683aa
  */
 
 // 리뷰 타입 정의
 type ReviewType = 'guest' | 'host';
 
-<<<<<<< HEAD
-// 게스트 리뷰 인터페이스 (모집자가 게스트에게 작성한 리뷰)
-interface GuestReview {
-  guestReviewId: number;
-  applyId: number;
-  postingId: number;
-  userId: number; // 게스트(신청자) ID
-  content: string;
-  score: number;
-  createdAt: string; // ISO 문자열로 받음
-  updatedAt: string;
-  guestInfo: {
-    nickname: string;
-    profileImageUrl?: string;
-    guestPower: number;
-  };
-  postingInfo: {
-    title: string;
-    appointmentDatetime: string; // ISO 문자열로 받음
-    location: string;
-  };
-}
-
-// 호스트 리뷰 인터페이스 (신청자가 호스트에게 작성한 리뷰)
-interface HostReview {
-  hostReviewId: number;
-  applyId: number;
-  postingId: number;
-  userId: number; // 호스트(모집자) ID
-  content: string;
-  score: number;
-  createdAt: string;
-  updatedAt: string;
-  hostInfo: {
-    nickname: string;
-    profileImageUrl?: string;
-    hostPower: number;
-  };
-  postingInfo: {
-    title: string;
-    appointmentDatetime: string;
-    location: string;
-  };
-}
-
-// API 응답 인터페이스
-interface ReviewListResponse<T> {
-  data: T[];
-  totalCount: number;
-  hasMore: boolean;
-  currentPage: number;
-}
-
-interface ReviewCountResponse {
-  count: number;
-}
-
-=======
->>>>>>> ac7ebf3176fa2638bce854fe964e7227718683aa
 interface ReviewListProps {
   className?: string;
   userId?: number; // 특정 사용자의 리뷰를 조회할 때 사용
@@ -115,20 +41,6 @@ const ReviewList: React.FC<ReviewListProps> = ({ className = '', userId }) => {
     setError(null);
     
     try {
-<<<<<<< HEAD
-      // 실제 API 호출
-      const endpoint = reviewType === 'guest' ? '/review/guest-reviews' : '/review/host-reviews';
-      const response = await get<ReviewListResponse<GuestReview | HostReview>>(
-        `${endpoint}?page=${page}&limit=${itemsPerPage}`
-      );
-      
-      // ApiResponse 래퍼에서 실제 데이터 추출
-      if (!response.success || !response.data) {
-        throw new Error(response.message || '데이터를 불러올 수 없습니다.');
-      }
-      
-      const { data, totalCount: total, hasMore: more, currentPage: current } = response.data;
-=======
       let response;
       
       // userId가 있으면 특정 사용자의 리뷰 조회, 없으면 현재 사용자의 리뷰 조회
@@ -141,7 +53,6 @@ const ReviewList: React.FC<ReviewListProps> = ({ className = '', userId }) => {
           ? await reviewApi.getGuestReviews(page, itemsPerPage)
           : await reviewApi.getHostReviews(page, itemsPerPage);
       }
->>>>>>> ac7ebf3176fa2638bce854fe964e7227718683aa
       
       // API 응답 처리
       if (!response.success || !response.data) {
@@ -170,16 +81,6 @@ const ReviewList: React.FC<ReviewListProps> = ({ className = '', userId }) => {
       
       // 데이터 설정
       if (append && page > 1) {
-<<<<<<< HEAD
-        setReviewItems(prev => [...prev, ...data]);
-      } else {
-        setReviewItems(data);
-      }
-
-      setTotalCount(total);
-      setHasMore(more);
-      setCurrentPage(current);
-=======
         setReviewItems(prev => [...prev, ...reviewData.data]);
       } else {
         setReviewItems(reviewData.data);
@@ -188,7 +89,6 @@ const ReviewList: React.FC<ReviewListProps> = ({ className = '', userId }) => {
       setTotalCount(reviewData.totalCount || 0);
       setHasMore(reviewData.hasMore || false);
       setCurrentPage(reviewData.currentPage || page);
->>>>>>> ac7ebf3176fa2638bce854fe964e7227718683aa
 
     } catch (error) {
       console.error('리뷰 목록 로드 실패:', error);
@@ -225,23 +125,6 @@ const ReviewList: React.FC<ReviewListProps> = ({ className = '', userId }) => {
   // 리뷰 카운트 가져오기
   const fetchReviewCounts = async () => {
     try {
-<<<<<<< HEAD
-      // 실제 API 호출
-      const guestResponse = await get<ReviewCountResponse>('/review/guest-reviews/count');
-      const hostResponse = await get<ReviewCountResponse>('/review/host-reviews/count');
-      
-      // ApiResponse 래퍼에서 실제 데이터 추출
-      if (guestResponse.success && guestResponse.data) {
-        setGuestReviewCount(guestResponse.data.count);
-      }
-      
-      if (hostResponse.success && hostResponse.data) {
-        setHostReviewCount(hostResponse.data.count);
-      }
-    } catch (error) {
-      console.error('리뷰 카운트 로드 실패:', error);
-      // 에러가 발생해도 카운트는 0으로 유지
-=======
       // userId가 있는 경우 카운트는 조회하지 않음 (다른 사용자 프로필 조회 시)
       if (userId) {
         setGuestReviewCount(0);
@@ -264,7 +147,6 @@ const ReviewList: React.FC<ReviewListProps> = ({ className = '', userId }) => {
     } catch (error) {
       console.error('리뷰 카운트 로드 실패:', error);
       // 오류 시 기본값 0으로 설정
->>>>>>> ac7ebf3176fa2638bce854fe964e7227718683aa
       setGuestReviewCount(0);
       setHostReviewCount(0);
     }
@@ -377,11 +259,7 @@ const ReviewList: React.FC<ReviewListProps> = ({ className = '', userId }) => {
                 : 'bg-white text-gray-700 border border-gray-200 hover:border-purple-300 hover:bg-purple-50'
             }`}
           >
-<<<<<<< HEAD
-            게스트 리뷰 ({guestReviewCount})
-=======
             받은 게스트 리뷰 {!userId && `(${guestReviewCount})`}
->>>>>>> ac7ebf3176fa2638bce854fe964e7227718683aa
           </button>
           <button
             onClick={() => handleReviewTypeChange('host')}
@@ -391,11 +269,7 @@ const ReviewList: React.FC<ReviewListProps> = ({ className = '', userId }) => {
                 : 'bg-white text-gray-700 border border-gray-200 hover:border-purple-300 hover:bg-purple-50'
             }`}
           >
-<<<<<<< HEAD
-            호스트 리뷰 ({hostReviewCount})
-=======
             받은 호스트 리뷰 {!userId && `(${hostReviewCount})`}
->>>>>>> ac7ebf3176fa2638bce854fe964e7227718683aa
           </button>
         </div>
       </div>

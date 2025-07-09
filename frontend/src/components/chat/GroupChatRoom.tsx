@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useChatRoom } from './hooks/useChatRoom';
 import { ChatRoomSkeleton } from './components/ChatSkeleton';
+import OptimizedChatMessage from './components/OptimizedChatMessage';
+import ChatPerformanceMonitor from './components/ChatPerformanceMonitor';
 import { ChatMessage } from './api/chatApi';
 
 // 임시 사용자 정보 (실제로는 인증 시스템에서 가져와야 함)
@@ -15,24 +17,29 @@ const GroupChatRoom: React.FC = () => {
   const navigate = useNavigate();
   const { roomId } = useParams<{ roomId: string }>();
   const [message, setMessage] = useState('');
+  const [renderTrigger, setRenderTrigger] = useState(0); // 강제 리렌더링용
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  // 디버깅: 컴포넌트 마운트 추적
+  // 🔧 컴포넌트 마운트 추적
   const mountCountRef = useRef(0);
   
   useEffect(() => {
     mountCountRef.current += 1;
     const mountId = mountCountRef.current;
-    console.log(`🟢 GroupChatRoom 마운트 #${mountId}`, { roomId });
+    
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`🟢 GroupChatRoom 마운트 #${mountId}`, { roomId });
+    }
     
     return () => {
-      console.log(`🔴 GroupChatRoom 언마운트 #${mountId}`, { roomId });
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`🔴 GroupChatRoom 언마운트 #${mountId}`, { roomId });
+      }
     };
   }, [roomId]);
   
   // 실제 채팅 훅 사용
   const chatRoomId = parseInt(roomId || '0');
-  console.log(`🔄 useChatRoom 호출`, { chatRoomId, userId: CURRENT_USER.id, userName: CURRENT_USER.name });
   
   const {
     chatRoom,
@@ -52,10 +59,35 @@ const GroupChatRoom: React.FC = () => {
     CURRENT_USER.name
   );
 
-  // 메시지 스크롤 자동 이동
+  // 메시지 스크롤 자동 이동 (강화된 버전)
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    const scrollToBottom = () => {
+      if (messagesEndRef.current) {
+        messagesEndRef.current.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'end',
+          inline: 'nearest'
+        });
+      }
+    };
+    
+    // 즉시 스크롤
+    scrollToBottom();
+    
+    // 지연 스크롤 (렌더링 완료 후)
+    const timeoutId = setTimeout(scrollToBottom, 100);
+    
+    return () => clearTimeout(timeoutId);
+  }, [messages, messages.length]);
+  
+  // 메시지 변경 시 강제 리렌더링 트리거
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setRenderTrigger(prev => prev + 1);
+    }, 50);
+    
+    return () => clearTimeout(timeoutId);
+  }, [messages.length]);
 
   // 메시지 전송 핸들러
   const handleSendMessage = () => {
@@ -148,9 +180,16 @@ const GroupChatRoom: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
-      {/* 헤더 */}
-      <div className="bg-white p-4 border-b border-gray-200 flex items-center shadow-sm">
+    <div className="relative h-screen bg-gray-50 overflow-hidden">
+      {/* 성능 모니터 (개발 환경에서만 표시) */}
+      <ChatPerformanceMonitor
+        messageCount={messages.length}
+        isConnected={isConnected}
+        typingUsers={typingUsers.size}
+      />
+      
+      {/* 완전 고정 헤더 - fixed로 변경 */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-white p-4 border-b border-gray-200 flex items-center shadow-sm h-16">
         <button 
           onClick={() => navigate('/chat', { replace: true })} 
           className="mr-4 p-2 hover:bg-gray-100 rounded-full"
@@ -180,94 +219,59 @@ const GroupChatRoom: React.FC = () => {
         </button>
       </div>
 
-      {/* 메시지 목록 */}
-      <div className="flex-1 overflow-auto p-4 space-y-4">
-        {messages
-          .filter(msg => 
-            msg.messageType !== 'JOIN' && 
-            msg.messageType !== 'LEAVE' &&
-            msg.messageType !== 'TYPING' &&
-            msg.messageType !== 'STOP_TYPING'
-          )
-          .length === 0 ? (
-          <div className="text-center py-8">
-            <div className="text-gray-400 text-4xl mb-2">💬</div>
-            <p className="text-gray-500">아직 메시지가 없습니다.</p>
-            <p className="text-gray-400 text-sm">첫 번째 메시지를 보내보세요!</p>
-          </div>
-        ) : (
-          messages
+      {/* 메시지 영역 (헤더와 푸터 사이에 배치) */}
+      <div className="fixed top-16 bottom-20 left-0 right-0 overflow-auto p-4" key={renderTrigger}>
+        <div className="space-y-4">
+          {messages
             .filter(msg => 
               msg.messageType !== 'JOIN' && 
               msg.messageType !== 'LEAVE' &&
               msg.messageType !== 'TYPING' &&
               msg.messageType !== 'STOP_TYPING'
             )
-            .map((msg) => (
-            <div
-              key={msg.messageId}
-              className={`flex ${msg.senderId === CURRENT_USER.id ? 'justify-end' : 'justify-start'}`}
-            >
-              {msg.senderId !== CURRENT_USER.id && (
-                <div className="mr-3 flex-shrink-0">
-                  <div className="w-8 h-8 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                    {msg.senderName?.charAt(0) || '?'}
-                  </div>
-                </div>
-              )}
-              <div className={`max-w-[70%]`}>
-                {msg.senderId !== CURRENT_USER.id && (
-                  <div className="text-xs text-gray-600 mb-1 font-medium">{msg.senderName}</div>
-                )}
-                <div className="flex items-end">
-                  {msg.senderId === CURRENT_USER.id && (
-                    <div className="text-xs text-gray-500 mr-2 self-end">
-                      {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </div>
-                  )}
-                  <div className={`rounded-lg py-2 px-3 ${
-                    msg.senderId === CURRENT_USER.id 
-                      ? 'bg-purple-600 text-white' 
-                      : msg.messageType === 'MENTION'
-                      ? 'bg-yellow-100 border border-yellow-300'
-                      : msg.messageType === 'SYSTEM'
-                      ? 'bg-gray-100 text-gray-600 text-center italic'
-                      : 'bg-white border border-gray-200'
-                  }`}>
-                    {msg.messageType === 'SYSTEM' ? (
-                      <span>🔔 {msg.content}</span>
-                    ) : (
-                      msg.content
-                    )}
-                  </div>
-                  {msg.senderId !== CURRENT_USER.id && (
-                    <div className="text-xs text-gray-500 ml-2 self-end">
-                      {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </div>
-                  )}
-                </div>
+            .length === 0 ? (
+            <div className="text-center py-8">
+              <div className="text-gray-400 text-4xl mb-2">💬</div>
+              <p className="text-gray-500">아직 메시지가 없습니다.</p>
+              <p className="text-gray-400 text-sm">첫 번째 메시지를 보내보세요!</p>
+            </div>
+          ) : (
+            messages
+              .filter(msg => 
+                msg.messageType !== 'JOIN' && 
+                msg.messageType !== 'LEAVE' &&
+                msg.messageType !== 'TYPING' &&
+                msg.messageType !== 'STOP_TYPING'
+              )
+              .map((msg, index) => (
+                <OptimizedChatMessage
+                  key={`${msg.messageId}-${index}-${msg.timestamp}`}
+                  message={msg}
+                  isMe={msg.senderId === CURRENT_USER.id}
+                  showSender={true}
+                  currentUserId={CURRENT_USER.id}
+                />
+              ))
+          )}
+          
+          {/* 타이핑 상태 표시 */}
+          {typingUsers.size > 0 && (
+            <div className="flex items-center space-x-2 text-gray-500 text-sm">
+              <div className="flex space-x-1">
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
               </div>
+              <span>{Array.from(typingUsers).join(', ')}님이 입력 중...</span>
             </div>
-          ))
-        )}
-        
-        {/* 타이핑 상태 표시 */}
-        {typingUsers.size > 0 && (
-          <div className="flex items-center space-x-2 text-gray-500 text-sm">
-            <div className="flex space-x-1">
-              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-            </div>
-            <span>{Array.from(typingUsers).join(', ')}님이 입력 중...</span>
-          </div>
-        )}
-        
-        <div ref={messagesEndRef} />
+          )}
+          
+          <div ref={messagesEndRef} />
+        </div>
       </div>
 
-      {/* 입력 영역 */}
-      <div className="bg-white border-t border-gray-200 p-4">
+      {/* 완전 고정 푸터 (입력 영역) - fixed로 변경 */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 p-4 h-20">
         <div className="flex items-center space-x-3">
           <button className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">

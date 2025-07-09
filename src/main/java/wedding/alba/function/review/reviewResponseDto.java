@@ -4,67 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 import java.time.LocalDateTime;
-<<<<<<< HEAD
-import java.util.List;
-
-public class reviewResponseDto {
-
-    /**
-     * 게스트 리뷰 응답 DTO
-     * 모집자가 게스트에게 작성한 리뷰 정보
-     */
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class GuestReviewResponse {
-        private Long guestReviewId;
-        private Long applyId;
-        private Long postingId;
-        private Long userId;
-        private String content;
-        private Integer score;
-        private LocalDateTime createdAt;
-        private LocalDateTime updatedAt;
-        
-        // 게스트 정보 (실제로는 조인을 통해 가져와야 함)
-        private GuestInfo guestInfo;
-        
-        // 포스팅 정보 (실제로는 조인을 통해 가져와야 함)
-        private PostingInfo postingInfo;
-    }
-
-    /**
-     * 호스트 리뷰 응답 DTO
-     * 게스트가 호스트에게 작성한 리뷰 정보
-     */
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class HostReviewResponse {
-        private Long hostReviewId;
-        private Long applyId;
-        private Long postingId;
-        private Long userId;
-        private String content;
-        private Integer score;
-        private LocalDateTime createdAt;
-        private LocalDateTime updatedAt;
-        
-        // 호스트 정보 (실제로는 조인을 통해 가져와야 함)
-        private HostInfo hostInfo;
-        
-        // 포스팅 정보 (실제로는 조인을 통해 가져와야 함)
-        private PostingInfo postingInfo;
-    }
-
-    /**
-     * 게스트 정보 DTO
-     */
-=======
 
 /**
  * 리뷰 응답 DTO
@@ -100,7 +40,9 @@ public class ReviewResponseDto {
     // 모집글 정보
     private PostingInfo postingInfo;
     
->>>>>>> ac7ebf3176fa2638bce854fe964e7227718683aa
+    /**
+     * 게스트 정보 내부 클래스
+     */
     @Data
     @Builder
     @NoArgsConstructor
@@ -108,18 +50,12 @@ public class ReviewResponseDto {
     public static class GuestInfo {
         private String nickname;
         private String profileImageUrl;
-<<<<<<< HEAD
-        private Integer guestPower;
-    }
-
-    /**
-     * 호스트 정보 DTO
-     */
-=======
         private Integer guestPower; // 게스트 평점/레벨
     }
     
->>>>>>> ac7ebf3176fa2638bce854fe964e7227718683aa
+    /**
+     * 호스트 정보 내부 클래스
+     */
     @Data
     @Builder
     @NoArgsConstructor
@@ -127,18 +63,12 @@ public class ReviewResponseDto {
     public static class HostInfo {
         private String nickname;
         private String profileImageUrl;
-<<<<<<< HEAD
-        private Integer hostPower;
-    }
-
-    /**
-     * 포스팅 정보 DTO
-     */
-=======
         private Integer hostPower; // 호스트 평점/레벨
     }
     
->>>>>>> ac7ebf3176fa2638bce854fe964e7227718683aa
+    /**
+     * 모집글 정보 내부 클래스
+     */
     @Data
     @Builder
     @NoArgsConstructor
@@ -148,32 +78,44 @@ public class ReviewResponseDto {
         private LocalDateTime appointmentDatetime;
         private String location;
     }
-<<<<<<< HEAD
 
     /**
-     * 리뷰 목록 응답 DTO (페이징 정보 포함)
+     * 게스트 리뷰 응답 생성 메서드
      */
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class ReviewListResponse<T> {
-        private List<T> data;
-        private Long totalCount;
-        private Boolean hasMore;
-        private Integer currentPage;
+    public static ReviewResponseDto forGuestReview(Long guestReviewId, Long applyId, Long postingId, 
+            Long userId, String content, Integer score, LocalDateTime createdAt, LocalDateTime updatedAt,
+            GuestInfo guestInfo, PostingInfo postingInfo) {
+        return ReviewResponseDto.builder()
+                .guestReviewId(guestReviewId)
+                .applyId(applyId)
+                .postingId(postingId)
+                .userId(userId)
+                .content(content)
+                .score(score)
+                .createdAt(createdAt)
+                .updatedAt(updatedAt)
+                .guestInfo(guestInfo)
+                .postingInfo(postingInfo)
+                .build();
     }
 
     /**
-     * 리뷰 카운트 응답 DTO
+     * 호스트 리뷰 응답 생성 메서드
      */
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class ReviewCountResponse {
-        private Long count;
+    public static ReviewResponseDto forHostReview(Long hostReviewId, Long applyId, Long postingId, 
+            Long userId, String content, Integer score, LocalDateTime createdAt, LocalDateTime updatedAt,
+            HostInfo hostInfo, PostingInfo postingInfo) {
+        return ReviewResponseDto.builder()
+                .hostReviewId(hostReviewId)
+                .applyId(applyId)
+                .postingId(postingId)
+                .userId(userId)
+                .content(content)
+                .score(score)
+                .createdAt(createdAt)
+                .updatedAt(updatedAt)
+                .hostInfo(hostInfo)
+                .postingInfo(postingInfo)
+                .build();
     }
-=======
->>>>>>> ac7ebf3176fa2638bce854fe964e7227718683aa
 }

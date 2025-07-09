@@ -2,6 +2,57 @@ import { Client, Message } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import { ChatMessage } from './chatApi';
 
+// 메시지 안전 파싱 유틸리티
+const safeParseMessage = (rawMessage: string): ChatMessage[] => {
+  try {
+    const parsed = JSON.parse(rawMessage);
+    
+    // BATCH 타입 메시지 처리 - 여러 메시지가 한 번에 전송됨
+    if (parsed.messageType === 'BATCH' || (parsed.count && parsed.messages)) {
+      console.log('[WS] 배치 메시지 수신:', { count: parsed.count, messagesLength: parsed.messages?.length });
+      
+      if (!parsed.messages || !Array.isArray(parsed.messages)) {
+        console.warn('[WS] 배치 메시지에 messages 배열이 없음');
+        return [];
+      }
+      
+      return parsed.messages.map((msg: any) => ({
+        messageId: msg.messageId || msg.id || `auto_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        chatRoomId: msg.chatRoomId || msg.roomId || 0,
+        senderId: msg.senderId || msg.userId || msg.sender?.id || 0,
+        senderName: msg.senderName || msg.userName || msg.sender?.name || msg.user?.name || '',
+        senderProfileImage: msg.senderProfileImage || msg.profileImage || msg.sender?.profileImage || msg.user?.profileImage,
+        content: msg.content || msg.message || '',
+        messageType: msg.messageType || msg.type || 'CHAT',
+        timestamp: msg.timestamp || msg.createdAt || msg.time || new Date().toISOString(),
+        mentionUserId: msg.mentionUserId || msg.mentionedUserId,
+        attachmentUrl: msg.attachmentUrl || msg.fileUrl,
+        attachmentType: msg.attachmentType || msg.fileType
+      }));
+    }
+    
+    // 단일 메시지 처리
+    const message: ChatMessage = {
+      messageId: parsed.messageId || parsed.id || `auto_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      chatRoomId: parsed.chatRoomId || parsed.roomId || 0,
+      senderId: parsed.senderId || parsed.userId || parsed.sender?.id || 0,
+      senderName: parsed.senderName || parsed.userName || parsed.sender?.name || parsed.user?.name || '',
+      senderProfileImage: parsed.senderProfileImage || parsed.profileImage || parsed.sender?.profileImage || parsed.user?.profileImage,
+      content: parsed.content || parsed.message || '',
+      messageType: parsed.messageType || parsed.type || 'CHAT',
+      timestamp: parsed.timestamp || parsed.createdAt || parsed.time || new Date().toISOString(),
+      mentionUserId: parsed.mentionUserId || parsed.mentionedUserId,
+      attachmentUrl: parsed.attachmentUrl || parsed.fileUrl,
+      attachmentType: parsed.attachmentType || parsed.fileType
+    };
+    
+    return [message];
+  } catch (error) {
+    console.error('[WS] 메시지 파싱 실패:', error, '원본 메시지:', rawMessage);
+    return [];
+  }
+};
+
 // WebSocket 디버깅 헬퍼
 const WS_DEBUG = {
   enabled: true,
@@ -63,8 +114,6 @@ class ChatWebSocketService {
   private client: Client | null = null;
   private connected = false;
   private currentChatRoomId: number | null = null;
-  private currentUserId: number | null = null;
-  private currentUserName: string | null = null;
   
   // 연결 추적용
   private connectionAttempts = 0;
@@ -139,7 +188,7 @@ class ChatWebSocketService {
 
         // 연결 성공 핸들러
         this.client.onConnect = (frame) => {
-          WS_DEBUG.log(`연결 성공 #${connectId}`, { frame: frame.headers, userId, userName });
+          WS_DEBUG.log(`연결 성공 #${connectId}`, { frame: frame.headers });
           console.log('WebSocket 연결 성공:', frame);
           this.connected = true;
           resolve();
@@ -165,7 +214,7 @@ class ChatWebSocketService {
 
         // 연결 해제 핸들러
         this.client.onDisconnect = () => {
-          WS_DEBUG.warn(`연결 해제 #${connectId}`, { userId, userName });
+          WS_DEBUG.warn(`연결 해제 #${connectId}`);
           console.log('WebSocket 연결 해제됨');
           this.connected = false;
         };
@@ -188,13 +237,12 @@ class ChatWebSocketService {
   disconnect(): void {
     WS_DEBUG.log('연결 해제 요청', { 
       connected: this.connected, 
-      currentChatRoomId: this.currentChatRoomId,
-      currentUserId: this.currentUserId 
+      currentChatRoomId: this.currentChatRoomId
     });
     
     if (this.client && this.connected) {
       // 현재 채팅방에서 퇴장 메시지 전송
-      if (this.currentChatRoomId && this.currentUserId && this.currentUserName) {
+      if (this.currentChatRoomId) {
         WS_DEBUG.trace('disconnect', 'LEAVING_ROOM', { chatRoomId: this.currentChatRoomId });
         this.leaveRoom();
       }
@@ -205,8 +253,6 @@ class ChatWebSocketService {
     
     this.connected = false;
     this.currentChatRoomId = null;
-    this.currentUserId = null;
-    this.currentUserName = null;
     WS_DEBUG.log('연결 해제 완료', {});
   }
 
@@ -272,23 +318,49 @@ class ChatWebSocketService {
     }
 
     this.currentChatRoomId = chatRoomId;
-    WS_DEBUG.log(`채팅방 입장 시작`, { chatRoomId, userId: this.currentUserId });
+    WS_DEBUG.log(`채팅방 입장 시작`, { chatRoomId });
 
     try {
       // 채팅 메시지 구독
       WS_DEBUG.trace('performJoinRoom', 'SUBSCRIBING_CHAT', { chatRoomId });
       this.client.subscribe(`/topic/chat/${chatRoomId}`, (message: Message) => {
         try {
-          const chatMessage: ChatMessage = JSON.parse(message.body);
-          WS_DEBUG.trace('message', 'CHAT_RECEIVED', { 
-            messageId: chatMessage.messageId, 
-            messageType: chatMessage.messageType,
-            senderId: chatMessage.senderId 
+          WS_DEBUG.trace('message', 'RAW_MESSAGE_RECEIVED', { 
+            body: message.body,
+            bodyLength: message.body?.length || 0
           });
-          this.handleMessage(chatMessage);
+          
+          const chatMessages = safeParseMessage(message.body);
+          
+          if (!chatMessages || chatMessages.length === 0) {
+            WS_DEBUG.error('메시지 파싱 실패 - 빈 배열 반환', { rawMessage: message.body });
+            return;
+          }
+          
+          WS_DEBUG.trace('message', 'PARSED_MESSAGES', { 
+            count: chatMessages.length,
+            firstMessageId: chatMessages[0]?.messageId,
+            firstMessageType: chatMessages[0]?.messageType
+          });
+          
+          // 배치로 받은 각 메시지를 개별 처리
+          chatMessages.forEach(chatMessage => {
+            WS_DEBUG.trace('message', 'PROCESSING_INDIVIDUAL_MESSAGE', { 
+              messageId: chatMessage.messageId, 
+              messageType: chatMessage.messageType,
+              senderId: chatMessage.senderId,
+              senderName: chatMessage.senderName,
+              hasContent: !!chatMessage.content
+            });
+            this.handleMessage(chatMessage);
+          });
         } catch (error) {
-          WS_DEBUG.error('메시지 파싱 오류', { error, rawMessage: message.body });
-          console.error('메시지 파싱 오류:', error);
+          WS_DEBUG.error('메시지 처리 오류', { 
+            error, 
+            rawMessage: message.body,
+            messageLength: message.body?.length || 0
+          });
+          console.error('메시지 처리 오류:', error);
           this.handleError(error);
         }
       });
@@ -329,41 +401,44 @@ class ChatWebSocketService {
         }
       });
 
-      // 개인 멘션 알림 구독 (사용자별)
-      if (this.currentUserId) {
-        WS_DEBUG.trace('performJoinRoom', 'SUBSCRIBING_MENTION', { chatRoomId, userId: this.currentUserId });
-        this.client.subscribe(`/user/${this.currentUserId}/queue/mention`, (message: Message) => {
-          try {
-            const mentionMessage: ChatMessage = JSON.parse(message.body);
+      // 개인 멘션 알림 구독 (JWT 토큰으로 사용자 식별)
+      WS_DEBUG.trace('performJoinRoom', 'SUBSCRIBING_MENTION', { chatRoomId });
+      this.client.subscribe(`/user/queue/mention`, (message: Message) => {
+        try {
+          const mentionMessages = safeParseMessage(message.body);
+          if (!mentionMessages || mentionMessages.length === 0) {
+            WS_DEBUG.error('멘션 메시지 파싱 실패', { rawMessage: message.body });
+            return;
+          }
+          
+          // 멘션은 보통 단일 메시지이지만 배치로 올 수도 있음
+          mentionMessages.forEach(mentionMessage => {
             WS_DEBUG.trace('message', 'MENTION_RECEIVED', { 
               messageId: mentionMessage.messageId,
-              senderId: mentionMessage.senderId,
-              mentionedUserId: this.currentUserId 
+              senderId: mentionMessage.senderId
             });
             this.handleMessage(mentionMessage);
             // 멘션 알림 표시
             this.showMentionNotification(mentionMessage);
-          } catch (error) {
-            WS_DEBUG.error('멘션 메시지 파싱 오류', { error, rawMessage: message.body });
-            console.error('멘션 메시지 파싱 오류:', error);
-            this.handleError(error);
-          }
-        });
-      }
+          });
+        } catch (error) {
+          WS_DEBUG.error('멘션 메시지 파싱 오류', { error, rawMessage: message.body });
+          console.error('멘션 메시지 파싱 오류:', error);
+          this.handleError(error);
+        }
+      });
 
       // 입장 메시지 전송
-      WS_DEBUG.trace('performJoinRoom', 'SENDING_JOIN_MESSAGE', { chatRoomId, userId: this.currentUserId, userName: this.currentUserName });
+      WS_DEBUG.trace('performJoinRoom', 'SENDING_JOIN_MESSAGE', { chatRoomId });
       this.client.publish({
         destination: '/app/chat.addUser',
         body: JSON.stringify({
           chatRoomId: chatRoomId,
-          senderId: this.currentUserId,
-          senderName: this.currentUserName,
           type: 'JOIN'
         })
       });
 
-      WS_DEBUG.log(`채팅방 ${chatRoomId}에 입장 완료`, { userId: this.currentUserId, userName: this.currentUserName });
+      WS_DEBUG.log(`채팅방 ${chatRoomId}에 입장 완료`);
       console.log(`채팅방 ${chatRoomId}에 입장`);
     } catch (error) {
       WS_DEBUG.error('채팅방 입장 중 오류', { chatRoomId, error });
@@ -385,8 +460,6 @@ class ChatWebSocketService {
       destination: '/app/chat.removeUser',
       body: JSON.stringify({
         chatRoomId: this.currentChatRoomId,
-        senderId: this.currentUserId,
-        senderName: this.currentUserName,
         type: 'LEAVE'
       })
     });
@@ -400,17 +473,24 @@ class ChatWebSocketService {
    */
   sendMessage(content: string): void {
     if (!this.client || !this.connected || !this.currentChatRoomId) {
+      WS_DEBUG.error('메시지 전송 불가', { 
+        hasClient: !!this.client, 
+        connected: this.connected, 
+        hasRoomId: !!this.currentChatRoomId 
+      });
       console.error('메시지 전송 불가: WebSocket 미연결 또는 채팅방 미입장');
       return;
     }
 
-    const message: WebSocketMessage = {
+    const message = {
       chatRoomId: this.currentChatRoomId,
-      senderId: this.currentUserId!,
-      senderName: this.currentUserName!,
       content: content,
       type: 'CHAT'
     };
+
+    WS_DEBUG.log('메시지 전송', { 
+      messageLength: content.length
+    });
 
     this.client.publish({
       destination: '/app/chat.sendMessage',
@@ -423,18 +503,23 @@ class ChatWebSocketService {
    */
   sendMentionMessage(content: string, mentionUserId: number): void {
     if (!this.client || !this.connected || !this.currentChatRoomId) {
+      WS_DEBUG.error('멘션 메시지 전송 불가', { 
+        hasClient: !!this.client, 
+        connected: this.connected, 
+        hasRoomId: !!this.currentChatRoomId
+      });
       console.error('멘션 메시지 전송 불가: WebSocket 미연결 또는 채팅방 미입장');
       return;
     }
 
-    const message: WebSocketMessage = {
+    const message = {
       chatRoomId: this.currentChatRoomId,
-      senderId: this.currentUserId!,
-      senderName: this.currentUserName!,
       content: content,
       type: 'MENTION',
       mentionUserId: mentionUserId
     };
+
+    WS_DEBUG.log('멘션 메시지 전송', { mentionUserId });
 
     this.client.publish({
       destination: '/app/chat.sendMention',
@@ -447,19 +532,24 @@ class ChatWebSocketService {
    */
   sendFileMessage(content: string, attachmentUrl: string, attachmentType: string): void {
     if (!this.client || !this.connected || !this.currentChatRoomId) {
+      WS_DEBUG.error('파일 메시지 전송 불가', { 
+        hasClient: !!this.client, 
+        connected: this.connected, 
+        hasRoomId: !!this.currentChatRoomId
+      });
       console.error('파일 메시지 전송 불가: WebSocket 미연결 또는 채팅방 미입장');
       return;
     }
 
-    const message: WebSocketMessage = {
+    const message = {
       chatRoomId: this.currentChatRoomId,
-      senderId: this.currentUserId!,
-      senderName: this.currentUserName!,
       content: content,
       type: attachmentType.startsWith('image/') ? 'IMAGE' : 'FILE',
       attachmentUrl: attachmentUrl,
       attachmentType: attachmentType
     };
+
+    WS_DEBUG.log('파일 메시지 전송', { fileType: attachmentType });
 
     this.client.publish({
       destination: '/app/chat.sendFile',
@@ -475,10 +565,8 @@ class ChatWebSocketService {
       return;
     }
 
-    const message: WebSocketMessage = {
+    const message = {
       chatRoomId: this.currentChatRoomId,
-      senderId: this.currentUserId!,
-      senderName: this.currentUserName!,
       content: '',
       type: isTyping ? 'TYPING' : 'STOP_TYPING'
     };
@@ -500,7 +588,6 @@ class ChatWebSocketService {
 
     const message = {
       chatRoomId: this.currentChatRoomId,
-      senderId: this.currentUserId!,
       messageId: messageId
     };
 
@@ -593,11 +680,6 @@ class ChatWebSocketService {
   }
 
   private handleTyping(message: WebSocketMessage): void {
-    // 자신의 타이핑 메시지는 무시
-    if (message.senderId === this.currentUserId) {
-      return;
-    }
-
     this.typingHandlers.forEach(handler => {
       try {
         handler(message);

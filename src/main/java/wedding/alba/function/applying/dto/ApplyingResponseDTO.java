@@ -1,12 +1,11 @@
-package wedding.alba.function.applying;
+package wedding.alba.function.applying.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import wedding.alba.entity.Posting;
-import wedding.alba.function.posting.PostingResponseDTO;
+import wedding.alba.function.posting.dto.PostingResponseDTO;
 
 import java.time.LocalDateTime;
 
@@ -27,7 +26,6 @@ public class ApplyingResponseDTO {
 
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime confirmationDatetime;
-
 
     public void setStatusStr() {
         if(this.status == 0) {

@@ -1,4 +1,4 @@
-package wedding.alba.function.applying;
+package wedding.alba.function.applying.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

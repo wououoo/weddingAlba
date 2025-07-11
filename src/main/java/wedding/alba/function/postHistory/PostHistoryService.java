@@ -5,7 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import wedding.alba.entity.PostHistory;
 import wedding.alba.entity.Posting;
-import wedding.alba.function.posting.PostingResponseDTO;
+import wedding.alba.function.postHistory.dto.PostHistoryDTO;
 
 @Service
 @Slf4j

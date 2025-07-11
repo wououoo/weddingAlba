@@ -8,7 +8,7 @@ export const postingApi = {
     // 모집글 등록
     addPosting: async (postingData: PostingRequestDTO) => {
         try {
-            return await post<PostingResponseDTO>(`${API_BASE_URL}/posting/create`, postingData);
+            return await post<PostingResponseDTO>(`${API_BASE_URL}/posting`, postingData);
         } catch (error) {
             console.error('모집글 등록 에러:', error);
             return {
@@ -22,7 +22,7 @@ export const postingApi = {
     // 모집글 수정
     updatePosting: async (postingId: string, postingData: PostingRequestDTO) => {
         try {
-            return await put<PostingResponseDTO>(`${API_BASE_URL}/posting/update/${postingId}`, postingData);
+            return await put<PostingResponseDTO>(`${API_BASE_URL}/posting/${postingId}`, postingData);
         } catch (error) {
             return {
                 success: false,
@@ -35,7 +35,7 @@ export const postingApi = {
     // 모집글 삭제
     deletePosting: async (postingId: number) => {
         try {
-            return await del<void>(`${API_BASE_URL}/posting/delete/${postingId}`);
+            return await del<void>(`${API_BASE_URL}/posting/${postingId}`);
         } catch (error) {
             return {
                 success: false,
@@ -69,7 +69,7 @@ export const postingApi = {
                 first: boolean;
                 number: number;
                 size: number;
-            }>(`${API_BASE_URL}/posting/list/paged?page=${page}&size=${size}&address=${address}&guestMainRole=${guestMainRole}`);
+            }>(`${API_BASE_URL}/posting/page?page=${page}&size=${size}&address=${address}&guestMainRole=${guestMainRole}`);
         } catch(error) {
             return {
                 success: false,
@@ -89,7 +89,7 @@ export const postingApi = {
                 first: boolean;
                 number: number;
                 size: number;
-            }>(`${API_BASE_URL}/posting/my-list/paged?page=${page}&size=${size}`);
+            }>(`${API_BASE_URL}/posting/my/page?page=${page}&size=${size}`);
         } catch(error) {
             return {
                 success: false,

@@ -1,16 +1,10 @@
 package wedding.alba.function.posting;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,6 +12,9 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import wedding.alba.config.JwtConfig;
 import wedding.alba.dto.ApiResponse;
+import wedding.alba.function.posting.dto.MyPostingReponseDTO;
+import wedding.alba.function.posting.dto.PostingRequestDTO;
+import wedding.alba.function.posting.dto.PostingResponseDTO;
 
 @RestController
 @RequestMapping("/api/posting")
@@ -29,7 +26,7 @@ public class PostingController {
     @Autowired
     private JwtConfig jwtConfig;
 
-    @PostMapping("/create")
+    @PostMapping("/")
     public ResponseEntity<ApiResponse<PostingResponseDTO>> createPosting(@RequestBody @Valid PostingRequestDTO postingDto, BindingResult bindingResult) {
         try {
             // 유효성 검사 실패 시 구체적인 오류 메시지 반환
@@ -55,7 +52,7 @@ public class PostingController {
         }
     }
 
-    @PutMapping("/update/{postingId}")
+    @PutMapping("/{postingId}")
     public ResponseEntity<ApiResponse<PostingResponseDTO>> updatePosting(@PathVariable Long postingId, @RequestBody @Valid PostingRequestDTO postingDto) {
         try {
             Long userId = getCurrentUserId();
@@ -69,7 +66,7 @@ public class PostingController {
         }
     }
 
-    @DeleteMapping("/delete/{postingId}")
+    @DeleteMapping("/{postingId}")
     public ResponseEntity<Void> deletePosting(@PathVariable Long postingId){
         try {
             Long userId = getCurrentUserId();
@@ -82,7 +79,7 @@ public class PostingController {
     }
 
 
-    @GetMapping("/list/paged")
+    @GetMapping("/page")
     public ResponseEntity<ApiResponse<Page<PostingResponseDTO>>> getPostingListPaged(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -100,7 +97,7 @@ public class PostingController {
     }
 
     // 내가작성한 모집글 리스트 (모집글, 모집취소, 모집이력)
-    @GetMapping("/my-list/paged")
+    @GetMapping("/my/page")
     public ResponseEntity<ApiResponse<Page<MyPostingReponseDTO>>> getPostingListByUserId(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {

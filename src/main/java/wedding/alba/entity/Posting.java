@@ -15,10 +15,11 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import wedding.alba.function.posting.PostingRequestDTO;
+import wedding.alba.function.posting.dto.PostingRequestDTO;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.List;
 
 @Entity
 @Table(name = "postings")
@@ -32,7 +33,7 @@ public class Posting {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "posting_id")
     private Long postingId;            // 모집글 고유 식별자
-    
+
     @Column(name = "user_id")
     private Long userId;              // 모집글 작성자 ID
 
@@ -50,10 +51,10 @@ public class Posting {
 
     @Column(name = "person_name")
     private String personName;          // 결혼식 당사자 이름
-    
+
     @Column(name = "person_phone_number")
     private String personPhoneNumber;   // 결혼식 당사자 연락처
-    
+
     // 예식 정보
     @Column(name = "appointment_datetime")
     private LocalDateTime appointmentDatetime;  // 결혼식 예정 일시
@@ -66,36 +67,36 @@ public class Posting {
 
     @Column(name = "sido_sigungu")
     private String sidoSigungu;         // 시도 + 시군구
-    
+
     @Column(name = "has_mobile_invitation")
     private Integer hasMobileInvitation; // 모바일 청첩장 여부 (0: 없음, 1: 있음)
 
     // 알바정보
-    @Column(name="start_time")
+    @Column(name = "start_time")
     private LocalTime startTime;           // 근무 시작 시간
 
-    @Column(name="end_time")
+    @Column(name = "end_time")
     private LocalTime endTime;           // 근무 종료 시간
 
-    @Column(name="working_hours")
+    @Column(name = "working_hours")
     private String workingHours;        // 근무 시간
 
     @Enumerated(EnumType.STRING)
     private PayType payType;             // 급여 타입 (시급, 일급)
 
-    @Column(name="pay_amount")
+    @Column(name = "pay_amount")
     private String payAmount;           // 급여 금액
 
-    @Column(name="target_personnel")
+    @Column(name = "target_personnel")
     private Integer targetPersonnel;   // 모집인원
 
-    @Column(name="guest_main_role")
+    @Column(name = "guest_main_role")
     private String guestMainRole;       // 하객 주요 역할
 
-    @Column(name="detail_content")
+    @Column(name = "detail_content")
     private String detailContent;     // 상세내용
 
-    @Column(name="tags")
+    @Column(name = "tags")
     private String tags;              // 태그 (최대 5개)
 
     @CreationTimestamp
@@ -108,28 +109,5 @@ public class Posting {
 
     public enum PayType {
         DAILY, HOURLY
-    }
-
-    public void toUpdatePosting(PostingRequestDTO postingRequestDTO){
-        this.setPostingId(postingRequestDTO.getPostingId());
-        this.setUserId(postingRequestDTO.getUserId());
-        this.setTitle(postingRequestDTO.getTitle());
-        this.setIsSelf(postingRequestDTO.getIsSelf());
-        this.setPersonName(postingRequestDTO.getPersonName());
-        this.setPersonPhoneNumber(postingRequestDTO.getPersonPhoneNumber());
-        this.setAppointmentDatetime(postingRequestDTO.getAppointmentDatetime());
-        this.setAddress(postingRequestDTO.getAddress());
-        this.setBuildingName(postingRequestDTO.getBuildingName());
-        this.setSidoSigungu(postingRequestDTO.getSidoSigungu());
-        this.setHasMobileInvitation(postingRequestDTO.getHasMobileInvitation());
-        this.setStartTime(LocalTime.parse(postingRequestDTO.getStartTime()));
-        this.setEndTime(LocalTime.parse(postingRequestDTO.getEndTime()));
-        this.setWorkingHours(postingRequestDTO.getWorkingHours());
-        this.setPayType(PayType.valueOf(postingRequestDTO.getPayType().toUpperCase()));
-        this.setPayAmount(postingRequestDTO.getPayAmount());
-        this.setTargetPersonnel(postingRequestDTO.getTargetPersonnel());
-        this.setGuestMainRole(postingRequestDTO.getGuestMainRole());
-        this.setDetailContent(postingRequestDTO.getDetailContent());
-        this.setTags(postingRequestDTO.getTags() != null ? String.join(",", postingRequestDTO.getTags()) : null);
     }
 }

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMyPostingList } from "./hooks/useMyPostingList";
+import { convertDatetime, convertPay } from "../common/base";
 
 // 신청자 정보 DTO (임시 - 실제 신청자 정보는 별도 API로 조회 필요)
 interface ApplicantDTO {
@@ -15,7 +16,7 @@ interface ApplicantDTO {
     introduction?: string;
 }
 
-const PostingListByHost: React.FC = () => {
+const MyPostingListPage: React.FC = () => {
     const navigate = useNavigate();
     const [selectedStatus, setSelectedStatus] = useState("전체");
     const [expandedPostings, setExpandedPostings] = useState<Set<number>>(new Set());
@@ -175,7 +176,7 @@ const PostingListByHost: React.FC = () => {
                                 </svg>
                                 <span>{posting.posting.sidoSigungu}</span>
                                 <span className="mx-2">•</span>
-                                <span>{posting.posting.appointmentDatetime}</span>
+                                <span>{convertDatetime(posting.posting.appointmentDatetime)}</span>
                             </div>
 
                             <div className="flex flex-wrap gap-1 mb-2">
@@ -187,9 +188,9 @@ const PostingListByHost: React.FC = () => {
                             </div>
 
                             <div className="text-sm text-gray-600 mb-3">
-                                <span className="font-medium text-blue-600">{posting.posting.payAmount}</span>
+                                <span className="font-medium text-blue-600">{posting.posting.payTypeStr} {Number(posting.posting.payAmount).toLocaleString()}원</span>
                                 <span className="mx-2">•</span>
-                                <span>{posting.posting.workingHours}</span>
+                                <span>{Math.floor(Number(posting.posting.workingHours))}시간</span>
                             </div>
 
                             {/* 모집글 관리 버튼들 */}
@@ -278,4 +279,4 @@ const PostingListByHost: React.FC = () => {
     );
 };
 
-export default PostingListByHost; 
+export default MyPostingListPage; 

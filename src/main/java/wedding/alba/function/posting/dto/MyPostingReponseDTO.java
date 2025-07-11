@@ -1,4 +1,4 @@
-package wedding.alba.function.posting;
+package wedding.alba.function.posting.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

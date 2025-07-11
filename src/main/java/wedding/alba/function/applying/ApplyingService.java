@@ -8,9 +8,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import wedding.alba.entity.Applying;
+import wedding.alba.function.applying.dto.ApplyingRequestDTO;
+import wedding.alba.function.applying.dto.ApplyingResponseDTO;
+import wedding.alba.function.applying.dto.ApplyingStatusDTO;
+import wedding.alba.function.applying.mapper.ApplyingMapper;
 
 import java.util.List;
-import java.util.NoSuchElementException;
 
 @Service
 @Slf4j
@@ -19,10 +22,13 @@ public class ApplyingService {
     private ApplyingRepository applyingRepository;
 
     @Autowired
-    private ApplyingWrapper applyingWrapper;
+    private ApplyingMapper applyingMapper;
 
     public Long createApplying(ApplyingRequestDTO requestDTO) {
-        Applying applying = applyingWrapper.toEntity(requestDTO);
+        if(requestDTO.getStatus() == null) {
+            requestDTO.setStatus(0);
+        }
+        Applying applying = applyingMapper.toApplying(requestDTO);
         Long applyingId = applyingRepository.save(applying).getApplyingId();
         return applyingId;
     }
@@ -58,6 +64,7 @@ public class ApplyingService {
                 statusDTO.setHasApplied(false);
             }
         }
+
         return statusDTO;
     }
 
@@ -66,7 +73,7 @@ public class ApplyingService {
             log.error("존재하지 않는 신청글 {} ", applyingId);
             return new IllegalArgumentException("존재하지 않는 신청글입니다.");
         });
-        ApplyingResponseDTO responseDTO = applyingWrapper.toResponseDTO(applying);
+        ApplyingResponseDTO responseDTO = applyingMapper.toResponseDTO(applying);
         responseDTO.setStatusStr();
         responseDTO.getPosting().setPayTypeStr();
 
@@ -81,7 +88,7 @@ public class ApplyingService {
         } else {
             applyingPage = applyingRepository.findMyPageByStatus(pageable, status, userId);
         }
-        Page<ApplyingResponseDTO> myApplyingPage = applyingPage.map(applying -> applyingWrapper.toResponseDTO(applying));
+        Page<ApplyingResponseDTO> myApplyingPage = applyingPage.map(applying -> applyingMapper.toResponseDTO(applying));
         return myApplyingPage;
     }
 

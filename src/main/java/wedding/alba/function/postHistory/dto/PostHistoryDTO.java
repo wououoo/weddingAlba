@@ -1,4 +1,4 @@
-package wedding.alba.function.postHistory;
+package wedding.alba.function.postHistory.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

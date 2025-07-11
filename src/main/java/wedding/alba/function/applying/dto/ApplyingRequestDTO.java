@@ -1,4 +1,4 @@
-package wedding.alba.function.applying;
+package wedding.alba.function.applying.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;

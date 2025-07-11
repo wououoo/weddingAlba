@@ -1,4 +1,4 @@
-package wedding.alba.function.posting;
+package wedding.alba.function.posting.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
@@ -6,7 +6,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import wedding.alba.entity.Posting;
-import wedding.alba.function.applying.ApplyingResponseDTO;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;

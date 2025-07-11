@@ -10,6 +10,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import wedding.alba.dto.ApiResponse;
+import wedding.alba.function.applying.dto.ApplyingRequestDTO;
+import wedding.alba.function.applying.dto.ApplyingResponseDTO;
+import wedding.alba.function.applying.dto.ApplyingStatusDTO;
 
 @RestController
 @Slf4j
@@ -19,7 +22,7 @@ public class ApplyingController {
     @Autowired
     private ApplyingService applyingService;
 
-    @PostMapping("/create")
+    @PostMapping("")
     public ResponseEntity<ApiResponse<Long>> createApplying(@RequestBody @Valid ApplyingRequestDTO requestDTO, BindingResult bindingResult) {
         try{
             // 유효성 검사 실패 시 구체적인 오류 메시지 반환
@@ -44,7 +47,7 @@ public class ApplyingController {
         }
     }
 
-    @PutMapping("/update/{applyingId}")
+    @PutMapping("/{applyingId}")
     public ResponseEntity<ApiResponse<Long>> updateApplying(@PathVariable Long applyingId, @RequestBody ApplyingRequestDTO requestDTO) {
         try {
             Long userId = getCurrentUserId();
@@ -55,19 +58,6 @@ public class ApplyingController {
             return ResponseEntity.ok(ApiResponse.error(e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.ok(ApiResponse.error("신청글 수정에 실패했습니다. 다시 확인해주세요."));
-        }
-    }
-
-    @GetMapping("/check/{postingId}/{userId}")
-    public ResponseEntity<ApiResponse<ApplyingStatusDTO>> checkUserApplying(@PathVariable Long postingId, @PathVariable Long userId) {
-        try {
-            ApplyingStatusDTO statusDto = applyingService.checkUserApplying(userId, postingId);
-            return ResponseEntity.ok(ApiResponse.success(statusDto));
-        } catch(RuntimeException e) {
-            log.error("신청글 조회 실패: {}", e.getMessage());
-            return ResponseEntity.ok(ApiResponse.error(e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.ok(ApiResponse.error("신청글 조회에 실패했습니다. 다시 확인해주세요."));
         }
     }
 
@@ -85,7 +75,7 @@ public class ApplyingController {
         }
     }
 
-    @GetMapping("/page/byMe")
+    @GetMapping("/my/page")
     public ResponseEntity<ApiResponse<Page<ApplyingResponseDTO>>> getMyApplyingPage(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -122,6 +112,20 @@ public class ApplyingController {
 
     }
 
+    @GetMapping("/check/{postingId}")
+    public ResponseEntity<ApiResponse<ApplyingStatusDTO>> checkUserApplying(@PathVariable Long postingId) {
+        try {
+            // 현재 로그인한 유저를 기준으로 조회
+            Long userId = getCurrentUserId();
+            ApplyingStatusDTO statusDto = applyingService.checkUserApplying(postingId, userId);
+            return ResponseEntity.ok(ApiResponse.success(statusDto));
+        } catch(RuntimeException e) {
+            log.error("신청글 조회 실패: {}", e.getMessage());
+            return ResponseEntity.ok(ApiResponse.error(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.ok(ApiResponse.error("신청글 조회에 실패했습니다. 다시 확인해주세요."));
+        }
+    }
 
     private Long getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

@@ -72,7 +72,7 @@ export const usePostingView = () => {
                     // postingId가 확실히 존재하는지 다시 한번 확인
                     if (!postingData.postingId) return;
                     
-                    const response = await applyingApi.checkUserApplying(postingData.postingId, currentUserId);
+                    const response = await applyingApi.checkUserApplying(postingData.postingId);
                     
                     if (response.success && response.data) {
                         setHasApplied(response.data.hasApplied);

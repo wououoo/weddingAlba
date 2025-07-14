@@ -13,7 +13,7 @@ import wedding.alba.function.posting.dto.PostingResponseDTO;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2025-07-11T14:06:19+0900",
+    date = "2025-07-14T09:38:54+0900",
     comments = "version: 1.5.5.Final, compiler: javac, environment: Java 17.0.12 (Oracle Corporation)"
 )
 @Component
@@ -185,8 +185,8 @@ public class PostingMapperImpl implements PostingMapper {
     }
 
     @Override
-    public MyPostingReponseDTO toMyPostingReponseDTO(Posting posting, int applyCount, int confirmationCount, List<Long> applyingIdList) {
-        if ( posting == null && applyingIdList == null ) {
+    public MyPostingReponseDTO toMyPostingReponseDTO(Posting posting, int applyCount, int confirmationCount) {
+        if ( posting == null ) {
             return null;
         }
 
@@ -195,10 +195,6 @@ public class PostingMapperImpl implements PostingMapper {
         myPostingReponseDTO.posting( toDetailDTO( posting ) );
         myPostingReponseDTO.applyCount( applyCount );
         myPostingReponseDTO.confirmationCount( confirmationCount );
-        List<Long> list = applyingIdList;
-        if ( list != null ) {
-            myPostingReponseDTO.applyingIdList( new ArrayList<Long>( list ) );
-        }
 
         return myPostingReponseDTO.build();
     }

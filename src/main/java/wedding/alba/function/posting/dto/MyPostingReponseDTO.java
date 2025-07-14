@@ -13,7 +13,7 @@ import java.util.List;
 @Data
 public class MyPostingReponseDTO {
     private PostingResponseDTO posting;
-    private List<Long> applyingIdList;
     private int applyCount;
     private int confirmationCount;
+    private int status;     // 모집중, 모집 취소, 모집 확정 상태확인용
 }

@@ -14,6 +14,8 @@ import wedding.alba.function.applying.dto.ApplyingRequestDTO;
 import wedding.alba.function.applying.dto.ApplyingResponseDTO;
 import wedding.alba.function.applying.dto.ApplyingStatusDTO;
 
+import java.util.List;
+
 @RestController
 @Slf4j
 @RequestMapping("/api/applying")
@@ -95,6 +97,18 @@ public class ApplyingController {
 
     }
 
+    @GetMapping("/list/{postingId}")
+    public ResponseEntity<ApiResponse<List<ApplyingResponseDTO>>> getApplyingListByPostingId(@PathVariable Long postingId) {
+        try {
+            Long userId = getCurrentUserId();
+            List<ApplyingResponseDTO> applyingResponseDTOList = applyingService.getApplyingListByPostingId(postingId);
+            return ResponseEntity.ok(ApiResponse.success(applyingResponseDTOList));
+        } catch(RuntimeException e) {
+            log.error("모집글 별 신청글 리스트 조회 실패: {}", e.getMessage());
+            return ResponseEntity.ok(ApiResponse.error(e.getMessage()));
+        }
+    }
+
     @PutMapping("/change/status")
     public ResponseEntity<ApiResponse<Long>> changeStatus(
             @RequestParam Long applyingId,
@@ -126,6 +140,8 @@ public class ApplyingController {
             return ResponseEntity.ok(ApiResponse.error("신청글 조회에 실패했습니다. 다시 확인해주세요."));
         }
     }
+
+
 
     private Long getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

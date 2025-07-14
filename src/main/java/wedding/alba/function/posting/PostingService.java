@@ -150,11 +150,6 @@ public class PostingService {
         for(Posting posting : myPostingPage.getContent()) {
             List<Applying> applyingList = applyingRepository.findByPostingId(posting.getPostingId());
 
-            // 신청글 ID만 추출해서 list로 변환
-            List<Long> applyingIdList = applyingList.stream()
-                    .map(Applying::getApplyingId)
-                    .collect(Collectors.toList());
-
             // 신청 개수
             int applyCount = applyingList.size();
 
@@ -163,8 +158,9 @@ public class PostingService {
                     .filter(applying -> applying.getStatus() == 1)
                     .count();
 
-            MyPostingReponseDTO postingReponseDTO = postingMapper.toMyPostingReponseDTO(posting, applyCount, confirmationCount, applyingIdList);
+            MyPostingReponseDTO postingReponseDTO = postingMapper.toMyPostingReponseDTO(posting, applyCount, confirmationCount);
             postingReponseDTO.getPosting().setPayTypeStr();
+            postingReponseDTO.setStatus(0);         // 모집중
             myPostingList.add(postingReponseDTO);
         }
 

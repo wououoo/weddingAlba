@@ -22,5 +22,6 @@ public interface ApplyingRepository extends JpaRepository<Applying, Long> {
 
     // 모집글 ID별 신청 조회
     List<Applying> findByPostingId(Long postingId);
+    Long countByPostingId(Long postingId);
 
 }

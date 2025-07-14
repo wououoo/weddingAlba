@@ -18,6 +18,7 @@ public class ApplyingResponseDTO {
     private Long postingId;
     private PostingResponseDTO posting;
     private Long userId;
+    private String nickname;
     private String prContent;
     private Integer status;
     private String statusText;

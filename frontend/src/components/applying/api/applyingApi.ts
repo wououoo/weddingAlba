@@ -77,6 +77,16 @@ export const applyingApi = {
         }
     },
 
+    getApplyingListByPostingId: async (postingId: number) => {
+        try {
+            return await get<ApplyingResponseDTO[]>(`${API_BASE_URL}/applying/list/${postingId}`);
+        } catch (error) {
+            return {
+                success: false,
+                data: [],   
+            }
+        }
+    }
 
 
 }

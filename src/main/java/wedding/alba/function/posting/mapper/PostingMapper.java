@@ -52,9 +52,7 @@ public interface PostingMapper {
     @Mapping(target = "posting", source = "posting")
     @Mapping(target = "applyCount", source = "applyCount")
     @Mapping(target = "confirmationCount", source = "confirmationCount")
-    @Mapping(target = "applyingIdList", source = "applyingIdList")
-    MyPostingReponseDTO toMyPostingReponseDTO(Posting posting, int applyCount, 
-                                               int confirmationCount, List<Long> applyingIdList);
+    MyPostingReponseDTO toMyPostingReponseDTO(Posting posting, int applyCount, int confirmationCount);
 
     List<PostingResponseDTO> toBasicResponseDTOList(List<Posting> postings);
     List<PostingResponseDTO> toDetailDTOList(List<Posting> postings);

@@ -2,33 +2,73 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMyPostingList } from "./hooks/useMyPostingList";
 import { convertDatetime, convertPay } from "../common/base";
-
-// 신청자 정보 DTO (임시 - 실제 신청자 정보는 별도 API로 조회 필요)
-interface ApplicantDTO {
-    applicantId: number;
-    userId: number;
-    nickname: string;
-    appliedDatetime: string;
-    status: 'pending' | 'approved' | 'rejected';
-    phoneNumber?: string;
-    age?: number;
-    gender?: '남성' | '여성';
-    introduction?: string;
-}
+import { applyingApi } from "../applying/api/applyingApi";
+import { ApplyingResponseDTO } from "../applying/dto/ApplyingResponseDTO";
 
 const MyPostingListPage: React.FC = () => {
     const navigate = useNavigate();
     const [selectedStatus, setSelectedStatus] = useState("전체");
+    const [searchKeyword, setSearchKeyword] = useState("");
     const [expandedPostings, setExpandedPostings] = useState<Set<number>>(new Set());
+    const [applicantsByPosting, setApplicantsByPosting] = useState<Record<number, ApplyingResponseDTO[]>>({});
+    const [loadingApplicants, setLoadingApplicants] = useState<Set<number>>(new Set());
     
-        // 실제 API 호출
+    // 실제 API 호출
     const { postings: myPostings, loading, error, refetch } = useMyPostingList();
 
-    // 상태별 필터링 (임시로 전체 반환 - 신청자 정보는 별도 API 필요)
+    // 신청자 정보 가져오기
+    const fetchApplicants = async (postingId: number) => {
+        if (loadingApplicants.has(postingId)) return;
+        
+        setLoadingApplicants(prev => new Set(prev).add(postingId));
+        
+        try {
+            const response = await applyingApi.getApplyingListByPostingId(postingId);
+            if (response.success && response.data) {
+                setApplicantsByPosting(prev => ({
+                    ...prev,
+                    [postingId]: response.data || []
+                }));
+            }
+        } catch (error) {
+            console.error('신청자 정보 조회 실패:', error);
+        } finally {
+            setLoadingApplicants(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(postingId);
+                return newSet;
+            });
+        }
+    };
+
+    // 검색어와 상태별 필터링
     const getFilteredPostings = () => {
-        if (selectedStatus === "전체") return myPostings;
-        // TODO: 신청자 정보 API 구현 후 필터링 로직 추가
-        return myPostings;
+        let filtered = myPostings;
+
+        // 검색어 필터링
+        if (searchKeyword.trim()) {
+            filtered = filtered.filter(posting => 
+                posting.posting.title.toLowerCase().includes(searchKeyword.toLowerCase()) ||
+                posting.posting.sidoSigungu.toLowerCase().includes(searchKeyword.toLowerCase())
+            );
+        }
+
+        // 상태별 필터링
+        if (selectedStatus !== "전체") {
+            filtered = filtered.filter(posting => {
+                const applicants = applicantsByPosting[posting.posting.postingId] || [];
+                return applicants.some(applicant => {
+                    switch (selectedStatus) {
+                        case 'pending': return applicant.status === 0;
+                        case 'approved': return applicant.status === 1;
+                        case 'rejected': return applicant.status === -1;
+                        default: return true;
+                    }
+                });
+            });
+        }
+
+        return filtered;
     };
 
     // 모집글 상세 토글
@@ -38,6 +78,10 @@ const MyPostingListPage: React.FC = () => {
             newExpanded.delete(postingId);
         } else {
             newExpanded.add(postingId);
+            // 신청자 정보가 없으면 가져오기
+            if (!applicantsByPosting[postingId]) {
+                fetchApplicants(postingId);
+            }
         }
         setExpandedPostings(newExpanded);
     };
@@ -49,21 +93,21 @@ const MyPostingListPage: React.FC = () => {
     };
 
     // 상태별 한글 표시
-    const getStatusText = (status: string) => {
+    const getStatusText = (status: number) => {
         switch (status) {
-            case 'pending': return '대기중';
-            case 'approved': return '승인됨';
-            case 'rejected': return '거절됨';
-            default: return status;
+            case 0: return '대기중';
+            case 1: return '승인됨';
+            case -1: return '거절됨';
+            default: return '알 수 없음';
         }
     };
 
     // 상태별 색상
-    const getStatusColor = (status: string) => {
+    const getStatusColor = (status: number) => {
         switch (status) {
-            case 'pending': return 'bg-yellow-100 text-yellow-800';
-            case 'approved': return 'bg-green-100 text-green-800';
-            case 'rejected': return 'bg-red-100 text-red-800';
+            case 0: return 'bg-yellow-100 text-yellow-800';
+            case 1: return 'bg-green-100 text-green-800';
+            case -1: return 'bg-red-100 text-red-800';
             default: return 'bg-gray-100 text-gray-800';
         }
     };
@@ -111,26 +155,62 @@ const MyPostingListPage: React.FC = () => {
                     내 모집글 신청 현황
                 </h1>
                 
-                {/* 상태 필터 */}
-                <div className="flex justify-center">
-                    <div className="relative">
+                {/* 검색 및 필터 */}
+                <div className="flex flex-row gap-4 justify-center items-center max-w-4xl mx-auto">
+                    {/* 검색 입력창 */}
+                    <div className="relative w-full max-w-md group">
+                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <svg className="h-5 w-5 text-gray-400 group-focus-within:text-blue-500 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                        </div>
+                        <input
+                            type="text"
+                            placeholder="모집글 제목 또는 지역으로 검색..."
+                            value={searchKeyword}
+                            onChange={(e) => setSearchKeyword(e.target.value)}
+                            className="block w-full pl-12 pr-12 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm hover:shadow-md transition-all duration-200 bg-white/80 backdrop-blur-sm"
+                        />
+                        {searchKeyword && (
+                            <button
+                                onClick={() => setSearchKeyword("")}
+                                className="absolute inset-y-0 right-0 pr-4 flex items-center hover:scale-110 transition-transform duration-200"
+                            >
+                                <svg className="h-5 w-5 text-gray-400 hover:text-red-500 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        )}
+                    </div>
+
+                    {/* 상태 필터 */}
+                    <div className="relative group">
                         <select 
                             value={selectedStatus}
                             onChange={(e) => setSelectedStatus(e.target.value)}
-                            className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="appearance-none bg-white/80 backdrop-blur-sm border border-gray-200 rounded-xl px-6 py-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm hover:shadow-md transition-all duration-200 min-w-[140px]"
                         >
                             <option value="전체">전체 상태</option>
-                            <option value="pending">대기중</option>
-                            <option value="approved">승인됨</option>
-                            <option value="rejected">거절됨</option>
+                            <option value="pending">모집중</option>
+                            <option value="approved">모집확정</option>
+                            <option value="rejected">모집취소</option>
                         </select>
-                        <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none">
+                            <svg className="w-4 h-4 text-gray-400 group-focus-within:text-blue-500 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
                             </svg>
                         </div>
                     </div>
                 </div>
+
+                {/* 검색 결과 개수 표시 */}
+                {searchKeyword && (
+                    <div className="text-center mt-4">
+                        <p className="text-sm text-gray-600 bg-white/60 backdrop-blur-sm px-4 py-2 rounded-full inline-block shadow-sm">
+                            <span className="font-medium text-blue-600">"{searchKeyword}"</span> 검색 결과: <span className="font-semibold">{getFilteredPostings().length}개</span>
+                        </p>
+                    </div>
+                )}
             </div>
 
             {/* 모집글 리스트 */}
@@ -236,14 +316,82 @@ const MyPostingListPage: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* 신청자 리스트 (확장 시 표시) - 임시로 비활성화 */}
+                        {/* 신청자 리스트 (확장 시 표시) */}
                         {posting.posting.postingId && expandedPostings.has(posting.posting.postingId) && (
                             <div className="border-t bg-gray-50">
-                                <div className="p-6 text-center text-gray-500">
-                                    신청자 상세 정보는 별도 API 구현 후 표시됩니다.
-                                    <br />
-                                    현재 신청자 수: {posting.applyCount}명, 확정: {posting.confirmationCount}명
-                                </div>
+                                {loadingApplicants.has(posting.posting.postingId) ? (
+                                    <div className="p-6 text-center">
+                                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mx-auto mb-2"></div>
+                                        <p className="text-gray-500 text-sm">신청자 정보를 불러오는 중...</p>
+                                    </div>
+                                ) : (
+                                    <div className="p-4">
+                                        <h4 className="font-semibold text-gray-900 mb-3">신청자 목록</h4>
+                                        {(() => {
+                                            const applicants = applicantsByPosting[posting.posting.postingId] || [];
+                                            if (applicants.length === 0) {
+                                                return (
+                                                    <div className="text-center text-gray-500 py-4">
+                                                        신청자가 없습니다.
+                                                    </div>
+                                                );
+                                            }
+                                            
+                                            return (
+                                                <div className="space-y-3">
+                                                    {applicants.map((applicant) => (
+                                                        <div 
+                                                            key={applicant.applyingId} 
+                                                            className="bg-white rounded-lg p-4 border cursor-pointer hover:bg-gray-50 transition-colors"
+                                                            onClick={() => navigate(`/applying/${applicant.applyingId}`)}
+                                                        >
+                                                            <div className="flex justify-between items-start mb-2">
+                                                                <div>
+                                                                    <h5 className="font-medium text-gray-900">
+                                                                        {applicant.posting.nickname || '알 수 없음'}
+                                                                    </h5>
+                                                                    <p className="text-sm text-gray-500">
+                                                                        신청일: {convertDatetime(applicant.applyDatetime)}
+                                                                    </p>
+                                                                </div>
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(applicant.status)}`}>
+                                                                        {getStatusText(applicant.status)}
+                                                                    </span>
+                                                                    <select
+                                                                        value={applicant.status === 0 ? 'pending' : applicant.status === 1 ? 'approved' : 'rejected'}
+                                                                        onChange={(e) => {
+                                                                            e.stopPropagation();
+                                                                            handleStatusChange(
+                                                                                posting.posting.postingId, 
+                                                                                applicant.applyingId, 
+                                                                                e.target.value as 'pending' | 'approved' | 'rejected'
+                                                                            );
+                                                                        }}
+                                                                        className="text-xs border border-gray-300 rounded px-2 py-1"
+                                                                        onClick={(e) => e.stopPropagation()}
+                                                                    >
+                                                                        <option value="pending">대기중</option>
+                                                                        <option value="approved">승인</option>
+                                                                        <option value="rejected">거절</option>
+                                                                    </select>
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            {applicant.prContent && (
+                                                                <div className="mt-2">
+                                                                    <p className="text-sm text-gray-700 bg-gray-50 p-2 rounded">
+                                                                        {applicant.prContent}
+                                                                    </p>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            );
+                                        })()}
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>
@@ -259,17 +407,19 @@ const MyPostingListPage: React.FC = () => {
                         </svg>
                     </div>
                     <h3 className="text-lg font-medium text-gray-900 mb-2">
-                        작성한 모집글이 없습니다
+                        {searchKeyword ? '검색 결과가 없습니다' : '작성한 모집글이 없습니다'}
                     </h3>
                     <p className="text-gray-500 text-center mb-6">
-                        새로운 모집글을 작성해보세요
+                        {searchKeyword ? '다른 검색어를 시도해보세요' : '새로운 모집글을 작성해보세요'}
                     </p>
-                    <button
-                        onClick={() => navigate('/posting/create')}
-                        className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors"
-                    >
-                        모집글 작성하기
-                    </button>
+                    {!searchKeyword && (
+                        <button
+                            onClick={() => navigate('/posting/create')}
+                            className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+                        >
+                            모집글 작성하기
+                        </button>
+                    )}
                 </div>
             )}
 

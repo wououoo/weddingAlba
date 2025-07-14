@@ -37,7 +37,6 @@ interface MyPostingReponseDTO {
         nickname: string;
         targetPersonnel: number;
     };
-    applyingIdList: number[];
     applyCount: number;
     confirmationCount: number;
 }

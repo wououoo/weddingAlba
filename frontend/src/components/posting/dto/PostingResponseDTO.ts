@@ -6,10 +6,10 @@ export interface PostingResponseDTO {
     personName?: string;                // 결혼식 당사자 이름
     personPhoneNumber?: string;         // 결혼식 당사자 번호
     registrationDatetime?: string;      // 모집글 등록일시
-    updateDatetime?: string;            // 모집글 수정일시
+    updateDatetime?: string;                    // 모집글 수정일시
 
     // 예식 정보
-    appointmentDatetime?: string;       // 결혼식 예정일시
+    appointmentDatetime?: string;               // 결혼식 예정일시
     hasMobileInvitation?: number | null;      // 모바일 청첩장 제출 여부
     address?: string;
     buildingName?: string;
@@ -30,9 +30,11 @@ export interface PostingResponseDTO {
     // 모집자 정보
     userId?: number;                    // 모집자 ID
     nickname?: string;                  // 모집자 닉네임
+
+    // 내 모집글 현황에 필요한 필드
     applyCount?: number;
     confirmationCount?: number;
-    applyingIdList ?: number[];
+    status?: number;                //0 : 모집중, 1: 모집확정, -1: 모집취소
 }
 
 

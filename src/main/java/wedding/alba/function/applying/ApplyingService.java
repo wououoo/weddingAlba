@@ -92,6 +92,12 @@ public class ApplyingService {
         return myApplyingPage;
     }
 
+    public List<ApplyingResponseDTO> getApplyingListByPostingId(Long postingId) {
+        List<Applying> applyingList = applyingRepository.findByPostingId(postingId);
+        List<ApplyingResponseDTO> applyingResponseDTOList = applyingList.stream().map(applyingMapper::toResponseDTO).toList();
+        return applyingResponseDTOList;
+    }
+
     public Long changeStatus (Integer status, Long applyingId, Long userId) {
         Applying existApplying = applyingRepository.findById(applyingId).orElseThrow(() -> {
                 log.error("존재하지 않는 신청글 {} ", applyingId);
@@ -107,5 +113,6 @@ public class ApplyingService {
         Long updateApplyingId = applyingRepository.save(existApplying).getApplyingId();
         return updateApplyingId;
     }
+
 
 }

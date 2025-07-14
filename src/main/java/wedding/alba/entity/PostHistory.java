@@ -90,7 +90,7 @@ public class PostHistory {
     private String detailContent;     // 상세내용
 
     @Column(name="status")
-    private Integer status;
+    private Integer status;            // 0 : 1 : 확정, -1 : 취소
 
     @Column(name="tags")
     private String tags;              // 태그 (최대 5개)

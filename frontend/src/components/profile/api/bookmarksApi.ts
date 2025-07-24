@@ -71,9 +71,9 @@ export const bookmarksApi = {
   },
 
   // 북마크 삭제
-  deleteBookmark: async (bookmarkId: number): Promise<ApiResponse<void>> => {
+  deleteBookmark: async (bookmarkId: number): Promise<ApiResponse<string>> => {
     try {
-      return await del<void>(`${API_BASE_URL}/bookmarks/${bookmarkId}`);
+      return await del<string>(`${API_BASE_URL}/bookmarks/${bookmarkId}`);
     } catch (error) {
       return {
         success: false,

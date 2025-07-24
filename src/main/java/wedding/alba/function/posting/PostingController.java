@@ -3,6 +3,7 @@ package wedding.alba.function.posting;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 
+import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -12,9 +13,17 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import wedding.alba.config.JwtConfig;
 import wedding.alba.dto.ApiResponse;
+import wedding.alba.entity.Applying;
+import wedding.alba.function.applying.ApplyingService;
+import wedding.alba.function.applying.dto.ApplyingStatusDTO;
+import wedding.alba.function.bookMark.BookmarkResponseDto;
+import wedding.alba.function.bookMark.BookmarkService;
 import wedding.alba.function.posting.dto.MyPostingReponseDTO;
 import wedding.alba.function.posting.dto.PostingRequestDTO;
 import wedding.alba.function.posting.dto.PostingResponseDTO;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/posting")
@@ -22,6 +31,12 @@ import wedding.alba.function.posting.dto.PostingResponseDTO;
 public class PostingController {
     @Autowired
     private PostingService postingService;
+
+    @Autowired
+    private BookmarkService bookmarkService;
+
+    @Autowired
+    private ApplyingService applyingService;
 
     @Autowired
     private JwtConfig jwtConfig;
@@ -67,14 +82,14 @@ public class PostingController {
     }
 
     @DeleteMapping("/{postingId}")
-    public ResponseEntity<Void> deletePosting(@PathVariable Long postingId){
+    public ResponseEntity<ApiResponse<Void>> deletePosting(@PathVariable Long postingId){
         try {
             Long userId = getCurrentUserId();
             postingService.deletePosting(userId, postingId);
-            return ResponseEntity.ok().build();
+            return ResponseEntity.ok(ApiResponse.success());
         } catch(RuntimeException e) {
             log.error("모집글 삭제 실패: {}", e.getMessage());
-            return ResponseEntity.noContent().build();
+            return ResponseEntity.ok(ApiResponse.error("모집글 삭제에 실패했습니다. 다시 확인해주세요."));
         }
     }
 
@@ -118,6 +133,19 @@ public class PostingController {
         Long userId = getCurrentUserId();
         PostingResponseDTO dto = postingService.getPostingDetail(postingId);
         return ResponseEntity.ok(ApiResponse.success(dto));
+    }
+
+    @GetMapping("/check/status/{postingId}")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> checkStatusPosting(@PathVariable Long postingId) {
+        Long userId = getCurrentUserId();
+        Map<String, Object> response = new HashMap<>();
+        BookmarkResponseDto bookmark = bookmarkService.findBookmarkByUserAndPosting(userId, postingId);
+        ApplyingStatusDTO statusDto = applyingService.checkUserApplying(postingId, userId);
+        response.put("isBookmarked", bookmark != null);
+        response.put("bookmarkId", bookmark.getBookmarkId());
+        response.put("applyingId", statusDto.getApplyingId());
+        response.put("isApplied", statusDto.isHasApplied());
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
 

@@ -13,7 +13,7 @@ import wedding.alba.function.posting.dto.PostingResponseDTO;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2025-07-14T09:38:54+0900",
+    date = "2025-07-24T09:19:50+0900",
     comments = "version: 1.5.5.Final, compiler: javac, environment: Java 17.0.12 (Oracle Corporation)"
 )
 @Component

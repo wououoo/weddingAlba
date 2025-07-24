@@ -1,8 +1,16 @@
-import { get, put, post, del, ApiResponse } from '../../../utils/httpClient';
+import { get, put, post, del } from '../../../utils/httpClient';
 import { PostingRequestDTO, PostingResponseDTO } from '../dto';
 
 // API 기본 URL
 const API_BASE_URL = process.env.REACT_APP_API_URL || '';
+
+// 신청여부, 북마크여부 확인용 응답 타입
+export interface PostingStatusResponse {
+    bookmarkId: number;
+    isBookmarked: boolean;
+    isApplied: boolean;
+    applyingId: number;
+};
 
 export const postingApi = {
     // 모집글 등록
@@ -98,4 +106,16 @@ export const postingApi = {
             };
         }
     },
+
+    checkPostingStatus: async (postingId?: number | string) => {
+        try {
+            return await get<PostingStatusResponse>(`${API_BASE_URL}/posting/check/status/${postingId}`);
+        } catch(error) {
+            return {
+                success: false,
+                data: null,
+                message: '모집글 상태 확인에 실패했습니다.'
+            };
+        }
+    }
 }

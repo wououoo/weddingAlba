@@ -4,7 +4,7 @@ import { postingApi } from '../api/postingApi';
 import { PostingResponseDTO } from '../dto';
 import { getUserIdFromToken } from '../../../OAuth2/authUtils';
 import { useToast } from '../../common/toast/useToast';
-import { applyingApi } from '../../applying/api/applyingApi';
+import { bookmarksApi } from '../../profile/api/bookmarksApi';
 
 export const usePostingView = () => {
     const navigate = useNavigate();
@@ -12,13 +12,16 @@ export const usePostingView = () => {
     const { toastState, showToast, hideToast } = useToast();
     
     // 상태 관리
-    const [isFavorite, setIsFavorite] = useState(false);
+    const [isBookmarked, setIsBookmarked] = useState(false);
+    const [currentBookmarkId, setCurrentBookmarkId] = useState<number | null>(null);
+    const [hasApplied, setHasApplied] = useState(false);
+    const [userApplyingId, setUserApplyingId] = useState<number | null>(null);
+    const [isBookmarkLoading, setIsBookmarkLoading] = useState(false);
+
     const [showFullDescription, setShowFullDescription] = useState(false);
     const [postingData, setPostingData] = useState<PostingResponseDTO | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [currentUserId, setCurrentUserId] = useState<number | null>(null);
-    const [hasApplied, setHasApplied] = useState(false);
-    const [userApplyingId, setUserApplyingId] = useState<number | null>(null);
 
     // 현재 사용자 ID 추출 (JWT 토큰에서)
     useEffect(() => {
@@ -51,45 +54,86 @@ export const usePostingView = () => {
         }
     }, [id]);
 
+
     // 현재 사용자가 작성자인지 확인 (타입을 통일하여 비교)
     const isAuthor = useMemo(() => {
         if (!currentUserId || !postingData?.userId) {
             return false;
         }
         
-        // 둘 다 숫자로 변환하여 비교
-        const currentUserIdNum = typeof currentUserId === 'string' ? parseInt(currentUserId, 10) : currentUserId;
-        const postingUserIdNum = typeof postingData.userId === 'string' ? parseInt(postingData.userId, 10) : postingData.userId;
-        
-        return currentUserIdNum === postingUserIdNum;
+        return currentUserId === postingData.userId;
     }, [currentUserId, postingData?.userId]);
 
-    // 사용자의 신청 여부 확인
+    // 사용자의 신청, 북마크 여부 확인
     useEffect(() => {
         if (postingData?.postingId && currentUserId && !isAuthor) {
-            const checkApplyingStatus = async () => {
+            const checkPostingStatus = async () => {
                 try {
-                    // postingId가 확실히 존재하는지 다시 한번 확인
-                    if (!postingData.postingId) return;
-                    
-                    const response = await applyingApi.checkUserApplying(postingData.postingId);
-                    
+                    const response = await postingApi.checkPostingStatus(postingData?.postingId);
                     if (response.success && response.data) {
-                        setHasApplied(response.data.hasApplied);
+                        setHasApplied(response.data.isApplied);
                         setUserApplyingId(response.data.applyingId);
-                    }
+                        setIsBookmarked(response.data.isBookmarked);
+                        setCurrentBookmarkId(response.data.bookmarkId);
+                    }   
                 } catch (error) {
-                    console.error("Error checking applying status:", error);
+                    console.error("Error checking posting status:", error);
                 }
             };
-            
-            checkApplyingStatus();
+            checkPostingStatus();
         }
     }, [postingData?.postingId, currentUserId, isAuthor]);
 
-    // 찜하기 토글 함수 
-    const toggleFavorite = () => {
-        setIsFavorite(!isFavorite);
+    
+    // 북마크 토글 함수 - API 연결
+    const toggleBookmark = async () => {
+        // 로딩 중이면 중복 실행 방지
+        if (isBookmarkLoading) {
+            console.log('북마크 처리 중... 중복 클릭 무시');
+            return;
+        }
+        
+        if (!postingData?.postingId) {
+            showToast('게시물 정보를 불러오는 중입니다.');
+            return;
+        }
+
+        setIsBookmarkLoading(true); // 로딩 시작
+
+        try {
+            if (isBookmarked && currentBookmarkId) {
+                // 북마크 삭제
+                const response = await bookmarksApi.deleteBookmark(currentBookmarkId);
+                
+                if (response.success) {
+                    setIsBookmarked(false);
+                    setCurrentBookmarkId(null);
+                    showToast('북마크가 해제되었습니다.');
+                } else {
+                    showToast('북마크 해제에 실패했습니다.');
+                }
+            } else {
+                // 북마크 추가
+                const response = await bookmarksApi.createBookmark({
+                    postingId: postingData.postingId
+                });
+                
+                if (response.success && response.data) {
+                    const newBookmarkId = response.data.bookmarkId;
+                    setIsBookmarked(true);
+                    setCurrentBookmarkId(newBookmarkId);
+                    console.log('새로운 북마크 ID:', newBookmarkId);
+                    showToast('북마크가 추가되었습니다.');
+                } else {
+                    showToast('북마크 추가에 실패했습니다.');
+                }
+            }
+        } catch (error) {
+            console.error('북마크 토글 중 오류 발생:', error);
+            showToast('오류가 발생했습니다. 다시 시도해주세요.');
+        } finally {
+            setIsBookmarkLoading(false); // 로딩 종료
+        }
     };
 
     // 상세 설명 토글 함수
@@ -170,7 +214,8 @@ export const usePostingView = () => {
     return {
         // 상태
         postingData,
-        isFavorite,
+        isBookmarked,
+        isBookmarkLoading,
         showFullDescription,
         isLoading,
         isAuthor,
@@ -183,7 +228,7 @@ export const usePostingView = () => {
         hideToast,
         
         // 액션 함수
-        toggleFavorite,
+        toggleBookmark,
         toggleDescription,
         goBack,
         goToUserProfile,

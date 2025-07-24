@@ -1,20 +1,20 @@
 import React from "react";
-import { convertDatetime, convertPay, convertTime } from "../common/base";
+import { convertDatetime, convertTime } from "../common/base";
 import { usePostingView } from "./hooks/usePostingView";
 import Toast from "../profile/toast/Toast";
 
 const PostingViewPage: React.FC = () => {
     const {
         postingData,
-        isFavorite,
+        isBookmarked,
+        isBookmarkLoading,
         showFullDescription,
         isLoading,
         isAuthor,
-        currentUserId,
         hasApplied,
         toastState,
         hideToast,
-        toggleFavorite,
+        toggleBookmark,
         toggleDescription,
         goBack,
         goToUserProfile,
@@ -22,7 +22,6 @@ const PostingViewPage: React.FC = () => {
         goToApplyingDetail,
         goToEditPage,
         cancelPosting,
-        deletePosting,
     } = usePostingView();
 
     if (isLoading) {
@@ -67,21 +66,24 @@ const PostingViewPage: React.FC = () => {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path>
                         </svg>
                     </button>
-                    <h1 className="text-lg font-semibold text-gray-900">하객알바 모집</h1>
-                    <button 
-                        onClick={toggleFavorite}
-                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                    >
-                        {isFavorite ? (
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#000000" className="w-6 h-6">
-                                <path fillRule="evenodd" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" clipRule="evenodd" />
-                            </svg>
-                        ) : (
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-6 h-6 text-gray-400">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
-                            </svg>
+                    <h1 className="text-lg font-semibold text-gray-900 flex-1 text-center">하객알바 모집</h1>
+                    <div className="w-10 h-10 flex items-center justify-center">
+                        {!isAuthor && (
+                            <button 
+                                onClick={toggleBookmark}
+                                disabled={isBookmarkLoading}
+                                className={`p-2 hover:bg-gray-100 rounded-lg transition-colors ${
+                                    isBookmarkLoading ? 'opacity-50 cursor-not-allowed' : ''
+                                }`}
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" className={`h-6 w-6 ${
+                                    isBookmarked ? 'text-red-500' : 'text-gray-400'
+                                }`} fill={isBookmarked ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                </svg>
+                            </button>
                         )}
-                    </button>
+                    </div>
                 </div>
             </div>
 
@@ -291,17 +293,23 @@ const PostingViewPage: React.FC = () => {
                             </button>
                         </>
                     ) : (
-                        // 일반 사용자인 경우: 찜하기, 신청하기/신청글 확인하기
+                        // 일반 사용자인 경우: 북마크, 신청하기/신청글 확인하기
                         <>
                             <button
-                                onClick={toggleFavorite}
-                                className={`flex-1 py-4 rounded-xl font-semibold text-lg transition-all
-                                    ${isFavorite
-                                        ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                                onClick={toggleBookmark}
+                                disabled={isBookmarkLoading}
+                                className={`flex-1 py-4 rounded-xl font-semibold text-lg transition-all flex items-center justify-center space-x-2 
+                                    ${isBookmarkLoading 
+                                        ? 'opacity-50 cursor-not-allowed bg-gray-200 text-gray-500'
+                                        : isBookmarked
+                                        ? 'bg-red-100 text-red-600 hover:bg-red-200'
                                         : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}
                                 `}
                             >
-                                찜하기
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill={isBookmarked ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                </svg>
+                                <span>{isBookmarkLoading ? '처리중...' : '찜하기'}</span>
                             </button>
                             {hasApplied ? (
                                 <button

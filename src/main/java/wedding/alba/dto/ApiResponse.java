@@ -31,6 +31,13 @@ public class ApiResponse<T> {
     }
 
     /**
+     * 단순 성공 응답 생성 (메시지, 데이터 없음)
+     */
+    public static <T> ApiResponse<T> success() {
+        return new ApiResponse<>(true, null, null);
+    }
+
+    /**
      * 실패 응답 생성
      */
     public static <T> ApiResponse<T> error(String message) {

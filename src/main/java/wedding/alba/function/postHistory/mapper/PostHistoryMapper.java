@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 @Mapper(componentModel = "spring")
 public interface PostHistoryMapper {
     @Named("toBasic")
+    @Mapping(target = "status", ignore = true)
     PostHistoryDTO tobasicPostHistoryDTO (Posting posting);
 
     @Mapping(target = "status", expression = "java(isCancel ? -1 : 1)")
@@ -23,9 +24,12 @@ public interface PostHistoryMapper {
     @Mapping(target = "tags", expression = "java(parseTags(posting.getTags()))")
     PostHistoryDTO toPostHistoryDTO(Posting posting, boolean isCancel);
 
+    @Mapping(target = "postHistoryId", ignore = true)
+    @Mapping(target = "registrationDatetime", ignore = true)
+    @Mapping(target = "updateDatetime", ignore = true)
     @Mapping(target = "payType", expression = "java(parsePayType(postHistoryDTO.getPayType()))")
-    @Mapping(target = "startTime", expression = "java(parseTime(postHistoryDTO.getStartTime()))")
-    @Mapping(target = "endTime", expression = "java(parseTime(postHistoryDTO.getEndTime()))")
+    @Mapping(target = "startTime", source = "startTime")
+    @Mapping(target = "endTime", source = "endTime")
     @Mapping(target = "tags", expression = "java(joinTags(postHistoryDTO.getTags()))")
     PostHistory toPostHistory(PostHistoryDTO postHistoryDTO);
 
@@ -59,7 +63,7 @@ public interface PostHistoryMapper {
 
     default LocalTime parseTime(String time) {
         if (time == null || time.trim().isEmpty()) {
-            throw new IllegalArgumentException("Time cannot be null or empty");
+            return null;
         }
         try {
             return LocalTime.parse(time);

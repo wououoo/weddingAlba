@@ -20,6 +20,8 @@ import java.util.stream.Collectors;
 public interface PostingMapper {
 
     @Named("toBasic")
+    @Mapping(target = "payTypeStr", ignore = true)
+    @Mapping(target = "nickname", ignore = true)
     PostingResponseDTO toBasicResponseDTO(Posting posting);
 
     @Mapping(target = "registrationDatetime", source = "registrationDatetime")
@@ -27,8 +29,12 @@ public interface PostingMapper {
     @Mapping(target = "nickname", source = "profile.nickname")
     @Mapping(target = "startTime", source = "startTime")
     @Mapping(target = "endTime", source = "endTime")
+    @Mapping(target = "payTypeStr", ignore = true)
     PostingResponseDTO toDetailDTO(Posting posting);
 
+    @Mapping(target = "profile", ignore = true)
+    @Mapping(target = "registrationDatetime", ignore = true)
+    @Mapping(target = "updateDatetime", ignore = true)
     @Mapping(target = "payType", expression = "java(parsePayType(dto.getPayType()))")
     @Mapping(target = "startTime", expression = "java(parseTime(dto.getStartTime()))")
     @Mapping(target = "endTime", expression = "java(parseTime(dto.getEndTime()))")
@@ -37,6 +43,7 @@ public interface PostingMapper {
 
     @Mapping(target = "postingId", ignore = true) // ID는 변경하지 않음
     @Mapping(target = "registrationDatetime", ignore = true) // 등록일시는 변경하지 않음
+    @Mapping(target = "updateDatetime", ignore = true) // 수정일시는 자동 업데이트
     @Mapping(target = "profile", ignore = true) // 관계는 변경하지 않음
     @Mapping(target = "payType", expression = "java(parsePayType(dto.getPayType()))")
     @Mapping(target = "startTime", expression = "java(parseTime(dto.getStartTime()))")
@@ -49,6 +56,7 @@ public interface PostingMapper {
     @Mapping(target = "posting", source = "posting")
     @Mapping(target = "applyCount", source = "applyCount")
     @Mapping(target = "confirmationCount", source = "confirmationCount")
+    @Mapping(target = "status", ignore = true)
     MyPostingReponseDTO toMyPostingReponseDTO(Posting posting, int applyCount, int confirmationCount);
 
     List<PostingResponseDTO> toBasicResponseDTOList(List<Posting> postings);

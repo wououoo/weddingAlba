@@ -55,6 +55,7 @@ public class User {
     private AuthLevel authLevel;     // 권한 레벨 (USER, ADMIN, SUPER_ADMIN)
 
     @Column(nullable = false)
+    @Builder.Default
     private Integer blackList = 0;       // 블랙리스트 상태 (0: 아님, 1: 블랙리스트)
     
     @CreationTimestamp

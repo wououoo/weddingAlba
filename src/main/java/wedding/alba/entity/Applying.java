@@ -43,6 +43,7 @@ public class Applying {
     private Long postingId;
 
     @Column(name = "status", nullable = false)
+    @Builder.Default
     private Integer status = 0;              // 신청 상태 (0: 대기, 1: 승인, -1: 거절)
     
     @CreationTimestamp

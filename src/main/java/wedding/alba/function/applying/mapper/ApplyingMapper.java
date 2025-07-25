@@ -23,6 +23,7 @@ public interface ApplyingMapper {
     @Mapping(target = "applyDatetime", ignore = true) // 신청일시는 자동 생성
     @Mapping(target = "confirmationDatetime", ignore = true) // 확정일시는 나중에 설정
     @Mapping(target = "posting", ignore = true) // 관계는 별도 설정
+    @Mapping(target = "profile", ignore = true) // 프로필 관계는 별도 설정
     Applying toApplying(ApplyingRequestDTO dto);
 
     // 컬렉션 변환

@@ -6,7 +6,6 @@ import wedding.alba.entity.PostHistory;
 
 @Repository
 public interface PostHistoryRepository extends JpaRepository<PostHistory, Long> {
-//
 //    // 원본 모집글 ID로 이력 조회
 //    List<PostHistory> findByPostingId(Long postingId);
 //

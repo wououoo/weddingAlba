@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import wedding.alba.function.posting.dto.PostingResponseDTO;
+import wedding.alba.function.profile.ProfileResponseDto;
 
 import java.time.LocalDateTime;
 
@@ -18,7 +19,7 @@ public class ApplyingResponseDTO {
     private Long postingId;
     private PostingResponseDTO posting;
     private Long userId;
-    private String nickname;
+    private ProfileResponseDto profile;
     private String prContent;
     private Integer status;
     private String statusText;

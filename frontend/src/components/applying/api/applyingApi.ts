@@ -64,16 +64,14 @@ export const applyingApi = {
         }
     },
 
-    // 사용자가 특정 모집글에 신청했는지 확인하고 신청글 ID 반환
-    checkUserApplying: async (postingId: number) => {
+    changeApplyingStatus: async (applyingId: number, status: number) => {
         try {
-            return await get<{ applyingId: number | null; hasApplied: boolean }>(`${API_BASE_URL}/applying/check/${postingId}`);
+            return await put<ApplyingResponseDTO>(`${API_BASE_URL}/applying/change/status/${applyingId}?status=${status}`, {});
         } catch (error) {
             return {
                 success: false,
-                data: { applyingId: null, hasApplied: false },
-                message: '신청 상태 확인에 실패했습니다.'
-            };
+                data: null,
+            }
         }
     },
 

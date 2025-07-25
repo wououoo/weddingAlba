@@ -1,19 +1,6 @@
 import { useState, useEffect } from 'react';
 import { postingApi } from '../api/postingApi';
 
-// 신청자 정보 DTO
-interface ApplicantDTO {
-    applicantId: number;
-    userId: number;
-    nickname: string;
-    appliedDatetime: string;
-    status: 'pending' | 'approved' | 'rejected';
-    phoneNumber?: string;
-    age?: number;
-    gender?: '남성' | '여성';
-    introduction?: string;
-}
-
 // 내 모집글과 신청자 정보를 포함한 DTO (백엔드 MyPostingReponseDTO와 일치)
 interface MyPostingReponseDTO {
     posting: {
@@ -58,7 +45,7 @@ export const useMyPostingList = (): UseMyPostingListReturn => {
             setLoading(true);
             setError(null);
             
-            const response = await postingApi.getMyPostingList(0, 20); // 페이지 0, 크기 20
+            const response = await postingApi.getMyPostingList(0, 10); // 페이지 0, 크기 20
             if (response.success && response.data) {
                 setPostings(response.data.content || []);
             } else {

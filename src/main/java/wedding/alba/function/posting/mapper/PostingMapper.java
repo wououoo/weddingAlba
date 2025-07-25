@@ -44,10 +44,7 @@ public interface PostingMapper {
     @Mapping(target = "tags", expression = "java(joinTags(dto.getTags()))")
     void updatePostingFromDto(PostingRequestDTO dto, @MappingTarget Posting posting);
 
-    @Mapping(target = "status", expression = "java(isCancel ? -1 : 1)")
-    @Mapping(target = "payType", expression = "java(String.valueOf(posting.getPayType()))")
-    @Mapping(target = "tags", expression = "java(parseTags(posting.getTags()))")
-    PostHistoryDTO toPostHistoryDTO(Posting posting, boolean isCancel);
+
 
     @Mapping(target = "posting", source = "posting")
     @Mapping(target = "applyCount", source = "applyCount")
@@ -95,4 +92,5 @@ public interface PostingMapper {
             throw new IllegalArgumentException("Invalid time format: " + time);
         }
     }
+
 }

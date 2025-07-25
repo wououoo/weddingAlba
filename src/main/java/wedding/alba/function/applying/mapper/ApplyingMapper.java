@@ -15,6 +15,7 @@ public interface ApplyingMapper {
     // Applying -> ApplyingResponseDTO 변환
     @Mapping(target = "posting", source = "posting", qualifiedByName = "toBasic")
     @Mapping(target = "statusText", expression = "java(getStatusText(applying.getStatus()))")
+    @Mapping(target = "profile", source = "profile")
     ApplyingResponseDTO toResponseDTO(Applying applying);
 
     // ApplyingRequestDTO -> Applying 변환

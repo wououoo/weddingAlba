@@ -30,10 +30,13 @@ public class ApplyHistory {
     private Long applyHistoryId;           // 신청 내역 고유 식별자
     
     @Column(name = "user_id")
-    private Long userId;                  // 신청자 ID
+    private Long userId;                 // 신청자 ID
     
     @Column(name = "posting_id")
-    private Long postingId;               // 신청한 모집글 ID
+    private Long postingId;               // 신청했던 모집글 ID
+
+    @Column(name = "pr_content", columnDefinition = "TEXT")
+    private String prContent;             // 자기 PR 내용 (신청 이유, 자기소개 등)
     
     @Column(name = "status")
     private Integer status;               // 신청 상태 (0: 대기, 1: 승인, -1: 거절)

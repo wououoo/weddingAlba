@@ -7,7 +7,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
@@ -16,6 +15,7 @@ import wedding.alba.entity.Applying;
 import wedding.alba.entity.Posting;
 import wedding.alba.entity.Profile;
 import wedding.alba.function.applying.ApplyingRepository;
+import wedding.alba.function.postHistory.mapper.PostHistoryMapper;
 import wedding.alba.function.postHistory.dto.PostHistoryDTO;
 import wedding.alba.function.postHistory.PostHistoryService;
 import wedding.alba.function.posting.dto.MyPostingReponseDTO;
@@ -38,10 +38,13 @@ public class PostingService {
     private ApplyingRepository applyingRepository;
 
     @Autowired
+    private PostHistoryService postHistoryService;
+
+    @Autowired
     private PostingMapper postingMapper;
 
     @Autowired
-    private PostHistoryService postHistoryService;
+    private PostHistoryMapper postHistoryMapper;
 
     // 모집글 작성
     public PostingResponseDTO createPosting(PostingRequestDTO postingDto) {
@@ -105,7 +108,7 @@ public class PostingService {
 
         // 모집글 히스토리로 데이터 이동 (상태 : -1)
         // 실패시 삭제 시도안하고 전체 롤백되게
-        PostHistoryDTO historyDTO = postingMapper.toPostHistoryDTO(existPosting, true);
+        PostHistoryDTO historyDTO = postHistoryMapper.toPostHistoryDTO(existPosting, true);
         Long postHistoryId = postHistoryService.movePostingToHistory(historyDTO);
 
         if(postHistoryId == null || postHistoryId == 0L) {
@@ -113,9 +116,40 @@ public class PostingService {
             throw new RuntimeException("모집글 이력 저장에 실패하여 삭제를 중단합니다.");
         }
 
-    
         // 모집글 삭제
         postingRepository.deleteById(postingId);
+    }
+
+    @Transactional
+    public void confirmationPosting(Long postingId, Long userId) {
+        Posting existPosting = postingRepository.findById(postingId)
+                .orElseThrow(() -> {
+                    log.error("존재하지 않는 모집글 {}  확정 시도", postingId);
+                    return new IllegalArgumentException("존재하지 않는 모집글입니다.");
+                });
+
+        // 본인 게시글인지, 확정할려는 게시글이 맞는지 확인
+        if(!existPosting.getUserId().equals(userId)) {
+            log.warn("사용자 {}가 다른 사용자의 모집글 {} 삭제 시도", userId, postingId);
+            throw new IllegalArgumentException("확정 권한이 없습니다.");
+        }
+
+        List<Applying> existApplyingList = applyingRepository.findByPostingId(postingId).stream().toList();
+
+        // 모집글 이력으로 이동
+        PostHistoryDTO historyDTO = postHistoryMapper.toPostHistoryDTO(existPosting, false);
+        Long postHistoryId = postHistoryService.movePostingToHistory(historyDTO);
+
+
+
+
+
+
+
+    }
+
+    public void getPostingAndApplying(Long postingId, Long userId) {
+
     }
 
     // 전체 모집글 리스트 조회
@@ -138,7 +172,7 @@ public class PostingService {
             
         } catch (Exception e) {
             log.error("페이징 모집글 조회 중 오류 발생: {}", e.getMessage());
-            throw new RuntimeException("페이징 모집글 조회에 실패했습니다.", e);
+            throw new RuntimeException("페이징 모집글 조회에 실패했습니다.",    e);
         }
     }
 

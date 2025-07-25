@@ -33,7 +33,7 @@ public class ApplyingController {
                 bindingResult.getFieldErrors().forEach(error -> {
                     errorMessage.append(error.getDefaultMessage()).append(" ");
                 });
-                log.warn("모집글 생성 유효성 검사 실패: {}", errorMessage.toString());
+                log.warn("신청글 생성 유효성 검사 실패: {}", errorMessage.toString());
                 return ResponseEntity.badRequest().body(ApiResponse.error(errorMessage.toString().trim()));
             }
 
@@ -109,12 +109,12 @@ public class ApplyingController {
         }
     }
 
-    @PutMapping("/change/status")
+    @PutMapping("/change/status/{applyingId}")
     public ResponseEntity<ApiResponse<Long>> changeStatus(
-            @RequestParam Long applyingId,
+            @PathVariable Long applyingId,
             @RequestParam Integer status) {
-        Long userId = getCurrentUserId();
         try {
+            Long userId = getCurrentUserId();
             Long updateApplyingId = applyingService.changeStatus(status, applyingId, userId);
             return ResponseEntity.ok(ApiResponse.success(updateApplyingId));
         } catch(RuntimeException e) {
@@ -125,23 +125,6 @@ public class ApplyingController {
         }
 
     }
-
-    @GetMapping("/check/{postingId}")
-    public ResponseEntity<ApiResponse<ApplyingStatusDTO>> checkUserApplying(@PathVariable Long postingId) {
-        try {
-            // 현재 로그인한 유저를 기준으로 조회
-            Long userId = getCurrentUserId();
-            ApplyingStatusDTO statusDto = applyingService.checkUserApplying(postingId, userId);
-            return ResponseEntity.ok(ApiResponse.success(statusDto));
-        } catch(RuntimeException e) {
-            log.error("신청글 조회 실패: {}", e.getMessage());
-            return ResponseEntity.ok(ApiResponse.error(e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.ok(ApiResponse.error("신청글 조회에 실패했습니다. 다시 확인해주세요."));
-        }
-    }
-
-
 
     private Long getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

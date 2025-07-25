@@ -98,6 +98,7 @@ public class ApplyingService {
         return applyingResponseDTOList;
     }
 
+    // 모집글 작성자가 확정 혹은 거절로 상태 변경하는경우
     public Long changeStatus (Integer status, Long applyingId, Long userId) {
         Applying existApplying = applyingRepository.findById(applyingId).orElseThrow(() -> {
                 log.error("존재하지 않는 신청글 {} ", applyingId);
@@ -105,7 +106,7 @@ public class ApplyingService {
             }
         );
 
-        if(!existApplying.getUserId().equals(userId)) {
+        if(!existApplying.getPosting().getUserId().equals(userId)) {
             log.warn("사용자 {}가 다른 사용자의 신청글 {} 수정 시도", userId, applyingId);
             throw new IllegalArgumentException("수정 권한이 없습니다.");
         }

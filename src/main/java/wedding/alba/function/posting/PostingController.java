@@ -93,7 +93,6 @@ public class PostingController {
         }
     }
 
-
     @GetMapping("/page")
     public ResponseEntity<ApiResponse<Page<PostingResponseDTO>>> getPostingListPaged(
             @RequestParam(defaultValue = "0") int page,
@@ -111,7 +110,7 @@ public class PostingController {
         }
     }
 
-    // 내가작성한 모집글 리스트 (모집글, 모집취소, 모집이력)
+    // 내가 작성한 모집글 리스트 (모집글, 모집취소, 모집이력)
     @GetMapping("/my/page")
     public ResponseEntity<ApiResponse<Page<MyPostingReponseDTO>>> getPostingListByUserId(
             @RequestParam(defaultValue = "0") int page,
@@ -126,7 +125,6 @@ public class PostingController {
             return ResponseEntity.ok(ApiResponse.error("모집글 조회에 실패했습니다."));
         }
     }
-
 
     @GetMapping("/detail/{postingId}")
     public ResponseEntity<ApiResponse<PostingResponseDTO>> getPostingDetail(@PathVariable Long postingId) {
@@ -147,6 +145,20 @@ public class PostingController {
         response.put("isApplied", statusDto.isHasApplied());
         return ResponseEntity.ok(ApiResponse.success(response));
     }
+
+    @GetMapping("/confirmation/{postingId}")
+    public ResponseEntity<ApiResponse<Void>> confirmationPosting (@PathVariable Long postingId) {
+        try {
+            Long userId = getCurrentUserId();
+            postingService.confirmationPosting(postingId, userId);
+        } catch (RuntimeException e) {
+
+        } catch (Exception e) {
+
+        }
+        return ResponseEntity.ok(ApiResponse.success());
+    }
+
 
 
     private Long getCurrentUserId() {

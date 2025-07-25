@@ -1,9 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMyPostingList } from "./hooks/useMyPostingList";
-import { convertDatetime, convertPay } from "../common/base";
+import { convertDatetime } from "../common/base";
 import { applyingApi } from "../applying/api/applyingApi";
 import { ApplyingResponseDTO } from "../applying/dto/ApplyingResponseDTO";
+import { postingApi } from "./api/postingApi";
+import { Toast, useToast } from "../common/toast";
 
 const MyPostingListPage: React.FC = () => {
     const navigate = useNavigate();
@@ -12,9 +14,24 @@ const MyPostingListPage: React.FC = () => {
     const [expandedPostings, setExpandedPostings] = useState<Set<number>>(new Set());
     const [applicantsByPosting, setApplicantsByPosting] = useState<Record<number, ApplyingResponseDTO[]>>({});
     const [loadingApplicants, setLoadingApplicants] = useState<Set<number>>(new Set());
+    const [postingStatuses, setPostingStatuses] = useState<Record<number, number>>({});
+    
+    // Toast hook 추가
+    const { toastState, showToast, hideToast } = useToast();
     
     // 실제 API 호출
     const { postings: myPostings, loading, error, refetch } = useMyPostingList();
+
+    // 모집글 로드 완료 후 모든 신청자 정보 미리 가져오기
+    useEffect(() => {
+        if (myPostings.length > 0) {
+            myPostings.forEach(posting => {
+                if (posting.posting.postingId && !applicantsByPosting[posting.posting.postingId]) {
+                    fetchApplicants(posting.posting.postingId);
+                }
+            });
+        }
+    }, [myPostings]);
 
     // 신청자 정보 가져오기
     const fetchApplicants = async (postingId: number) => {
@@ -86,10 +103,79 @@ const MyPostingListPage: React.FC = () => {
         setExpandedPostings(newExpanded);
     };
 
-    // 신청자 상태 변경
-    const handleStatusChange = (postingId: number, applicantId: number, newStatus: 'pending' | 'approved' | 'rejected') => {
-        // TODO: API 호출로 상태 변경
-        console.log(`Posting ${postingId}, Applicant ${applicantId} status changed to ${newStatus}`);
+    // 신청자 상태 변경 확인 토스트
+    const handleStatusChange = (applicantId: number, newStatus: 'pending' | 'approved' | 'rejected') => {
+        const statusText = newStatus === 'approved' ? '승인' : newStatus === 'rejected' ? '거절' : '대기';
+        const warningMessage = newStatus !== 'pending' 
+            ? `정말로 이 신청을 ${statusText}으로 변경하시겠습니까?\n\n⚠️ 한 번 승인/거절하면 다시 변경할 수 없습니다.`
+            : `정말로 이 신청을 ${statusText}으로 변경하시겠습니까?`;
+            
+        showToast(
+            warningMessage,
+            '확인',
+            () => executeStatusChange(applicantId, newStatus)
+        );
+    };
+
+    // 실제 상태 변경 실행
+    const executeStatusChange = async (applicantId: number, newStatus: 'pending' | 'approved' | 'rejected') => {
+        let status = 0;
+        if(newStatus === 'pending') status = 0;
+        if(newStatus === 'approved') status = 1;
+        if(newStatus === 'rejected') status = -1;
+
+        try {
+            const response = await applyingApi.changeApplyingStatus(applicantId, status);
+            if (response.success) {
+                // 성공 시 해당 신청자의 상태만 업데이트
+                setApplicantsByPosting(prev => {
+                    const updated = { ...prev };
+                    Object.keys(updated).forEach(postingIdStr => {
+                        const postingId = Number(postingIdStr);
+                        updated[postingId] = updated[postingId].map(applicant => 
+                            applicant.applyingId === applicantId 
+                                ? { ...applicant, status: status }
+                                : applicant
+                        );
+                    });
+                    return updated;
+                });
+
+                // 성공 메시지 표시
+                showToast(`신청이 ${newStatus === 'approved' ? '승인' : newStatus === 'rejected' ? '거절' : '대기'}로 변경되었습니다.`);
+            } else {
+                showToast('상태 변경에 실패했습니다.');
+            }
+        } catch (error) {
+            console.error('상태 변경 실패:', error);
+            showToast('상태 변경 중 오류가 발생했습니다.');
+        }
+    };
+
+    // 모집글 삭제 확인 토스트
+    const handleDeletePosting = (postingId: number) => {
+        showToast(
+            '정말로 이 모집글을 취소하시겠습니까?',
+            '확인',
+            () => executeDeletePosting(postingId)
+        );
+    };
+
+    // 실제 모집글 삭제 실행
+    const executeDeletePosting = async (postingId: number) => {
+        try {
+            const response = await postingApi.deletePosting(postingId);
+            if (response.success) {
+                // 성공 시 목록 새로고침
+                refetch();
+                showToast('모집글이 성공적으로 취소되었습니다.');
+            } else {
+                showToast(response.message || '모집글 취소에 실패했습니다.');
+            }
+        } catch (error) {
+            console.error('모집글 삭제 실패:', error);
+            showToast('모집글 취소 중 오류가 발생했습니다.');
+        }
     };
 
     // 상태별 한글 표시
@@ -216,10 +302,14 @@ const MyPostingListPage: React.FC = () => {
             {/* 모집글 리스트 */}
             <div className="px-4 py-2">
                 {getFilteredPostings().map((posting) => (
-                    <div key={posting.posting.postingId} className="bg-white rounded-lg shadow-sm mb-4 overflow-hidden">
+                                    <div key={posting.posting.postingId} className={`rounded-lg shadow-sm mb-4 overflow-hidden transition-colors ${
+                    (posting.posting.postingId && postingStatuses[posting.posting.postingId || 0] === 1) 
+                        ? 'bg-green-50 border border-green-200' 
+                        : 'bg-white border border-gray-200'
+                }`}>
                         {/* 모집글 기본 정보 */}
                         <div 
-                            className="p-4 cursor-pointer hover:bg-gray-50"
+                            className="p-4 cursor-pointer hover:bg-gray-100 transition-colors"
                             onClick={() => posting.posting.postingId && navigate(`/posting/${posting.posting.postingId}`)}
                         >
                             <div className="flex justify-between items-start mb-2">
@@ -279,29 +369,52 @@ const MyPostingListPage: React.FC = () => {
                                 <button
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        console.log(`모집글 ${posting.posting.postingId} 취소`);
-                                        // TODO: 모집취소 API 호출
+                                        if (posting.posting.postingId) {
+                                            handleDeletePosting(posting.posting.postingId);
+                                        }
                                     }}
                                     className="px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600 transition-colors"
                                 >
                                     모집취소
                                 </button>
 
-                                {/* 확정 버튼 (모집인원과 확정인원이 같을 때) */}
+                                {/* 확정하기 버튼 및 상태 표시 */}
                                 {(() => {
-                                    const approvedCount = posting.confirmationCount;
-                                    const targetCount = posting.posting.targetPersonnel || 0;
+                                    const applicants = posting.posting.postingId ? (applicantsByPosting[posting.posting.postingId] || []) : [];
+                                    const currentApprovedCount = applicants.filter(applicant => applicant.status === 1).length;
+                                    const isConfirmed = posting.posting.postingId && postingStatuses[posting.posting.postingId || 0] === 1;
                                     
-                                    return approvedCount === targetCount && targetCount > 0 && (
+                                    if (isConfirmed) {
+                                        return (
+                                            <span className="px-3 py-1 bg-green-100 text-green-800 text-sm rounded font-medium">
+                                                ✅ 모집확정
+                                            </span>
+                                        );
+                                    }
+                                    
+                                    // 승인된 신청자가 1명 이상 있으면 확정하기 버튼 표시
+                                    return currentApprovedCount > 0 && (
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                console.log(`모집글 ${posting.posting.postingId} 확정 완료`);
-                                                // TODO: 모집확정 API 호출
+                                                showToast(
+                                                    '정말로 이 모집글을 확정하시겠습니까?\n\n⚠️ 확정 후에는 취소할 수 없습니다.',
+                                                    '확인',
+                                                    () => {
+                                                        if (posting.posting.postingId) {
+                                                            const postingId = posting.posting.postingId;
+                                                            setPostingStatuses(prev => ({
+                                                                ...prev,
+                                                                [postingId]: 1
+                                                            }));
+                                                            showToast('🎉 모집이 확정되었습니다!');
+                                                        }
+                                                    }
+                                                );
                                             }}
                                             className="px-3 py-1 bg-green-500 text-white text-sm rounded hover:bg-green-600 transition-colors"
                                         >
-                                            확정완료
+                                            확정하기
                                         </button>
                                     );
                                 })()}
@@ -309,8 +422,11 @@ const MyPostingListPage: React.FC = () => {
                                 {/* 모집 현황 표시 */}
                                 <div className="flex items-center text-xs text-gray-500 ml-auto">
                                     <span>
-                                        확정 {posting.confirmationCount}명 / 
-                                        목표 {posting.posting.targetPersonnel || 0}명
+                                        {(() => {
+                                            const applicants = posting.posting.postingId ? (applicantsByPosting[posting.posting.postingId] || []) : [];
+                                            const currentApprovedCount = applicants.filter(applicant => applicant.status === 1).length;
+                                            return `확정 ${currentApprovedCount}명 / 목표 ${posting.posting.targetPersonnel || 0}명`;
+                                        })()}
                                     </span>
                                 </div>
                             </div>
@@ -318,7 +434,7 @@ const MyPostingListPage: React.FC = () => {
 
                         {/* 신청자 리스트 (확장 시 표시) */}
                         {posting.posting.postingId && expandedPostings.has(posting.posting.postingId) && (
-                            <div className="border-t bg-gray-50">
+                            <div className="border-t bg-white">
                                 {loadingApplicants.has(posting.posting.postingId) ? (
                                     <div className="p-6 text-center">
                                         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mx-auto mb-2"></div>
@@ -348,7 +464,7 @@ const MyPostingListPage: React.FC = () => {
                                                             <div className="flex justify-between items-start mb-2">
                                                                 <div>
                                                                     <h5 className="font-medium text-gray-900">
-                                                                        {applicant.posting.nickname || '알 수 없음'}
+                                                                        {applicant.profile.nickname || '알 수 없음'}
                                                                     </h5>
                                                                     <p className="text-sm text-gray-500">
                                                                         신청일: {convertDatetime(applicant.applyDatetime)}
@@ -363,13 +479,14 @@ const MyPostingListPage: React.FC = () => {
                                                                         onChange={(e) => {
                                                                             e.stopPropagation();
                                                                             handleStatusChange(
-                                                                                posting.posting.postingId, 
                                                                                 applicant.applyingId, 
                                                                                 e.target.value as 'pending' | 'approved' | 'rejected'
                                                                             );
                                                                         }}
-                                                                        className="text-xs border border-gray-300 rounded px-2 py-1"
+                                                                        className={`text-xs border border-gray-300 rounded px-2 py-1 ${applicant.status !== 0 ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                                                                         onClick={(e) => e.stopPropagation()}
+                                                                        disabled={applicant.status !== 0}
+                                                                        title={applicant.status !== 0 ? '이미 결정된 신청은 변경할 수 없습니다' : ''}
                                                                     >
                                                                         <option value="pending">대기중</option>
                                                                         <option value="approved">승인</option>
@@ -425,6 +542,15 @@ const MyPostingListPage: React.FC = () => {
 
             {/* 하단 여백 */}
             <div className="h-20"></div>
+
+            {/* Toast 컴포넌트 */}
+            <Toast
+                isVisible={toastState.isVisible}
+                message={toastState.message}
+                actionText={toastState.actionText}
+                onAction={toastState.onAction}
+                onClose={hideToast}
+            />
         </div>
     );
 };

@@ -51,8 +51,6 @@ public interface PostingMapper {
     @Mapping(target = "tags", expression = "java(joinTags(dto.getTags()))")
     void updatePostingFromDto(PostingRequestDTO dto, @MappingTarget Posting posting);
 
-
-
     @Mapping(target = "posting", source = "posting")
     @Mapping(target = "applyCount", source = "applyCount")
     @Mapping(target = "confirmationCount", source = "confirmationCount")

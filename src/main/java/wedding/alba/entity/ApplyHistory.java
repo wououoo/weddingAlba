@@ -35,6 +35,9 @@ public class ApplyHistory {
     @Column(name = "posting_id")
     private Long postingId;               // 신청했던 모집글 ID
 
+    @Column(name = "post_history_id")
+    private Long postHistoryId;          // 모집이 취소되서 이력으로 넘어간경우
+
     @Column(name = "pr_content", columnDefinition = "TEXT")
     private String prContent;             // 자기 PR 내용 (신청 이유, 자기소개 등)
     

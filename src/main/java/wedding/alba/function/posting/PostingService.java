@@ -14,6 +14,9 @@ import org.springframework.stereotype.Service;
 import wedding.alba.entity.Applying;
 import wedding.alba.entity.Posting;
 import wedding.alba.entity.Profile;
+import wedding.alba.function.applyHistory.ApplyHistoryService;
+import wedding.alba.function.applyHistory.dto.ApplyHistoryDTO;
+import wedding.alba.function.applyHistory.mapper.ApplyHistoryMapper;
 import wedding.alba.function.applying.ApplyingRepository;
 import wedding.alba.function.postHistory.mapper.PostHistoryMapper;
 import wedding.alba.function.postHistory.dto.PostHistoryDTO;
@@ -41,17 +44,22 @@ public class PostingService {
     private PostHistoryService postHistoryService;
 
     @Autowired
+    private ApplyHistoryService applyHistoryService;
+
+    @Autowired
     private PostingMapper postingMapper;
 
     @Autowired
     private PostHistoryMapper postHistoryMapper;
+
+    @Autowired
+    private ApplyHistoryMapper applyHistoryMapper;
 
     // 모집글 작성
     public PostingResponseDTO createPosting(PostingRequestDTO postingDto) {
         // dto -> Posting 엔터티로 변경
         Posting posting = postingMapper.toPosting(postingDto);
 
-        // insert
         Posting responsePosting = postingRepository.save(posting);
 
         PostingResponseDTO responseDTO = PostingResponseDTO.builder()
@@ -64,17 +72,7 @@ public class PostingService {
     // 모집글 수정
     @Transactional
     public PostingResponseDTO updatePosting(Long userId, Long postingId, PostingRequestDTO postingDto) {
-        Posting existPosting = postingRepository.findById(postingId)
-                .orElseThrow(() -> {
-                        log.error("존재하지 않는 모집글 {}  수정 시도", postingId);
-                         return new IllegalArgumentException("존재하지 않는 모집글입니다.");
-                    });
-
-        // 본인 게시글인지, 수정할려는 게시글이 맞는지 확인
-        if(!existPosting.getUserId().equals(userId)) {
-            log.warn("사용자 {}가 다른 사용자의 모집글 {} 수정 시도", postingDto.getUserId(), postingId);
-            throw new IllegalArgumentException("수정 권한이 없습니다.");
-        }
+        Posting existPosting = checkPostingStatus(postingId, userId, "update");
 
         postingDto.setUserId(userId);
         postingDto.setPostingId(postingId);
@@ -90,21 +88,9 @@ public class PostingService {
 
     @Transactional
     public void deletePosting(Long userId, Long postingId) {
-        Posting existPosting = postingRepository.findById(postingId)
-                .orElseThrow(() -> {
-                    log.error("존재하지 않는 모집글 {}  삭제 시도", postingId);
-                    return new IllegalArgumentException("존재하지 않는 모집글입니다.");
-                });
-
-        // 본인 게시글인지, 수정할려는 게시글이 맞는지 확인
-        if(!existPosting.getUserId().equals(userId)) {
-            log.warn("사용자 {}가 다른 사용자의 모집글 {} 삭제 시도", userId, postingId);
-            throw new IllegalArgumentException("삭제 권한이 없습니다.");
-        }
 
         // 삭제전에 신청글 확인
-        // 확정된 신청글이있는경우, 신청이력테이블로 데이터 이동
-        // 없는경우, 신청글 모두 신청이력테이블로 이동 모집글 이력으로 이동
+        Posting existPosting = checkPostingStatus(postingId, userId, "delete");
 
         // 모집글 히스토리로 데이터 이동 (상태 : -1)
         // 실패시 삭제 시도안하고 전체 롤백되게
@@ -116,39 +102,37 @@ public class PostingService {
             throw new RuntimeException("모집글 이력 저장에 실패하여 삭제를 중단합니다.");
         }
 
+        // 확정된 신청글이있는경우, 신청이력테이블로 데이터 이동
+        // 없는경우, 신청글 모두 신청이력테이블로 이동 모집글 이력으로 이동
+        List<Applying> applyingList = applyingRepository.findByPostingId(postingId);
+
+        if(!applyingList.isEmpty()) {
+            for(Applying applying : applyingList) {
+                ApplyHistoryDTO applyHistoryDTO = applyHistoryMapper.toApplyHistoryDTO(applying, true, postHistoryId);
+                Long applyHistoryId = applyHistoryService.moveApplyingToHistory(applyHistoryDTO);
+
+                if(applyHistoryId == null || applyHistoryId == 0L) {
+                    log.error("신청글 {}을 신청글 이력으로 데이터 이동 실패", applying.getApplyingId());
+                    throw new RuntimeException("신청글 이력 저장에 실패하여 삭제를 중단합니다.");
+                }
+
+                applyingRepository.deleteById(applying.getApplyingId());
+            }
+        }
+
         // 모집글 삭제
         postingRepository.deleteById(postingId);
     }
 
+
     @Transactional
     public void confirmationPosting(Long postingId, Long userId) {
-        Posting existPosting = postingRepository.findById(postingId)
-                .orElseThrow(() -> {
-                    log.error("존재하지 않는 모집글 {}  확정 시도", postingId);
-                    return new IllegalArgumentException("존재하지 않는 모집글입니다.");
-                });
-
-        // 본인 게시글인지, 확정할려는 게시글이 맞는지 확인
-        if(!existPosting.getUserId().equals(userId)) {
-            log.warn("사용자 {}가 다른 사용자의 모집글 {} 삭제 시도", userId, postingId);
-            throw new IllegalArgumentException("확정 권한이 없습니다.");
-        }
-
+        Posting existPosting = checkPostingStatus(postingId, userId, "confirm");
         List<Applying> existApplyingList = applyingRepository.findByPostingId(postingId).stream().toList();
 
         // 모집글 이력으로 이동
         PostHistoryDTO historyDTO = postHistoryMapper.toPostHistoryDTO(existPosting, false);
         Long postHistoryId = postHistoryService.movePostingToHistory(historyDTO);
-
-
-
-
-
-
-
-    }
-
-    public void getPostingAndApplying(Long postingId, Long userId) {
 
     }
 
@@ -175,7 +159,6 @@ public class PostingService {
             throw new RuntimeException("페이징 모집글 조회에 실패했습니다.",    e);
         }
     }
-
 
     public Page<MyPostingReponseDTO> getMyPostingPage(int page, int size, Long userId) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "registrationDatetime"));
@@ -208,6 +191,37 @@ public class PostingService {
         PostingResponseDTO dto = postingMapper.toDetailDTO(posting);
         dto.setPayTypeStr();
         return dto;
+    }
+
+
+    private Posting checkPostingStatus (Long postingId, Long userId, String check) {
+        String checkText = "";
+        switch (check) {
+            case "update":
+                checkText = "수정";
+                break;
+            case "delete":
+                checkText = "삭제";
+                break;
+            case "confirm":
+                checkText = "확정";
+                break;
+        }
+
+        String finalCheckText = checkText;
+        Posting existPosting = postingRepository.findById(postingId)
+                .orElseThrow(() -> {
+                    log.error("존재하지 않는 모집글 {}  {} 시도", postingId, finalCheckText);
+                    return new IllegalArgumentException("존재하지 않는 모집글입니다.");
+                });
+
+        // 본인 게시글인지, 수정할려는 게시글이 맞는지 확인
+        if(!existPosting.getUserId().equals(userId)) {
+            log.warn("사용자 {}가 다른 사용자의 모집글 {} {} 시도", userId, postingId, finalCheckText);
+            throw new IllegalArgumentException("권한이 없습니다.");
+        }
+
+        return existPosting;
     }
 
 }

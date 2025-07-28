@@ -13,6 +13,7 @@ import wedding.alba.function.applying.dto.ApplyingResponseDTO;
 import wedding.alba.function.applying.dto.ApplyingStatusDTO;
 import wedding.alba.function.applying.mapper.ApplyingMapper;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -110,7 +111,9 @@ public class ApplyingService {
             log.warn("사용자 {}가 다른 사용자의 신청글 {} 수정 시도", userId, applyingId);
             throw new IllegalArgumentException("수정 권한이 없습니다.");
         }
+
         existApplying.setStatus(status);
+        existApplying.setConfirmationDatetime(LocalDateTime.now());
         Long updateApplyingId = applyingRepository.save(existApplying).getApplyingId();
         return updateApplyingId;
     }

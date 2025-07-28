@@ -117,5 +117,17 @@ export const postingApi = {
                 message: '모집글 상태 확인에 실패했습니다.'
             };
         }
+    }, 
+    
+    confirmationPosting: async (postingId: number) => {
+        try {
+            return await get<void>(`${API_BASE_URL}/posting/confirmation/${postingId}`);
+        } catch(error) {
+            return {
+                success: false,
+                data: null,
+                message: '모집글 확정에 실패했습니다.'
+            }
+        }
     }
 }

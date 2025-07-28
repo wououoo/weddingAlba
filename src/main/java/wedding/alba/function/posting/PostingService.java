@@ -124,16 +124,44 @@ public class PostingService {
         postingRepository.deleteById(postingId);
     }
 
-
     @Transactional
     public void confirmationPosting(Long postingId, Long userId) {
         Posting existPosting = checkPostingStatus(postingId, userId, "confirm");
-        List<Applying> existApplyingList = applyingRepository.findByPostingId(postingId).stream().toList();
 
         // 모집글 이력으로 이동
         PostHistoryDTO historyDTO = postHistoryMapper.toPostHistoryDTO(existPosting, false);
         Long postHistoryId = postHistoryService.movePostingToHistory(historyDTO);
 
+        if(postHistoryId == null || postHistoryId == 0L) {
+            log.error("모집글 {}을 모집글 이력으로 데이터 이동 실패", postingId);
+            throw new RuntimeException("모집글 이력 저장에 실패하여 확정을 중단합니다.");
+        }
+        // 신청글 확인
+        List<Applying> applyingList = applyingRepository.findByPostingId(postingId);
+
+        if(!applyingList.isEmpty()) {
+            for (Applying applying : applyingList) {
+                if(applying.getStatus() == 1) {
+                    ApplyHistoryDTO applyHistoryDTO = applyHistoryMapper.toApplyHistoryDTO(applying, false, postHistoryId);
+                    Long applyHistoryId = applyHistoryService.moveApplyingToHistory(applyHistoryDTO);
+
+                    if(applyHistoryId == null || applyHistoryId == 0L) {
+                        log.error("신청글 {}을 신청글 이력으로 데이터 이동 실패", applying.getApplyingId());
+                        throw new RuntimeException("신청글 이력 저장에 실패하여 모집확정을 중단합니다.");
+                    }
+                } else {
+                    ApplyHistoryDTO applyHistoryDTO = applyHistoryMapper.toApplyHistoryDTO(applying, true, postHistoryId);
+                    Long applyHistoryId = applyHistoryService.moveApplyingToHistory(applyHistoryDTO);
+
+                    if(applyHistoryId == null || applyHistoryId == 0L) {
+                        log.error("신청글 {}을 신청글 이력으로 데이터 이동 실패", applying.getApplyingId());
+                        throw new RuntimeException("신청글 이력 저장에 실패하여 모집확정을 중단합니다.");
+                    }
+                }
+                applyingRepository.deleteById(applying.getApplyingId());
+            }
+        }
+        postingRepository.deleteById(postingId);
     }
 
     // 전체 모집글 리스트 조회

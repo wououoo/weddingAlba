@@ -178,6 +178,28 @@ const MyPostingListPage: React.FC = () => {
         }
     };
 
+    // 모집글 확정 실행
+    const executeConfirmationPosting = async (postingId: number) => {
+        try {
+            const response = await postingApi.confirmationPosting(postingId);
+            if (response.success) {
+                // 성공 시 해당 모집글을 확정 상태로 설정
+                setPostingStatuses(prev => ({
+                    ...prev,
+                    [postingId]: 1
+                }));
+                showToast('🎉 모집이 확정되었습니다!');
+                // 목록 새로고침
+                refetch();
+            } else {
+                showToast(response.message || '모집글 확정에 실패했습니다.');
+            }
+        } catch (error) {
+            console.error('모집글 확정 실패:', error);
+            showToast('모집글 확정 중 오류가 발생했습니다.');
+        }
+    };
+
     // 상태별 한글 표시
     const getStatusText = (status: number) => {
         switch (status) {
@@ -402,12 +424,7 @@ const MyPostingListPage: React.FC = () => {
                                                     '확인',
                                                     () => {
                                                         if (posting.posting.postingId) {
-                                                            const postingId = posting.posting.postingId;
-                                                            setPostingStatuses(prev => ({
-                                                                ...prev,
-                                                                [postingId]: 1
-                                                            }));
-                                                            showToast('🎉 모집이 확정되었습니다!');
+                                                            executeConfirmationPosting(posting.posting.postingId);
                                                         }
                                                     }
                                                 );

@@ -13,10 +13,10 @@ import java.util.List;
 public interface ApplyingMapper {
 
     // Applying -> ApplyingResponseDTO 변환
-    @Mapping(target = "posting", source = "posting", qualifiedByName = "toBasic")
+    @Mapping(target = "posting", source = "posting")
     @Mapping(target = "statusText", expression = "java(getStatusText(applying.getStatus()))")
     @Mapping(target = "profile", source = "profile")
-    ApplyingResponseDTO toResponseDTO(Applying applying);
+    ApplyingResponseDTO toApplyingResponseDTO(Applying applying);
 
     // ApplyingRequestDTO -> Applying 변환
     @Mapping(target = "applyingId", ignore = true) // ID는 자동 생성

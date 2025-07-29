@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class ApplyHistoryDTO {
     private Long userId;
+    private Long applyHistoryId;
     private Long postingId;
     private Long postHistoryId;
     private String prContent;

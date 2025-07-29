@@ -2,9 +2,9 @@ package wedding.alba.function.postHistory.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.Named;
 import wedding.alba.entity.PostHistory;
 import wedding.alba.entity.Posting;
+import wedding.alba.enums.PayType;
 import wedding.alba.function.postHistory.dto.PostHistoryDTO;
 
 import java.time.LocalTime;
@@ -15,23 +15,27 @@ import java.util.stream.Collectors;
 
 @Mapper(componentModel = "spring")
 public interface PostHistoryMapper {
-    @Named("toBasic")
-    @Mapping(target = "status", ignore = true)
-    PostHistoryDTO tobasicPostHistoryDTO (Posting posting);
 
     @Mapping(target = "status", expression = "java(isCancel ? -1 : 1)")
-    @Mapping(target = "payType", expression = "java(String.valueOf(posting.getPayType()))")
     @Mapping(target = "tags", expression = "java(parseTags(posting.getTags()))")
-    PostHistoryDTO toPostHistoryDTO(Posting posting, boolean isCancel);
+    @Mapping(target = "nickname", source = "posting.profile.nickname")
+    @Mapping(target = "postHistoryId", ignore = true)
+    @Mapping(target = "payTypeText", ignore = true)
+    PostHistoryDTO toPostHistoryDTOFromPosting(Posting posting, boolean isCancel);
 
     @Mapping(target = "postHistoryId", ignore = true)
     @Mapping(target = "registrationDatetime", ignore = true)
     @Mapping(target = "updateDatetime", ignore = true)
-    @Mapping(target = "payType", expression = "java(parsePayType(postHistoryDTO.getPayType()))")
+    @Mapping(target = "profile", ignore = true)
     @Mapping(target = "startTime", source = "startTime")
     @Mapping(target = "endTime", source = "endTime")
     @Mapping(target = "tags", expression = "java(joinTags(postHistoryDTO.getTags()))")
     PostHistory toPostHistory(PostHistoryDTO postHistoryDTO);
+
+    @Mapping(target = "payTypeText", expression = "java(parsePayTypeText(postHistory.getPayType()))")
+    @Mapping(target = "nickname", source = "profile.nickname")
+    PostHistoryDTO toPostHistoryDTO(PostHistory postHistory);
+
 
     default List<String> parseTags(String tags) {
         if (tags == null || tags.trim().isEmpty()) {
@@ -50,15 +54,20 @@ public interface PostHistoryMapper {
         return String.join(",", tags);
     }
 
-    default Posting.PayType parsePayType(String payType) {
+    default PayType parsePayType(String payType) {
         if (payType == null || payType.trim().isEmpty()) {
             throw new IllegalArgumentException("Pay type cannot be null or empty");
         }
         try {
-            return Posting.PayType.valueOf(payType.toUpperCase());
+            return PayType.valueOf(payType.toUpperCase());
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Invalid pay type: " + payType);
         }
+    }
+
+    default String parsePayTypeText (PayType payType) {
+        if(payType.equals(PayType.DAILY)) return "일급";
+        else return "시급";
     }
 
     default LocalTime parseTime(String time) {

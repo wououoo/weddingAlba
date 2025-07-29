@@ -3,7 +3,6 @@ package wedding.alba.function.posting;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 
-import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -13,12 +12,12 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import wedding.alba.config.JwtConfig;
 import wedding.alba.dto.ApiResponse;
-import wedding.alba.entity.Applying;
 import wedding.alba.function.applying.ApplyingService;
 import wedding.alba.function.applying.dto.ApplyingStatusDTO;
 import wedding.alba.function.bookMark.BookmarkResponseDto;
 import wedding.alba.function.bookMark.BookmarkService;
-import wedding.alba.function.posting.dto.MyPostingReponseDTO;
+import wedding.alba.function.common.CommonService;
+import wedding.alba.function.common.dto.CommonPostResponseDTO;
 import wedding.alba.function.posting.dto.PostingRequestDTO;
 import wedding.alba.function.posting.dto.PostingResponseDTO;
 
@@ -39,10 +38,13 @@ public class PostingController {
     private ApplyingService applyingService;
 
     @Autowired
+    private CommonService commonService;
+
+    @Autowired
     private JwtConfig jwtConfig;
 
     @PostMapping("/")
-    public ResponseEntity<ApiResponse<PostingResponseDTO>> createPosting(@RequestBody @Valid PostingRequestDTO postingDto, BindingResult bindingResult) {
+    public ResponseEntity<ApiResponse<Long>> createPosting(@RequestBody @Valid PostingRequestDTO postingDto, BindingResult bindingResult) {
         try {
             // 유효성 검사 실패 시 구체적인 오류 메시지 반환
             if (bindingResult.hasErrors()) {
@@ -56,8 +58,8 @@ public class PostingController {
 
             Long userId = getCurrentUserId();
             postingDto.setUserId(userId);
-            PostingResponseDTO responseDTO = postingService.createPosting(postingDto);
-            return ResponseEntity.ok(ApiResponse.success(responseDTO));
+            Long postingId = postingService.createPosting(postingDto);
+            return ResponseEntity.ok(ApiResponse.success(postingId));
         } catch(RuntimeException e) {
             log.error("모집글 생성 실패: {}", e.getMessage());
             return ResponseEntity.ok(ApiResponse.error(e.getMessage()));
@@ -68,11 +70,11 @@ public class PostingController {
     }
 
     @PutMapping("/{postingId}")
-    public ResponseEntity<ApiResponse<PostingResponseDTO>> updatePosting(@PathVariable Long postingId, @RequestBody @Valid PostingRequestDTO postingDto) {
+    public ResponseEntity<ApiResponse<Long>> updatePosting(@PathVariable Long postingId, @RequestBody @Valid PostingRequestDTO postingDto) {
         try {
             Long userId = getCurrentUserId();
-            PostingResponseDTO responseDTO = postingService.updatePosting(userId, postingId, postingDto);
-            return ResponseEntity.ok(ApiResponse.success(responseDTO));
+            Long updatePostingId = postingService.updatePosting(userId, postingId, postingDto);
+            return ResponseEntity.ok(ApiResponse.success(updatePostingId));
         } catch(RuntimeException e) {
             log.error("모집글 수정 실패: {}", e.getMessage());
             return ResponseEntity.ok(ApiResponse.error(e.getMessage()));
@@ -112,13 +114,13 @@ public class PostingController {
 
     // 내가 작성한 모집글 리스트 (모집글, 모집취소, 모집이력)
     @GetMapping("/my/page")
-    public ResponseEntity<ApiResponse<Page<MyPostingReponseDTO>>> getPostingListByUserId(
+    public ResponseEntity<ApiResponse<Page<CommonPostResponseDTO>>> getPostingListByUserId(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         Long userId = getCurrentUserId();
 
         try {
-            Page<MyPostingReponseDTO> postingPage = postingService.getMyPostingPage(page, size, userId);
+            Page<CommonPostResponseDTO> postingPage = commonService.getMyPostingPage(page, size, userId);
             return ResponseEntity.ok(ApiResponse.success(postingPage));
         } catch (Exception e) {
             log.error("내 모집글 조회 중 예외 발생: {}", e.getMessage());
@@ -152,14 +154,14 @@ public class PostingController {
             Long userId = getCurrentUserId();
             postingService.confirmationPosting(postingId, userId);
         } catch (RuntimeException e) {
-
+            log.error("모집확정 중 오류 발생 : {}", e.getMessage());
+            return ResponseEntity.ok(ApiResponse.error("모집글 확정에 실패했습니다."));
         } catch (Exception e) {
-
+            log.error("모집확정 중 오류 발생 : {}", e.getMessage());
+            return ResponseEntity.ok(ApiResponse.error("모집글 확정에 실패했습니다."));
         }
         return ResponseEntity.ok(ApiResponse.success());
     }
-
-
 
     private Long getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 import wedding.alba.entity.Applying;
 import wedding.alba.function.applying.dto.ApplyingRequestDTO;
@@ -74,9 +75,8 @@ public class ApplyingService {
             log.error("존재하지 않는 신청글 {} ", applyingId);
             return new IllegalArgumentException("존재하지 않는 신청글입니다.");
         });
-        ApplyingResponseDTO responseDTO = applyingMapper.toResponseDTO(applying);
+        ApplyingResponseDTO responseDTO = applyingMapper.toApplyingResponseDTO(applying);
         responseDTO.setStatusStr();
-        responseDTO.getPosting().setPayTypeStr();
 
         return responseDTO;
     }
@@ -89,13 +89,13 @@ public class ApplyingService {
         } else {
             applyingPage = applyingRepository.findMyPageByStatus(pageable, status, userId);
         }
-        Page<ApplyingResponseDTO> myApplyingPage = applyingPage.map(applying -> applyingMapper.toResponseDTO(applying));
+        Page<ApplyingResponseDTO> myApplyingPage = applyingPage.map(applying -> applyingMapper.toApplyingResponseDTO(applying));
         return myApplyingPage;
     }
 
     public List<ApplyingResponseDTO> getApplyingListByPostingId(Long postingId) {
         List<Applying> applyingList = applyingRepository.findByPostingId(postingId);
-        List<ApplyingResponseDTO> applyingResponseDTOList = applyingList.stream().map(applyingMapper::toResponseDTO).toList();
+        List<ApplyingResponseDTO> applyingResponseDTOList = applyingList.stream().map(applyingMapper::toApplyingResponseDTO).toList();
         return applyingResponseDTOList;
     }
 
@@ -116,6 +116,15 @@ public class ApplyingService {
         existApplying.setConfirmationDatetime(LocalDateTime.now());
         Long updateApplyingId = applyingRepository.save(existApplying).getApplyingId();
         return updateApplyingId;
+    }
+
+    public void deleteApplyingById(Long applyingId) {
+        try {
+            applyingRepository.deleteById(applyingId);
+        } catch (Exception e) {
+            log.warn("신청글 {} 삭제 실패", applyingId);
+            throw new IllegalArgumentException("신청글 삭제에 실패했습니다.");
+        }
     }
 
 

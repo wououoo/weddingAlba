@@ -11,17 +11,15 @@ import java.util.NoSuchElementException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
-import wedding.alba.entity.Applying;
-import wedding.alba.entity.Posting;
-import wedding.alba.entity.Profile;
+import wedding.alba.entity.*;
 import wedding.alba.function.applyHistory.ApplyHistoryService;
 import wedding.alba.function.applyHistory.dto.ApplyHistoryDTO;
 import wedding.alba.function.applyHistory.mapper.ApplyHistoryMapper;
-import wedding.alba.function.applying.ApplyingRepository;
+import wedding.alba.function.applying.ApplyingService;
+import wedding.alba.function.applying.dto.ApplyingResponseDTO;
 import wedding.alba.function.postHistory.mapper.PostHistoryMapper;
 import wedding.alba.function.postHistory.dto.PostHistoryDTO;
 import wedding.alba.function.postHistory.PostHistoryService;
-import wedding.alba.function.posting.dto.MyPostingReponseDTO;
 import wedding.alba.function.posting.dto.PostingRequestDTO;
 import wedding.alba.function.posting.dto.PostingResponseDTO;
 import wedding.alba.function.posting.mapper.PostingMapper;
@@ -38,7 +36,7 @@ public class PostingService {
     private ProfileRepository profileRepository;
 
     @Autowired
-    private ApplyingRepository applyingRepository;
+    private ApplyingService applyingService;
 
     @Autowired
     private PostHistoryService postHistoryService;
@@ -56,34 +54,27 @@ public class PostingService {
     private ApplyHistoryMapper applyHistoryMapper;
 
     // 모집글 작성
-    public PostingResponseDTO createPosting(PostingRequestDTO postingDto) {
+    public Long createPosting(PostingRequestDTO postingDto) {
         // dto -> Posting 엔터티로 변경
         Posting posting = postingMapper.toPosting(postingDto);
 
-        Posting responsePosting = postingRepository.save(posting);
+        Long createdPostingId = postingRepository.save(posting).getPostingId();
 
-        PostingResponseDTO responseDTO = PostingResponseDTO.builder()
-                .postingId(responsePosting.getPostingId())
-                .build();
-
-        return responseDTO;
+        return createdPostingId;
     }
 
     // 모집글 수정
     @Transactional
-    public PostingResponseDTO updatePosting(Long userId, Long postingId, PostingRequestDTO postingDto) {
+    public Long updatePosting(Long userId, Long postingId, PostingRequestDTO postingDto) {
         Posting existPosting = checkPostingStatus(postingId, userId, "update");
 
         postingDto.setUserId(userId);
         postingDto.setPostingId(postingId);
-        postingMapper.updatePostingFromDto(postingDto, existPosting);
-        Posting updatePosting = postingRepository.save(existPosting);
-        log.info("사용자 {}가  모집글 {} 수정완료", updatePosting.getUserId(), updatePosting.getPostingId());
 
-        PostingResponseDTO responseDTO = PostingResponseDTO.builder()
-                .postingId(updatePosting.getPostingId())
-                .build();
-        return responseDTO;
+        postingMapper.updatePostingFromDto(postingDto, existPosting);
+        Long updatePostingId = postingRepository.save(existPosting).getPostingId();
+        log.info("사용자 {}가  모집글 {} 수정완료", userId, updatePostingId);
+        return updatePostingId;
     }
 
     @Transactional
@@ -94,7 +85,7 @@ public class PostingService {
 
         // 모집글 히스토리로 데이터 이동 (상태 : -1)
         // 실패시 삭제 시도안하고 전체 롤백되게
-        PostHistoryDTO historyDTO = postHistoryMapper.toPostHistoryDTO(existPosting, true);
+        PostHistoryDTO historyDTO = postHistoryMapper.toPostHistoryDTOFromPosting(existPosting, true);
         Long postHistoryId = postHistoryService.movePostingToHistory(historyDTO);
 
         if(postHistoryId == null || postHistoryId == 0L) {
@@ -104,10 +95,10 @@ public class PostingService {
 
         // 확정된 신청글이있는경우, 신청이력테이블로 데이터 이동
         // 없는경우, 신청글 모두 신청이력테이블로 이동 모집글 이력으로 이동
-        List<Applying> applyingList = applyingRepository.findByPostingId(postingId);
+        List<ApplyingResponseDTO> applyingList = applyingService.getApplyingListByPostingId(postingId);
 
         if(!applyingList.isEmpty()) {
-            for(Applying applying : applyingList) {
+            for(ApplyingResponseDTO applying : applyingList) {
                 ApplyHistoryDTO applyHistoryDTO = applyHistoryMapper.toApplyHistoryDTO(applying, true, postHistoryId);
                 Long applyHistoryId = applyHistoryService.moveApplyingToHistory(applyHistoryDTO);
 
@@ -116,7 +107,7 @@ public class PostingService {
                     throw new RuntimeException("신청글 이력 저장에 실패하여 삭제를 중단합니다.");
                 }
 
-                applyingRepository.deleteById(applying.getApplyingId());
+                applyingService.deleteApplyingById(applying.getApplyingId());
             }
         }
 
@@ -129,7 +120,7 @@ public class PostingService {
         Posting existPosting = checkPostingStatus(postingId, userId, "confirm");
 
         // 모집글 이력으로 이동
-        PostHistoryDTO historyDTO = postHistoryMapper.toPostHistoryDTO(existPosting, false);
+        PostHistoryDTO historyDTO = postHistoryMapper.toPostHistoryDTOFromPosting(existPosting, false);
         Long postHistoryId = postHistoryService.movePostingToHistory(historyDTO);
 
         if(postHistoryId == null || postHistoryId == 0L) {
@@ -137,10 +128,10 @@ public class PostingService {
             throw new RuntimeException("모집글 이력 저장에 실패하여 확정을 중단합니다.");
         }
         // 신청글 확인
-        List<Applying> applyingList = applyingRepository.findByPostingId(postingId);
+        List<ApplyingResponseDTO> applyingList = applyingService.getApplyingListByPostingId(postingId);
 
         if(!applyingList.isEmpty()) {
-            for (Applying applying : applyingList) {
+            for (ApplyingResponseDTO applying : applyingList) {
                 if(applying.getStatus() == 1) {
                     ApplyHistoryDTO applyHistoryDTO = applyHistoryMapper.toApplyHistoryDTO(applying, false, postHistoryId);
                     Long applyHistoryId = applyHistoryService.moveApplyingToHistory(applyHistoryDTO);
@@ -158,7 +149,7 @@ public class PostingService {
                         throw new RuntimeException("신청글 이력 저장에 실패하여 모집확정을 중단합니다.");
                     }
                 }
-                applyingRepository.deleteById(applying.getApplyingId());
+                applyingService.deleteApplyingById(applying.getApplyingId());
             }
         }
         postingRepository.deleteById(postingId);
@@ -175,7 +166,6 @@ public class PostingService {
             List<PostingResponseDTO> dtoList = new ArrayList<>();
             for(Posting posting : postingPage.getContent()) {
                 PostingResponseDTO dto = postingMapper.toDetailDTO(posting);
-                dto.setPayTypeStr();
                 dtoList.add(dto);
             }
             
@@ -188,37 +178,17 @@ public class PostingService {
         }
     }
 
-    public Page<MyPostingReponseDTO> getMyPostingPage(int page, int size, Long userId) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "registrationDatetime"));
-        Page<Posting> myPostingPage = postingRepository.findPostingPageByUserId(pageable,userId);
-        List<MyPostingReponseDTO> myPostingList = new ArrayList<>();
-        for(Posting posting : myPostingPage.getContent()) {
-            List<Applying> applyingList = applyingRepository.findByPostingId(posting.getPostingId());
-
-            // 신청 개수
-            int applyCount = applyingList.size();
-
-            // 확정된 신청 개수 (status == 1)
-            int confirmationCount = (int) applyingList.stream()
-                    .filter(applying -> applying.getStatus() == 1)
-                    .count();
-
-            MyPostingReponseDTO postingReponseDTO = postingMapper.toMyPostingReponseDTO(posting, applyCount, confirmationCount);
-            postingReponseDTO.getPosting().setPayTypeStr();
-            postingReponseDTO.setStatus(0);         // 모집중
-            myPostingList.add(postingReponseDTO);
-        }
-
-        return new PageImpl<>(myPostingList, pageable, myPostingPage.getTotalElements());
-    }
-
     // 상세페이지
     public PostingResponseDTO getPostingDetail(Long postingId) {
         Posting posting = postingRepository.findById(postingId).orElseThrow(() -> new NoSuchElementException("모집글을 찾을 수 없습니다. ID: " + postingId));
         Profile profile = profileRepository.findByUserId(posting.getUserId()).orElseThrow(() -> new NoSuchElementException("사용자 프로필을 찾을 수 없습니다. ID: " + postingId));
         PostingResponseDTO dto = postingMapper.toDetailDTO(posting);
-        dto.setPayTypeStr();
         return dto;
+    }
+
+    public List<PostingResponseDTO> getPostingListByUserId(Long userId) {
+        List<PostingResponseDTO> postingResponseDTOList =  postingRepository.findPostingPageByUserId(userId).stream().map(posting -> postingMapper.toDetailDTO(posting)).toList();
+        return postingResponseDTOList;
     }
 
 

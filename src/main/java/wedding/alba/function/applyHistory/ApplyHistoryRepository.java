@@ -13,8 +13,8 @@ public interface ApplyHistoryRepository extends JpaRepository<ApplyHistory, Long
     // 사용자 ID별 신청 내역 조회
     List<ApplyHistory> findByUserId(Long userId);
 
-    // 모집글 ID별 신청 내역 조회
-    List<ApplyHistory> findByPostingId(Long postingId);
+
+    List<ApplyHistory> findByPostHistoryId(Long postHistoryId);
 
     // 상태별 신청 내역 조회
     List<ApplyHistory> findByStatus(Integer status);

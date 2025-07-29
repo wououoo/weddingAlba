@@ -4,6 +4,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import wedding.alba.entity.PostHistory;
 
+import java.util.List;
+
 @Repository
 public interface PostHistoryRepository extends JpaRepository<PostHistory, Long> {
 //    // 원본 모집글 ID로 이력 조회
@@ -26,5 +28,7 @@ public interface PostHistoryRepository extends JpaRepository<PostHistory, Long> 
 //
 //    // 모바일 청첩장이 있는 모집글 이력 조회
 //    List<PostHistory> findByHasMobileInvitation(Integer hasMobileInvitation);
+
+    List<PostHistory> findByUserId(Long userId);
 
 }

@@ -1,42 +1,18 @@
 import { useState, useEffect } from 'react';
 import { postingApi } from '../api/postingApi';
+import { MyPostingResponseDTO } from '../dto';
 
 // 내 모집글과 신청자 정보를 포함한 DTO (백엔드 MyPostingReponseDTO와 일치)
-interface MyPostingReponseDTO {
-    posting: {
-        postingId: number;
-        userId: number;
-        title: string;
-        sidoSigungu: string;
-        appointmentDatetime: string;
-        registrationDatetime: string;
-        workingHours: string;
-        address: string;
-        isSelf: number;
-        personName: string;
-        personPhoneNumber: string;
-        hasMobileInvitation: number;
-        payTypeStr: string;
-        payAmount: string;
-        tags: string[];
-        guestMainRole: string;
-        detailContent: string;
-        nickname: string;
-        targetPersonnel: number;
-    };
-    applyCount: number;
-    confirmationCount: number;
-}
 
 interface UseMyPostingListReturn {
-    postings: MyPostingReponseDTO[];
+    postings: MyPostingResponseDTO[];
     loading: boolean;
     error: string | null;
     refetch: () => void;
 }
 
 export const useMyPostingList = (): UseMyPostingListReturn => {
-    const [postings, setPostings] = useState<MyPostingReponseDTO[]>([]);
+    const [postings, setPostings] = useState<MyPostingResponseDTO[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 

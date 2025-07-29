@@ -15,6 +15,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import wedding.alba.enums.PayType;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -34,6 +35,11 @@ public class PostHistory {
 
     @Column(name = "user_id")
     private Long userId;              // 모집글 작성자 ID
+
+    // Profile과의 관계 추가 (자주 사용되므로 연결)
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", referencedColumnName = "user_id", insertable = false, updatable = false)
+    private Profile profile;
 
     // 기본정보
     @Column(name = "title")
@@ -75,7 +81,7 @@ public class PostHistory {
     private String workingHours;        // 근무 시간
 
     @Enumerated(EnumType.STRING)
-    private Posting.PayType payType;     // 급여 타입 (시급, 일급)
+    private PayType payType;     // 급여 타입 (시급, 일급)
 
     @Column(name="pay_amount")
     private String payAmount;           // 급여 금액
@@ -103,11 +109,6 @@ public class PostHistory {
     @Column(name = "update_datetime")
     private LocalDateTime updateDatetime;   // 모집이력 수정 일시
 
-    public enum PayType {
-        DAILY, HOURLY
-    }
-
     @Column(name = "posting_id")
-    private Long postingId;
-    // 원본 모집글 ID (변경 이력을 추적하기 위한 참조)
+    private Long postingId; // 원본 모집글 ID (변경 이력을 추적하기 위한 참조)
 }

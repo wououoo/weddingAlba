@@ -7,6 +7,8 @@ import wedding.alba.entity.ApplyHistory;
 import wedding.alba.function.applyHistory.dto.ApplyHistoryDTO;
 import wedding.alba.function.applyHistory.mapper.ApplyHistoryMapper;
 
+import java.util.List;
+
 @Service
 @Slf4j
 public class ApplyHistoryService {
@@ -21,6 +23,13 @@ public class ApplyHistoryService {
         Long applyHistoryId = applyHistoryRepository.save(history).getApplyHistoryId();
         return applyHistoryId;
     }
+
+    public List<ApplyHistoryDTO> getApplyHistoryListByPostId (Long postHistoryId) {
+        List<ApplyHistoryDTO> applyHistoryList = applyHistoryRepository.findByPostHistoryId(postHistoryId)
+                    .stream().map(applyHistory -> applyHistoryMapper.toBasicApplyHistoryDTO(applyHistory)).toList();
+        return applyHistoryList;
+    }
+
 
 
 }

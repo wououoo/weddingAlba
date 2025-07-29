@@ -15,6 +15,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import wedding.alba.enums.PayType;
 import wedding.alba.function.posting.dto.PostingRequestDTO;
 
 import java.time.LocalDateTime;
@@ -107,7 +108,4 @@ public class Posting {
     @Column(name = "update_datetime")
     private LocalDateTime updateDatetime;   // 모집글 수정 일시
 
-    public enum PayType {
-        DAILY, HOURLY
-    }
 }

@@ -3,10 +3,8 @@ package wedding.alba.function.posting.mapper;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
-import org.mapstruct.Named;
 import wedding.alba.entity.Posting;
-import wedding.alba.function.postHistory.dto.PostHistoryDTO;
-import wedding.alba.function.posting.dto.MyPostingReponseDTO;
+import wedding.alba.enums.PayType;
 import wedding.alba.function.posting.dto.PostingRequestDTO;
 import wedding.alba.function.posting.dto.PostingResponseDTO;
 
@@ -18,18 +16,12 @@ import java.util.stream.Collectors;
 
 @Mapper(componentModel = "spring")
 public interface PostingMapper {
-
-    @Named("toBasic")
-    @Mapping(target = "payTypeStr", ignore = true)
-    @Mapping(target = "nickname", ignore = true)
-    PostingResponseDTO toBasicResponseDTO(Posting posting);
-
     @Mapping(target = "registrationDatetime", source = "registrationDatetime")
     @Mapping(target = "updateDatetime", source = "updateDatetime")
     @Mapping(target = "nickname", source = "profile.nickname")
     @Mapping(target = "startTime", source = "startTime")
     @Mapping(target = "endTime", source = "endTime")
-    @Mapping(target = "payTypeStr", ignore = true)
+    @Mapping(target = "payTypeText", expression="java(parsePayTypeText(posting.getPayType()))")
     PostingResponseDTO toDetailDTO(Posting posting);
 
     @Mapping(target = "profile", ignore = true)
@@ -51,14 +43,6 @@ public interface PostingMapper {
     @Mapping(target = "tags", expression = "java(joinTags(dto.getTags()))")
     void updatePostingFromDto(PostingRequestDTO dto, @MappingTarget Posting posting);
 
-    @Mapping(target = "posting", source = "posting")
-    @Mapping(target = "applyCount", source = "applyCount")
-    @Mapping(target = "confirmationCount", source = "confirmationCount")
-    @Mapping(target = "status", ignore = true)
-    MyPostingReponseDTO toMyPostingReponseDTO(Posting posting, int applyCount, int confirmationCount);
-
-    List<PostingResponseDTO> toBasicResponseDTOList(List<Posting> postings);
-    List<PostingResponseDTO> toDetailDTOList(List<Posting> postings);
 
     default List<String> parseTags(String tags) {
         if (tags == null || tags.trim().isEmpty()) {
@@ -77,15 +61,20 @@ public interface PostingMapper {
         return String.join(",", tags);
     }
 
-    default Posting.PayType parsePayType(String payType) {
+    default PayType parsePayType(String payType) {
         if (payType == null || payType.trim().isEmpty()) {
             throw new IllegalArgumentException("Pay type cannot be null or empty");
         }
         try {
-            return Posting.PayType.valueOf(payType.toUpperCase());
+            return PayType.valueOf(payType.toUpperCase());
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Invalid pay type: " + payType);
         }
+    }
+
+    default String parsePayTypeText (PayType payType) {
+        if(payType.equals(PayType.DAILY)) return "일급";
+        else return "시급";
     }
 
     default LocalTime parseTime(String time) {

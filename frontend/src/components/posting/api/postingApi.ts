@@ -1,5 +1,5 @@
 import { get, put, post, del } from '../../../utils/httpClient';
-import { PostingRequestDTO, PostingResponseDTO } from '../dto';
+import { MyPostingResponseDTO, PostingRequestDTO, PostingResponseDTO } from '../dto';
 
 // API 기본 URL
 const API_BASE_URL = process.env.REACT_APP_API_URL || '';
@@ -90,7 +90,7 @@ export const postingApi = {
     getMyPostingList: async (page: number = 0, size: number = 10) => {
         try {
             return await get<{
-                content: any[]; // MyPostingReponseDTO[] - 임시로 any 사용
+                content: MyPostingResponseDTO[]; // MyPostingReponseDTO[] - 임시로 any 사용
                 totalElements: number;
                 totalPages: number;
                 last: boolean;

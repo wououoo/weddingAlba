@@ -13,6 +13,8 @@ import wedding.alba.dto.ApiResponse;
 import wedding.alba.function.applying.dto.ApplyingRequestDTO;
 import wedding.alba.function.applying.dto.ApplyingResponseDTO;
 import wedding.alba.function.applying.dto.ApplyingStatusDTO;
+import wedding.alba.function.common.CommonService;
+import wedding.alba.function.common.dto.CommonApplyResponseDTO;
 
 import java.util.List;
 
@@ -23,6 +25,9 @@ public class ApplyingController {
 
     @Autowired
     private ApplyingService applyingService;
+
+    @Autowired
+    private CommonService commonService;
 
     @PostMapping("")
     public ResponseEntity<ApiResponse<Long>> createApplying(@RequestBody @Valid ApplyingRequestDTO requestDTO, BindingResult bindingResult) {
@@ -98,11 +103,11 @@ public class ApplyingController {
     }
 
     @GetMapping("/list/{postingId}")
-    public ResponseEntity<ApiResponse<List<ApplyingResponseDTO>>> getApplyingListByPostingId(@PathVariable Long postingId) {
+    public ResponseEntity<ApiResponse<List<CommonApplyResponseDTO>>> getApplyingListByPostingId(@PathVariable Long postingId, @RequestParam String dataType) {
         try {
             Long userId = getCurrentUserId();
-            List<ApplyingResponseDTO> applyingResponseDTOList = applyingService.getApplyingListByPostingId(postingId);
-            return ResponseEntity.ok(ApiResponse.success(applyingResponseDTOList));
+            List<CommonApplyResponseDTO> applyList = commonService.getApplyListByPostId(postingId, dataType);
+            return ResponseEntity.ok(ApiResponse.success(applyList));
         } catch(RuntimeException e) {
             log.error("모집글 별 신청글 리스트 조회 실패: {}", e.getMessage());
             return ResponseEntity.ok(ApiResponse.error(e.getMessage()));

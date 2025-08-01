@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import PostingCard from "./component/PostingCard";
+import { PostingCard } from "./component";
 import { PostingResponseDTO } from "./dto/PostingResponseDTO";
 import { usePostingList } from "./hooks/usePostingList";
 import { useInfiniteScroll } from "../common/infiniteScroll/useInfiniteScroll";

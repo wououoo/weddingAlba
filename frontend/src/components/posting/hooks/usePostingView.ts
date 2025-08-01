@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { postingApi } from '../api/postingApi';
 import { PostingResponseDTO } from '../dto';
 import { getUserIdFromToken } from '../../../OAuth2/authUtils';
@@ -9,7 +9,11 @@ import { bookmarksApi } from '../../profile/api/bookmarksApi';
 export const usePostingView = () => {
     const navigate = useNavigate();
     const { id } = useParams<{ id: string }>();
+    const location = useLocation();
     const { toastState, showToast, hideToast } = useToast();
+    
+    // URL로 모집글 타입 구분 (history 경로인지 확인)
+    const isHistoryType = location.pathname.includes('/posting/history/');
     
     // 상태 관리
     const [isBookmarked, setIsBookmarked] = useState(false);
@@ -29,13 +33,21 @@ export const usePostingView = () => {
         setCurrentUserId(userId);
     }, []);
 
-    // 게시물 데이터 가져오기
+    // 게시물 데이터 가져오기 (타입에 따라 다른 API 호출)
     useEffect(() => {
         if (id) {
             const fetchPosting = async () => {
                 try {
                     setIsLoading(true);
-                    const response = await postingApi.getPostingDetail(id);
+                    let response;
+                    
+                    if (isHistoryType) {
+                        // 모집이력 API 호출 (새로운 API)
+                        response = await postingApi.getPostingHistoryDetail(id);
+                    } else {
+                        // 일반 모집글 API 호출 (기존 API)
+                        response = await postingApi.getPostingDetail(id);
+                    }
 
                     if (response.success && response.data) {
                         setPostingData(response.data as PostingResponseDTO);
@@ -52,7 +64,7 @@ export const usePostingView = () => {
             };
             fetchPosting();
         }
-    }, [id]);
+    }, [id, isHistoryType]);
 
 
     // 현재 사용자가 작성자인지 확인 (타입을 통일하여 비교)
@@ -64,9 +76,9 @@ export const usePostingView = () => {
         return currentUserId === postingData.userId;
     }, [currentUserId, postingData?.userId]);
 
-    // 사용자의 신청, 북마크 여부 확인
+    // 사용자의 신청, 북마크 여부 확인 (모집이력이 아닌 경우만)
     useEffect(() => {
-        if (postingData?.postingId && currentUserId && !isAuthor) {
+        if (postingData?.postingId && currentUserId && !isAuthor && !isHistoryType) {
             const checkPostingStatus = async () => {
                 try {
                     const response = await postingApi.checkPostingStatus(postingData?.postingId);
@@ -82,7 +94,7 @@ export const usePostingView = () => {
             };
             checkPostingStatus();
         }
-    }, [postingData?.postingId, currentUserId, isAuthor]);
+    }, [postingData?.postingId, currentUserId, isAuthor, isHistoryType]);
 
     
     // 북마크 토글 함수 - API 연결
@@ -170,14 +182,19 @@ export const usePostingView = () => {
         }
     };
 
+    const goToApplicantManage = () => {
+        if (id) {
+            navigate(`/posting/${id}/applicants`);
+        }
+    };
+
     // 모집 취소 함수
     const cancelPosting = async () => {
-        // 먼저 확인 Toast 표시
         showToast('정말로 모집을 취소하시겠습니까?', '취소하기', async () => {
             try {
                 // TODO: 모집 취소 API 호출
                 const postingId = id ? parseInt(id, 10) : 0;
-                postingApi.deletePosting(postingId);
+                postingApi.cancelPosting(postingId);
                 hideToast(); // 확인 Toast 닫기
                 showToast('모집이 취소되었습니다.');
                 
@@ -193,24 +210,6 @@ export const usePostingView = () => {
         });
     };
 
-    // 게시글 삭제 함수
-    const deletePosting = async (postingId: number) => {
-        if (window.confirm('정말로 이 게시글을 삭제하시겠습니까?')) {
-            try {
-                const response = await postingApi.deletePosting(postingId);
-                if (response.success) {
-                    alert('게시글이 삭제되었습니다.');
-                    navigate('/posting/list'); // 게시글 목록 페이지로 이동
-                } else {
-                    alert('게시글 삭제에 실패했습니다.');
-                }
-            } catch (error) {
-                console.error('게시글 삭제 중 오류 발생:', error);
-                alert('게시글 삭제 중 오류가 발생했습니다.');
-            }
-        }
-    };
-
     return {
         // 상태
         postingData,
@@ -222,6 +221,7 @@ export const usePostingView = () => {
         currentUserId,
         hasApplied,
         userApplyingId,
+        isHistoryType, // 모집이력 타입 여부 추가
         
         // Toast 상태
         toastState,
@@ -235,7 +235,7 @@ export const usePostingView = () => {
         goToApplyPage,
         goToApplyingDetail,
         goToEditPage,
-        cancelPosting,
-        deletePosting
+        goToApplicantManage,
+        cancelPosting
     };
 };

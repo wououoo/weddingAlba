@@ -16,7 +16,6 @@ export const usePostingList = () => {
 
     const getPostingList = async () => {
         const response = await postingApi.getAllPostingList(0, 10, address, guestMainRole);
-        console.log(response);
         if(response.success) {
             setPostingList(response.data?.content || []);
         }
@@ -29,10 +28,8 @@ export const usePostingList = () => {
         isLoadingRef.current = true;
         setLoading(true);
         setError(null);
-        
         try {
             const response = await postingApi.getAllPostingList(page, 10, address, guestMainRole);
-            console.log(response);
             
             if (response.success && response.data) {
                 const { content, last } = response.data;

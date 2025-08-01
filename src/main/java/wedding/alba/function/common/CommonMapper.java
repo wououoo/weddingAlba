@@ -2,7 +2,10 @@ package wedding.alba.function.common;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import wedding.alba.enums.PayType;
+import wedding.alba.enums.EnumType;
+import wedding.alba.function.applyHistory.dto.ApplyHistoryDTO;
+import wedding.alba.function.applying.dto.ApplyingResponseDTO;
+import wedding.alba.function.common.dto.CommonApplyResponseDTO;
 import wedding.alba.function.common.dto.CommonPostResponseDTO;
 import wedding.alba.function.postHistory.dto.PostHistoryDTO;
 import wedding.alba.function.posting.dto.PostingResponseDTO;
@@ -25,8 +28,27 @@ public interface CommonMapper {
     @Mapping(target = "postingId", ignore = true)
     CommonPostResponseDTO toCommonPostResponseDTO(PostHistoryDTO postHistoryDTO, int applyCount, int confirmationCount);
 
-    default String parsePayTypeText (PayType payType) {
-        if(payType.equals(PayType.DAILY)) return "일급";
+    @Mapping(target = "statusText", expression = "java(parseStausText(applying.getStatus()))")
+    @Mapping(target = "nickname", source = "profile.nickname")
+    @Mapping(target = "applyHistoryId", ignore = true)
+    @Mapping(target = "postHistoryId", ignore = true)
+    CommonApplyResponseDTO toCommonApplyResponseDTO(ApplyingResponseDTO applying);
+
+    @Mapping(target = "statusText", expression = "java(parseStausText(applyHistoryDTO.getStatus()))")
+    @Mapping(target = "nickname", source = "profile.nickname")
+    @Mapping(target = "applyingId", ignore = true)
+    @Mapping(target = "postingId", ignore = true)
+    CommonApplyResponseDTO toCommonApplyResponseDTO(ApplyHistoryDTO applyHistoryDTO);
+
+    default String parsePayTypeText (EnumType.PayType payType) {
+        if(payType.equals(EnumType.PayType.DAILY)) return "일급";
         else return "시급";
     }
+
+    default String parseStausText (Integer status) {
+        if(status == 0) return "대기";
+        else if (status == -1) return "거절";
+        else return "확정";
+    }
+
 }

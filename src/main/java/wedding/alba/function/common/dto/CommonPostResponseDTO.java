@@ -5,7 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import wedding.alba.enums.PayType;
+import wedding.alba.enums.EnumType;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -53,11 +53,11 @@ public class CommonPostResponseDTO {
     private LocalDateTime updateDatetime;
     
     // 공통 계산 필드
-    private PayType payType;
+    private EnumType.PayType payType;
     private String payTypeText;
     
     // === 구분 필드 ===
-    private String dataType; // "ACTIVE" 또는 "HISTORY"
+    private EnumType.PostingStatusType dataType; // "ACTIVE" 또는 "HISTORY"
 
     // === PostHistoryDTO 전용 필드들 (히스토리) ===
     private Long postHistoryId; // nullable, HISTORY일 때만 사용

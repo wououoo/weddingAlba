@@ -1,3 +1,8 @@
-export  type { PostingRequestDTO } from './PostingRequestDTO';
-export type { PostingResponseDTO } from './PostingResponseDTO';
-export type { MyPostingResponseDTO, PayType, MyPostingResponseDTOUtils } from './MyPostingResponseDTO';
+export type { PostingRequestDTO } from './PostingRequestDTO';
+export type { 
+    PostingResponseDTO, 
+    MyPostingResponseDTO, 
+    BasePostingDTO,
+    PayType 
+} from './PostingResponseDTO';
+export { PostingDTOUtils } from './PostingResponseDTO';

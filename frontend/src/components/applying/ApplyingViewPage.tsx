@@ -127,7 +127,7 @@ const ApplyingViewPage: React.FC = () => {
 
                         <div className="flex items-center justify-between">
                             <div className="text-sm text-gray-600">
-                                <span className="font-medium text-blue-600">{posting.payTypeStr} {Number(posting.payAmount).toLocaleString()}원</span>
+                                <span className="font-medium text-blue-600">{posting.payTypeText} {Number(posting.payAmount).toLocaleString()}원</span>
                                 <span className="mx-2">•</span>
                                 <span>{posting.guestMainRole}</span>
                             </div>

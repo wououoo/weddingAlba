@@ -33,13 +33,10 @@ const PostingFormPage: React.FC = () => {
         handleAddressComplete,
         isEditMode,
         toastState,
-        showToast,
         hideToast,
     } = usePostingForm();
 
-
-
-    // 폼 제출 핸들러 (커스텀 훅의 handleSubmit을 사용하고, 추가적인 navigation 로직을 여기에 둡니다)
+    // 폼 제출 핸들
     const handleFormSubmit = () => {
         handleSubmit(); // 커스텀 훅의 handleSubmit 호출
     };

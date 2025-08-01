@@ -5,8 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import wedding.alba.entity.Posting;
-import wedding.alba.enums.PayType;
+import wedding.alba.enums.EnumType;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -39,7 +38,7 @@ public class PostingResponseDTO {
     @JsonFormat(pattern = "HH:mm:ss")
     private LocalTime endTime;
     
-    private PayType payType;
+    private EnumType.PayType payType;
     private String payTypeText;
     private String payAmount;
 

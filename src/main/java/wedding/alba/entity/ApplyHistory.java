@@ -31,6 +31,10 @@ public class ApplyHistory {
     
     @Column(name = "user_id")
     private Long userId;                 // 신청자 ID
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", referencedColumnName = "user_id", insertable = false, updatable = false)
+    private Profile profile;
     
     @Column(name = "posting_id")
     private Long postingId;               // 신청했던 모집글 ID

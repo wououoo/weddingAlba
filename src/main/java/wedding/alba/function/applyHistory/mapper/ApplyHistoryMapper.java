@@ -11,15 +11,19 @@ import wedding.alba.function.applying.dto.ApplyingResponseDTO;
 @Mapper(componentModel = "spring")
 public interface ApplyHistoryMapper {
     @Named("toBasic")
+    @Mapping(target = "profile", source = "profile")
     ApplyHistoryDTO toBasicApplyHistoryDTO (ApplyHistory applyHistory);
 
     @Mapping(target = "postingId", expression = "java(applying.getPostingId() != null && applying.getPostingId() > 0 ? applying.getPostingId() : null)")
     @Mapping(target = "postHistoryId", expression = "java(postHistoryId != null ? postHistoryId : null)")
     @Mapping(target = "status", expression = "java(isCancel ? -1 : 1)")
+    @Mapping(target = "profile", source = "applying.profile")
+    @Mapping(target = "applyHistoryId", ignore = true)
     ApplyHistoryDTO toApplyHistoryDTO(ApplyingResponseDTO applying, boolean isCancel, Long postHistoryId);
 
     @Mapping(target = "applyHistoryId", ignore = true)
     @Mapping(target = "confirmationDatetime", expression = "java(applyHistoryDTO.getConfirmationDatetime() != null ? applyHistoryDTO.getConfirmationDatetime() : java.time.LocalDateTime.now())")
+    @Mapping(target = "profile", ignore = true)
     ApplyHistory toApplyHistory(ApplyHistoryDTO applyHistoryDTO);
 
 

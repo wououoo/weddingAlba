@@ -1,6 +1,7 @@
 import { post, get, put } from "../../../utils/httpClient";
 import { ApplyingResponseDTO } from "../dto/ApplyingResponseDTO";
 import { ApplyingRequestDTO } from "../dto/ApplyingRequestDTO";
+import { ApplyResponseDTO } from "../dto/ApplyResponseDTO";
 
 // API 기본 URL
 const API_BASE_URL = process.env.REACT_APP_API_URL || '';
@@ -75,13 +76,16 @@ export const applyingApi = {
         }
     },
 
-    getApplyingListByPostingId: async (postingId: number) => {
+    getApplyingListByPostingId: async (postingId: number, dataType: string) => {
         try {
-            return await get<ApplyingResponseDTO[]>(`${API_BASE_URL}/applying/list/${postingId}`);
+            console.log('🌐 API 요청 URL:', `${API_BASE_URL}/applying/list/${postingId}?dataType=${dataType}`);
+            return await get<ApplyResponseDTO[]>(`${API_BASE_URL}/applying/list/${postingId}?dataType=${dataType}`);
         } catch (error) {
+            console.error('🚨 API 에러:', error);
             return {
                 success: false,
-                data: [],   
+                data: [],
+                message: '신청자 목록 조회 실패'
             }
         }
     }

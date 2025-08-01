@@ -19,6 +19,7 @@ import PrivateChatRoom from './components/chat/PrivateChatRoom';
 import { ApplyingListPage, ApplyingFormPage } from './components/applying';
 import ApplyingViewPage from './components/applying/ApplyingViewPage';
 import { PostingFormPage,  MyPostingListPage,  PostingListPage,  PostingViewPage} from './components/posting';
+import ApplicantManagePage from './components/posting/ApplicantManagePage';
 import MainPage from './components/main/MainPage';
 // import { useAuthStore } from './stores/authStore'; // 주석 처리
 
@@ -88,6 +89,24 @@ const App: React.FC = () => {
           <SimplePrivateRoute>
             <WithLayout>
               <PostingViewPage />
+            </WithLayout>
+          </SimplePrivateRoute>
+        } />
+
+        {/* 모집 이력 상세보기 */}
+        <Route path="/posting/history/:id" element={
+          <SimplePrivateRoute>
+            <WithLayout>
+              <PostingViewPage />
+            </WithLayout>
+          </SimplePrivateRoute>
+        } />
+
+        {/* 신청자 관리 페이지 */}
+        <Route path="/posting/:id/applicants" element={
+          <SimplePrivateRoute>
+            <WithLayout>
+              <ApplicantManagePage />
             </WithLayout>
           </SimplePrivateRoute>
         } />
@@ -242,93 +261,6 @@ const App: React.FC = () => {
             <ReviewListPage />
           </SimplePrivateRoute>
         } />
-
-
-
-        {/*<Route path="/posting/:id" element={*/}
-        {/*  <SimplePrivateRoute>*/}
-        {/*    <WithLayout>*/}
-        {/*      <div className="p-4">*/}
-        {/*        <h1 className="text-xl font-bold mb-4">게시글 상세 페이지</h1>*/}
-        {/*        <p>현재 구현 중입니다.</p>*/}
-        {/*        <button */}
-        {/*          className="mt-4 px-4 py-2 bg-purple-600 text-white rounded"*/}
-        {/*          onClick={() => window.history.back()}*/}
-        {/*        >*/}
-        {/*          뒤로가기*/}
-        {/*        </button>*/}
-        {/*      </div>*/}
-        {/*    </WithLayout>*/}
-        {/*  </SimplePrivateRoute>*/}
-        {/*} />*/}
-
-        {/*<Route path="/posting/create" element={*/}
-        {/*  <SimplePrivateRoute>*/}
-        {/*    <WithLayout>*/}
-        {/*      <div className="p-4">*/}
-        {/*        <h1 className="text-xl font-bold mb-4">게시글 작성</h1>*/}
-        {/*        <p>현재 구현 중입니다.</p>*/}
-        {/*        <button */}
-        {/*          className="mt-4 px-4 py-2 bg-purple-600 text-white rounded"*/}
-        {/*          onClick={() => window.history.back()}*/}
-        {/*        >*/}
-        {/*          뒤로가기*/}
-        {/*        </button>*/}
-        {/*      </div>*/}
-        {/*    </WithLayout>*/}
-        {/*  </SimplePrivateRoute>*/}
-        {/*} />*/}
-
-        {/*<Route path="/apply/:id" element={*/}
-        {/*  <SimplePrivateRoute>*/}
-        {/*    <WithLayout>*/}
-        {/*      <div className="p-4">*/}
-        {/*        <h1 className="text-xl font-bold mb-4">하객 신청</h1>*/}
-        {/*        <p>현재 구현 중입니다.</p>*/}
-        {/*        <button*/}
-        {/*          className="mt-4 px-4 py-2 bg-purple-600 text-white rounded"*/}
-        {/*          onClick={() => window.history.back()}*/}
-        {/*        >*/}
-        {/*          뒤로가기*/}
-        {/*        </button>*/}
-        {/*      </div>*/}
-        {/*    </WithLayout>*/}
-        {/*  </SimplePrivateRoute>*/}
-        {/*} />*/}
-
-        {/* 추가 페이지들 */}
-        {/*<Route path="/postings" element={*/}
-        {/*  <SimplePrivateRoute>*/}
-        {/*    <WithLayout>*/}
-        {/*      <div className="p-4">*/}
-        {/*        <h1 className="text-xl font-bold mb-4">예정된 공고</h1>*/}
-        {/*        <p>현재 구현 중입니다.</p>*/}
-        {/*      </div>*/}
-        {/*    </WithLayout>*/}
-        {/*  </SimplePrivateRoute>*/}
-        {/*} />*/}
-
-        {/*<Route path="/chat" element={*/}
-        {/*  <SimplePrivateRoute>*/}
-        {/*    <WithLayout>*/}
-        {/*      <div className="p-4">*/}
-        {/*        <h1 className="text-xl font-bold mb-4">채팅</h1>*/}
-        {/*        <p>현재 구현 중입니다.</p>*/}
-        {/*      </div>*/}
-        {/*    </WithLayout>*/}
-        {/*  </SimplePrivateRoute>*/}
-        {/*} />*/}
-
-        {/*<Route path="/mypage" element={*/}
-        {/*  <SimplePrivateRoute>*/}
-        {/*    <WithLayout>*/}
-        {/*      <div className="p-4">*/}
-        {/*        <h1 className="text-xl font-bold mb-4">마이페이지</h1>*/}
-        {/*        <p>현재 구현 중입니다.</p>*/}
-        {/*      </div>*/}
-        {/*    </WithLayout>*/}
-        {/*  </SimplePrivateRoute>*/}
-        {/*} />*/}
       </Routes>
     </Router>
   );

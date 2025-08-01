@@ -8,6 +8,7 @@ import wedding.alba.function.postHistory.dto.PostHistoryDTO;
 import wedding.alba.function.postHistory.mapper.PostHistoryMapper;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @Service
 @Slf4j
@@ -31,6 +32,13 @@ public class PostHistoryService {
         List<PostHistory> postHistoryList = postHistoryRepository.findByUserId(userId);
         List<PostHistoryDTO> postHistoryDTOList = postHistoryList.stream().map(postHistory -> postHistoryMapper.toPostHistoryDTO(postHistory)).toList();
         return postHistoryDTOList;
+    }
+
+    public PostHistoryDTO getPostHistoryDetail(Long postHistoryId) {
+        PostHistoryDTO postHistoryDTO = postHistoryRepository.findById(postHistoryId)
+                .map(postHistoryMapper::toPostHistoryDTO)
+                .orElseThrow(() -> new NoSuchElementException("모집이력을 찾을 수 없습니다. ID: " + postHistoryId));
+        return postHistoryDTO;
     }
 
 }

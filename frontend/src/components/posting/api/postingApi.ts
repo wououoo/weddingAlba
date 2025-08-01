@@ -40,8 +40,8 @@ export const postingApi = {
         }
     },
 
-    // 모집글 삭제
-    deletePosting: async (postingId: number) => {
+    // 모집 취소
+    cancelPosting: async (postingId: number) => {
         try {
             return await del<void>(`${API_BASE_URL}/posting/${postingId}`);
         } catch (error) {
@@ -62,6 +62,19 @@ export const postingApi = {
                 success: false,
                 data: null,
                 message: '모집글 상세 조회에 실패했습니다.'
+            };
+        }
+    },
+
+    // 모집이력 상세조회
+    getPostingHistoryDetail: async (id: string) => {
+        try {
+            return await get<PostingResponseDTO>(`${API_BASE_URL}/post/history/detail/${id}`);
+        } catch(error) {
+            return {
+                success: false,
+                data: null,
+                message: '모집이력 상세 조회에 실패했습니다.'
             };
         }
     },
@@ -87,10 +100,11 @@ export const postingApi = {
         }
     },
 
+    // 내 모집글
     getMyPostingList: async (page: number = 0, size: number = 10) => {
         try {
             return await get<{
-                content: MyPostingResponseDTO[]; // MyPostingReponseDTO[] - 임시로 any 사용
+                content: MyPostingResponseDTO[]; 
                 totalElements: number;
                 totalPages: number;
                 last: boolean;
@@ -107,6 +121,7 @@ export const postingApi = {
         }
     },
 
+    // 모집글 신청 및 북마크 여부 확인
     checkPostingStatus: async (postingId?: number | string) => {
         try {
             return await get<PostingStatusResponse>(`${API_BASE_URL}/posting/check/status/${postingId}`);
@@ -119,6 +134,7 @@ export const postingApi = {
         }
     }, 
     
+    // 모집 확정
     confirmationPosting: async (postingId: number) => {
         try {
             return await get<void>(`${API_BASE_URL}/posting/confirmation/${postingId}`);

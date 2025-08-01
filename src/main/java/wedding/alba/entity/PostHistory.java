@@ -15,7 +15,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import wedding.alba.enums.PayType;
+import wedding.alba.enums.EnumType;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -80,8 +80,8 @@ public class PostHistory {
     @Column(name="working_hours")
     private String workingHours;        // 근무 시간
 
-    @Enumerated(EnumType.STRING)
-    private PayType payType;     // 급여 타입 (시급, 일급)
+    @Enumerated(jakarta.persistence.EnumType.STRING)
+    private EnumType.PayType payType;     // 급여 타입 (시급, 일급)
 
     @Column(name="pay_amount")
     private String payAmount;           // 급여 금액

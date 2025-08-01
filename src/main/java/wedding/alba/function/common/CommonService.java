@@ -3,10 +3,14 @@ package wedding.alba.function.common;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
+
+import lombok.extern.slf4j.Slf4j;
+import wedding.alba.enums.EnumType;
 import wedding.alba.function.applyHistory.ApplyHistoryService;
 import wedding.alba.function.applyHistory.dto.ApplyHistoryDTO;
 import wedding.alba.function.applying.ApplyingService;
 import wedding.alba.function.applying.dto.ApplyingResponseDTO;
+import wedding.alba.function.common.dto.CommonApplyResponseDTO;
 import wedding.alba.function.common.dto.CommonPostResponseDTO;
 import wedding.alba.function.postHistory.PostHistoryService;
 import wedding.alba.function.postHistory.dto.PostHistoryDTO;
@@ -15,8 +19,10 @@ import wedding.alba.function.posting.dto.PostingResponseDTO;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class CommonService {
     @Autowired
     private CommonMapper commonMapper;
@@ -79,5 +85,37 @@ public class CommonService {
 
         // 4. PageImpl로 변환
         return new PageImpl<>(pageContent, pageable, myPostingList.size());
+    }
+
+    public List<CommonApplyResponseDTO> getApplyListByPostId(Long id, String dataType) {
+        List<CommonApplyResponseDTO> commonApplyResponseDTOList =  new ArrayList<>();
+        
+        try {
+            EnumType.PostingStatusType statusType = EnumType.PostingStatusType.valueOf(dataType);
+            
+            if(statusType == EnumType.PostingStatusType.ACTIVE) {
+                List<CommonApplyResponseDTO> list = applyingService.getApplyingListByPostingId(id)
+                        .stream()
+                        .map(commonMapper::toCommonApplyResponseDTO)
+                        .collect(Collectors.toList());
+                commonApplyResponseDTOList.addAll(list);
+            } else if(statusType == EnumType.PostingStatusType.HISTORY) {
+                List<CommonApplyResponseDTO> list = applyHistoryService.getApplyHistoryListByPostId(id)
+                        .stream()
+                        .map(commonMapper::toCommonApplyResponseDTO)
+                        .collect(Collectors.toList());
+                commonApplyResponseDTOList.addAll(list);
+            }
+        } catch (IllegalArgumentException e) {
+            // 잘못된 dataType인 경우 기본적으로 ACTIVE로 처리
+            log.warn("잘못된 dataType: {}, ACTIVE로 처리합니다.", dataType);
+            List<CommonApplyResponseDTO> list = applyingService.getApplyingListByPostingId(id)
+                    .stream()
+                    .map(commonMapper::toCommonApplyResponseDTO)
+                    .collect(Collectors.toList());
+            commonApplyResponseDTOList.addAll(list);
+        }
+        
+        return commonApplyResponseDTOList;
     }
 }

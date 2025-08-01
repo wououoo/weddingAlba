@@ -4,7 +4,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import wedding.alba.entity.PostHistory;
 import wedding.alba.entity.Posting;
-import wedding.alba.enums.PayType;
+import wedding.alba.enums.EnumType;
 import wedding.alba.function.postHistory.dto.PostHistoryDTO;
 
 import java.time.LocalTime;
@@ -54,19 +54,19 @@ public interface PostHistoryMapper {
         return String.join(",", tags);
     }
 
-    default PayType parsePayType(String payType) {
+    default EnumType.PayType parsePayType(String payType) {
         if (payType == null || payType.trim().isEmpty()) {
             throw new IllegalArgumentException("Pay type cannot be null or empty");
         }
         try {
-            return PayType.valueOf(payType.toUpperCase());
+            return EnumType.PayType.valueOf(payType.toUpperCase());
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Invalid pay type: " + payType);
         }
     }
 
-    default String parsePayTypeText (PayType payType) {
-        if(payType.equals(PayType.DAILY)) return "일급";
+    default String parsePayTypeText (EnumType.PayType payType) {
+        if(payType.equals(EnumType.PayType.DAILY)) return "일급";
         else return "시급";
     }
 

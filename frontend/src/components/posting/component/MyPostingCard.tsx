@@ -8,7 +8,7 @@ interface MyPostingCardProps {
     posting: MyPostingResponseDTO;
     cancelLoading: boolean;
     onCardClick: (postingId: number, dataType: string) => void;
-    onApplicantManage: (postingId: number) => void;
+    onApplicantManage: (postingId: number, dataType: string) => void;
     onCancel: (postingId: number) => void;
     onEdit: (postingId: number) => void;
 }

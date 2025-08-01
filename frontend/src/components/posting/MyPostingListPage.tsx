@@ -62,12 +62,18 @@ const MyPostingListPage: React.FC = () => {
                         cancelLoading={cancelLoading}
                         onCardClick={(postingId, dataType) => {
                             if (dataType === "HISTORY") {
-                                navigate(`/posting/history/${postingId}`);
+                                navigate(`/post/history/${postingId}`);
                             } else {
                                 navigate(`/posting/${postingId}`);
                             }
                         }}
-                        onApplicantManage={(postingId) => navigate(`/posting/${postingId}/applicants`)}
+                        onApplicantManage={(postingId, dataType) => {
+                            if (dataType === "HISTORY") {
+                                navigate(`/post/history/${postingId}/applicants`);
+                            } else {
+                                navigate(`/posting/${postingId}/applicants`);
+                            }
+                        }}
                         onCancel={(postingId) => handleCancelPosting(postingId, showToast)}
                         onEdit={(postingId) => navigate(`/posting/edit/${postingId}`)}
                     />

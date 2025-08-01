@@ -1,20 +1,24 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { convertDatetime } from "../common/base";
 import { applyingApi } from "../applying/api/applyingApi";
 import { postingApi } from "./api/postingApi";
 import { Toast, useToast } from "../common/toast";
-import { ApplyResponseDTO } from "../applying/dto/ApplyResponseDTO";
 import { PostingResponseDTO } from "./dto/PostingResponseDTO";
+import { ApplyingResponseDTO, MyApplyingResponseDTO } from "../applying/dto/ApplyingResponseDTO";
 
 const ApplicantManagePage: React.FC = () => {
     const navigate = useNavigate();
     const { id } = useParams<{ id: string }>();
+    const location = useLocation();
     const { toastState, showToast, hideToast } = useToast();
+    
+    // URL에서 모집이력인지 판단 (예: /post/history/123/applicants)
+    const isHistoryFromUrl = location.pathname.includes('/history/');
     
     // 상태 관리
     const [postingData, setPostingData] = useState<PostingResponseDTO | null>(null);
-    const [applicants, setApplicants] = useState<ApplyResponseDTO[]>([]);
+    const [applicants, setApplicants] = useState<MyApplyingResponseDTO[]>([]);
     const [loading, setLoading] = useState(true);
     const [applicantsLoading, setApplicantsLoading] = useState(false);
     const [postingStatus, setPostingStatus] = useState<number>(0);
@@ -31,21 +35,32 @@ const ApplicantManagePage: React.FC = () => {
         if (!id) return;
         
         setLoading(true);
-        let isHistoryData = false;
         
         try {
-            // 먼저 일반 모집글 정보 가져오기 시도
-            let postingResponse = await postingApi.getPostingDetail(id);
+            let postingResponse;
+            let isHistoryData = isHistoryFromUrl;
             
-            // 일반 모집글 조회 실패시 모집이력에서 조회
-            if (!postingResponse.success || !postingResponse.data) {
-                console.log('일반 모집글 조회 실패, 모집이력에서 조회 시도...');
+            console.log('🚀 데이터 로드 시작:', { id, isHistoryFromUrl, pathname: location.pathname });
+            
+            if (isHistoryFromUrl) {
+                // URL에서 이미 모집이력으로 판단된 경우 바로 PostHistory에서 조회
+                console.log('📁 모집이력에서 조회');
                 postingResponse = await postingApi.getPostingHistoryDetail(id);
+                setIsHistory(true);
+            } else {
+                // 일반 모집글에서 조회 시도
+                console.log('📝 일반 모집글에서 조회');
+                postingResponse = await postingApi.getPostingDetail(id);
                 
-                // 모집이력에서 성공적으로 조회된 경우
-                if (postingResponse.success && postingResponse.data) {
-                    isHistoryData = true;
-                    setIsHistory(true);
+                // 일반 모집글 조회 실패시 모집이력에서 재시도
+                if (!postingResponse.success || !postingResponse.data) {
+                    console.log('⚠️ 일반 모집글 조회 실패, 모집이력에서 재시도...');
+                    postingResponse = await postingApi.getPostingHistoryDetail(id);
+                    
+                    if (postingResponse.success && postingResponse.data) {
+                        isHistoryData = true;
+                        setIsHistory(true);
+                    }
                 }
             }
             
@@ -53,6 +68,8 @@ const ApplicantManagePage: React.FC = () => {
                 const currentStatus = postingResponse.data.status || 0;
                 setPostingData(postingResponse.data);
                 setPostingStatus(currentStatus);
+                
+                console.log('📊 모집글 정보:', { currentStatus, isHistoryData, title: postingResponse.data.title });
                 
                 // 신청자 목록 가져오기 - 상태값들을 직접 전달
                 await loadApplicants(Number(id), isHistoryData, currentStatus);
@@ -103,6 +120,12 @@ const ApplicantManagePage: React.FC = () => {
             if (response.success && response.data) {
                 setApplicants(response.data || []);
                 console.log('✅ 신청자 설정 완료:', response.data.length + '명');
+                console.log('👥 신청자 목록:', response.data.map(a => ({
+                    nickname: a.nickname,
+                    applyingId: a.applyingId,
+                    applyHistoryId: a.applyHistoryId,
+                    status: a.status
+                })));
             } else {
                 console.log('❌ 응답 실패 또는 데이터 없음:', response);
                 setApplicants([]);
@@ -255,7 +278,7 @@ const ApplicantManagePage: React.FC = () => {
     const goToPostingDetail = () => {
         if (id) {
             if (isHistory) {
-                navigate(`/posting/history/${id}`);
+                navigate(`/post/history/${id}`);
             } else {
                 navigate(`/posting/${id}`);
             }
@@ -340,12 +363,23 @@ const ApplicantManagePage: React.FC = () => {
                         </svg>
                     </button>
                     <h1 className="text-lg font-bold text-gray-900">신청자 관리</h1>
-                    <button
-                        onClick={goToPostingDetail}
-                        className="text-sm text-blue-600 hover:text-blue-800 px-3 py-1 rounded-lg hover:bg-blue-50 transition-colors"
-                    >
-                        상세보기
-                    </button>
+                    <div className="flex gap-2">
+                        {/* 신청자가 없고 모집중일 때만 수정 가능 */}
+                        {postingStatus === 0 && !isHistory && totalCount === 0 && (
+                            <button
+                                onClick={() => navigate(`/posting/edit/${id}`)}
+                                className="text-sm text-green-600 hover:text-green-800 px-3 py-1 rounded-lg hover:bg-green-50 transition-colors"
+                            >
+                                수정
+                            </button>
+                        )}
+                        <button
+                            onClick={goToPostingDetail}
+                            className="text-sm text-blue-600 hover:text-blue-800 px-3 py-1 rounded-lg hover:bg-blue-50 transition-colors"
+                        >
+                            상세보기
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -474,7 +508,13 @@ const ApplicantManagePage: React.FC = () => {
                                         </div>
                                         <div className="flex gap-2">
                                             <button
-                                                onClick={() => navigate(`/applying/${applicant.applyingId}`)}
+                                                onClick={() => {
+                                                    if (isHistory || isHistoryFromUrl) {
+                                                        navigate(`/apply/history/${applicant.applyHistoryId || applicant.applyingId}`);
+                                                    } else {
+                                                        navigate(`/applying/${applicant.applyingId}`);
+                                                    }
+                                                }}
                                                 className="text-sm text-blue-600 hover:text-blue-800 px-3 py-1 rounded hover:bg-blue-50 transition-colors"
                                             >
                                                 상세보기
@@ -508,6 +548,43 @@ const ApplicantManagePage: React.FC = () => {
                 {postingStatus === 0 && !isHistory && (
                     <div className="bg-white rounded-xl shadow-sm p-6">
                         <h3 className="text-lg font-bold text-gray-900 mb-4">모집글 관리</h3>
+                        
+                        {/* 신청자가 없을 때만 수정 가능 안내 */}
+                        {totalCount === 0 && (
+                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <span className="text-blue-800 font-medium">수정 가능</span>
+                                </div>
+                                <p className="text-sm text-blue-700">
+                                    아직 신청자가 없어 모집글을 자유롭게 수정할 수 있습니다.
+                                </p>
+                                <button
+                                    onClick={() => navigate(`/posting/edit/${id}`)}
+                                    className="mt-3 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
+                                >
+                                    📝 모집글 수정하기
+                                </button>
+                            </div>
+                        )}
+                        
+                        {/* 신청자가 있을 때 수정 불가 안내 */}
+                        {totalCount > 0 && (
+                            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                                    </svg>
+                                    <span className="text-orange-800 font-medium">수정 불가</span>
+                                </div>
+                                <p className="text-sm text-orange-700">
+                                    신청자가 있어 공정성을 위해 모집글 수정이 제한됩니다.
+                                </p>
+                            </div>
+                        )}
+                        
                         <div className="flex gap-3 mb-4">
                             {approvedCount > 0 && (
                                 <button

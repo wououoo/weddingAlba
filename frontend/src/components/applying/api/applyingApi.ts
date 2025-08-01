@@ -1,7 +1,6 @@
 import { post, get, put } from "../../../utils/httpClient";
-import { ApplyingResponseDTO } from "../dto/ApplyingResponseDTO";
+import { ApplyingResponseDTO, MyApplyingResponseDTO } from "../dto/ApplyingResponseDTO";
 import { ApplyingRequestDTO } from "../dto/ApplyingRequestDTO";
-import { ApplyResponseDTO } from "../dto/ApplyResponseDTO";
 
 // API 기본 URL
 const API_BASE_URL = process.env.REACT_APP_API_URL || '';
@@ -36,7 +35,19 @@ export const applyingApi = {
     // 신청글 상세 조회
     getApplyingDetail: async (applyingId: string) => {
         try {
-            return await get<ApplyingResponseDTO>(`${API_BASE_URL}/applying/detail/${applyingId}`);
+            return await get<MyApplyingResponseDTO>(`${API_BASE_URL}/applying/detail/${applyingId}`);
+        } catch (error) {
+            return {
+                success: false,
+                data: null,
+                message: '신청글 조회에 실패했습니다.'
+            };
+        }
+    },
+
+    getApplyHistoryDetail: async (applyHistoryId: string) => {
+        try {
+            return await get<MyApplyingResponseDTO>(`${API_BASE_URL}/apply/history/detail/${applyHistoryId}`);
         } catch (error) {
             return {
                 success: false,
@@ -79,7 +90,7 @@ export const applyingApi = {
     getApplyingListByPostingId: async (postingId: number, dataType: string) => {
         try {
             console.log('🌐 API 요청 URL:', `${API_BASE_URL}/applying/list/${postingId}?dataType=${dataType}`);
-            return await get<ApplyResponseDTO[]>(`${API_BASE_URL}/applying/list/${postingId}?dataType=${dataType}`);
+            return await get<ApplyingResponseDTO[]>(`${API_BASE_URL}/applying/list/${postingId}?dataType=${dataType}`);
         } catch (error) {
             console.error('🚨 API 에러:', error);
             return {

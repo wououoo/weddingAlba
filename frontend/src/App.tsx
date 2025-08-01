@@ -94,7 +94,7 @@ const App: React.FC = () => {
         } />
 
         {/* 모집 이력 상세보기 */}
-        <Route path="/posting/history/:id" element={
+        <Route path="/post/history/:id" element={
           <SimplePrivateRoute>
             <WithLayout>
               <PostingViewPage />
@@ -102,8 +102,17 @@ const App: React.FC = () => {
           </SimplePrivateRoute>
         } />
 
-        {/* 신청자 관리 페이지 */}
+        {/* 모집 중 : 신청자 관리 페이지 */}
         <Route path="/posting/:id/applicants" element={
+          <SimplePrivateRoute>
+            <WithLayout>
+              <ApplicantManagePage />
+            </WithLayout>
+          </SimplePrivateRoute>
+        } />
+
+        {/* 이력 : 신청자 관리 페이지 */}
+        <Route path="/post/history/:id/applicants" element={
           <SimplePrivateRoute>
             <WithLayout>
               <ApplicantManagePage />
@@ -141,6 +150,15 @@ const App: React.FC = () => {
 
         {/*  신청글 상세보기 */}
         <Route path="/applying/:applyingId" element={
+          <SimplePrivateRoute>
+          <WithLayout>
+            <ApplyingViewPage />
+          </WithLayout>
+        </SimplePrivateRoute>
+        } />
+        
+        {/*  신청이력 상세보기 */}
+        <Route path="/apply/history/:applyHistoryId" element={
           <SimplePrivateRoute>
           <WithLayout>
             <ApplyingViewPage />

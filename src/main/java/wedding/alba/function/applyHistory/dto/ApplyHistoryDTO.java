@@ -1,5 +1,6 @@
 package wedding.alba.function.applyHistory.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -20,6 +21,9 @@ public class ApplyHistoryDTO {
     private Long postHistoryId;
     private String prContent;
     private Integer status;
+    private String statusText;
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime applyDatetime;
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime confirmationDatetime;
 }

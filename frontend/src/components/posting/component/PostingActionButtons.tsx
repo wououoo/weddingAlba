@@ -5,7 +5,7 @@ interface PostingActionButtonsProps {
     posting: MyPostingResponseDTO;
     postingId: number | undefined;
     cancelLoading: boolean;
-    onApplicantManage: (postingId: number) => void;
+    onApplicantManage: (postingId: number, dataType: string) => void;
     onCancel: (postingId: number) => void;
     onEdit: (postingId: number) => void;
 }
@@ -32,7 +32,12 @@ const PostingActionButtons: React.FC<PostingActionButtonsProps> = ({
                     {/* 신청자 관리 버튼 - 신청자가 있으면 무조건 표시 */}
                     {(posting.applyCount || 0) > 0 && (
                         <button
-                            onClick={handleClick(onApplicantManage)}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                if (postingId !== undefined && postingId !== null) {
+                                    onApplicantManage(postingId, posting.dataType || "ACTIVE");
+                                }
+                            }}
                             className="px-4 py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 transition-colors font-medium"
                         >
                             👥 신청자 관리 ({posting.applyCount || 0}명)

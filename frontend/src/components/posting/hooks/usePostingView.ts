@@ -13,7 +13,7 @@ export const usePostingView = () => {
     const { toastState, showToast, hideToast } = useToast();
     
     // URL로 모집글 타입 구분 (history 경로인지 확인)
-    const isHistoryType = location.pathname.includes('/posting/history/');
+    const isHistoryType = location.pathname.includes('/post/history/');
     
     // 상태 관리
     const [isBookmarked, setIsBookmarked] = useState(false);

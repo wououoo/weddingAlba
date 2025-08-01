@@ -1,15 +1,25 @@
 import { PostingResponseDTO } from "../../posting/dto";
-import { ProfileResponseDTO } from "../../profile";
 
-export interface ApplyingResponseDTO {
-    applyingId: number;
+export interface BaseApplyingDTO {
+    applyingId?: number;
+    postingId?: number;
     userId: number;
-    postingId: number;
-    posting: PostingResponseDTO;
-    profile: ProfileResponseDTO;
+    nickname: string;
+    prContent: string;
     status: number; // 0: 대기, 1: 승인, -1: 거절
     statusText: string;
     applyDatetime: string;
-    prContent: string;
     confirmationDatetime: string | null;
+    posting?: PostingResponseDTO;
+    
+    // CommonApplyResponseDTO와 동일하게 추가
+    applyHistoryId?: number;
+    postHistoryId?: number;
+}
+
+export interface ApplyingResponseDTO extends BaseApplyingDTO {
+}
+
+export interface MyApplyingResponseDTO extends BaseApplyingDTO {
+    // BaseApplyingDTO에 이미 포함되어 있음
 }

@@ -1,12 +1,16 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { applyingApi } from '../api/applyingApi';
 import { ApplyingResponseDTO } from '../dto/ApplyingResponseDTO';
 import { getUserIdFromToken } from '../../../OAuth2/authUtils';
 
 export const useApplyingView = () => {
     const navigate = useNavigate();
-    const { applyingId } = useParams<{ applyingId: string }>();
+    const location = useLocation();
+
+    const isHistoryFromUrl = location.pathname.includes('/history/');
+
+    const { applyingId, applyHistoryId } = useParams<{ applyingId: string, applyHistoryId: string }>();
     
     // 상태 관리
     const [applyingData, setApplyingData] = useState<ApplyingResponseDTO | null>(null);
@@ -21,18 +25,20 @@ export const useApplyingView = () => {
 
     // 신청 데이터 가져오기
     useEffect(() => {
-        if (applyingId) {
+        if (applyingId || applyHistoryId && isHistoryFromUrl) {
             const fetchApplying = async () => {
                 try {
                     setIsLoading(true);
-                    const response = await applyingApi.getApplyingDetail(applyingId);
 
-                    if (response.success && response.data) {
+                    if(isHistoryFromUrl) {
+                        const response = await applyingApi.getApplyHistoryDetail(applyHistoryId || '');
+                        console.log('👥 신청이력 데이터:', response.data);
                         setApplyingData(response.data);
                     } else {
-                        console.error("Failed to fetch applying detail:", response.message);
-                        setApplyingData(null);
+                        const response = await applyingApi.getApplyingDetail(applyingId || '');
+                        setApplyingData(response.data);
                     }
+
                 } catch (error) {
                     console.error("Error fetching applying data:", error);
                     setApplyingData(null);
@@ -80,7 +86,7 @@ export const useApplyingView = () => {
         applyingData,
         isLoading,
         currentUserId,
-        
+        isHistory: isHistoryFromUrl,
         getStatusColor,
         goBack,
         goToPosting,

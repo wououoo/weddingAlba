@@ -75,17 +75,30 @@ const PostingViewPage: React.FC = () => {
                         {isHistoryType ? '하객알바 모집이력' : '하객알바 모집'}
                     </h1>
                     <div className="flex items-center gap-2">
-                        {/* 신청자 관리 버튼 - 작성자이고 신청자가 있을 때만 표시 */}
-                        {isAuthor && !isHistoryType && postingData && (postingData.applyCount || 0) > 0 && (
-                            <button
-                                onClick={goToApplicantManage}
-                                className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"
-                                title={`신청자 관리 (${postingData.applyCount || 0}명)`}
-                            >
-                                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"></path>
-                                </svg>
-                            </button>
+                        {isAuthor && !isHistoryType && (
+                            postingData && (postingData.applyCount || 0) > 0 ? (
+                                // 신청자가 있는 경우: 신청자 관리 버튼
+                                <button
+                                    onClick={goToApplicantManage}
+                                    className="p-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition-colors"
+                                    title={`신청자 관리 (${postingData.applyCount || 0}명)`}
+                                >
+                                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"></path>
+                                    </svg>
+                                </button>
+                            ) : (
+                                // 신청자가 없는 경우: 수정 버튼
+                                <button
+                                    onClick={goToEditPage}
+                                    className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"
+                                    title="모집글 수정"
+                                >
+                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                </button>
+                            )
                         )}
                         {!isAuthor && !isHistoryType && (
                             <button 
@@ -321,32 +334,47 @@ const PostingViewPage: React.FC = () => {
                 <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-20">
                     <div className="flex space-x-3">
                         {isAuthor ? (
-                            // 작성자인 경우: 신청자 관리, 모집취소하기, 수정하기
+                            // 작성자인 경우
                             <>
-                                {/* 신청자 관리 버튼 - 신청자가 있는 경우에만 표시 */}
-                                {postingData && (postingData.applyCount || 0) > 0 && (
-                                    <button
-                                        onClick={goToApplicantManage}
-                                        className="flex-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white py-4 rounded-xl font-semibold text-lg hover:shadow-lg transition-all flex items-center justify-center space-x-2"
-                                    >
-                                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"></path>
-                                        </svg>
-                                        <span>신청자 관리 ({postingData.applyCount || 0}명)</span>
-                                    </button>
+                                {postingData && (postingData.applyCount || 0) > 0 ? (
+                                    // 신청자가 있는 경우: 신청자 관리 + 모집 취소만
+                                    <>
+                                        <button
+                                            onClick={goToApplicantManage}
+                                            className="flex-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white py-4 rounded-xl font-semibold text-lg hover:shadow-lg transition-all flex items-center justify-center space-x-2"
+                                        >
+                                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                                <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"></path>
+                                            </svg>
+                                            <span>신청자 관리 ({postingData.applyCount || 0}명)</span>
+                                        </button>
+                                        <button
+                                            onClick={cancelPosting}
+                                            className="flex-1 bg-gray-200 text-gray-700 py-4 rounded-xl font-semibold text-lg hover:bg-gray-300 transition-all"
+                                        >
+                                            모집 취소
+                                        </button>
+                                    </>
+                                ) : (
+                                    // 신청자가 없는 경우: 수정하기 + 모집 취소
+                                    <>
+                                        <button
+                                            onClick={goToEditPage}
+                                            className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white py-4 rounded-xl font-semibold text-lg hover:shadow-lg transition-all flex items-center justify-center space-x-2"
+                                        >
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                            </svg>
+                                            <span>수정하기</span>
+                                        </button>
+                                        <button
+                                            onClick={cancelPosting}
+                                            className="flex-1 bg-gray-200 text-gray-700 py-4 rounded-xl font-semibold text-lg hover:bg-gray-300 transition-all"
+                                        >
+                                            모집 취소
+                                        </button>
+                                    </>
                                 )}
-                                <button
-                                    onClick={cancelPosting}
-                                    className="flex-1 bg-gray-200 text-gray-700 py-4 rounded-xl font-semibold text-lg hover:bg-gray-300 transition-all"
-                                >
-                                    모집 취소
-                                </button>
-                                <button
-                                    onClick={goToEditPage}
-                                    className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white py-4 rounded-xl font-semibold text-lg hover:shadow-lg transition-all"
-                                >
-                                    수정하기
-                                </button>
                             </>
                         ) : (
                             // 일반 사용자인 경우: 북마크, 신청하기/신청글 확인하기

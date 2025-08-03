@@ -17,8 +17,8 @@ const LoginPage: React.FC = () => {
   };
 
   const handleKakaoLogin = () => {
-    // 개발 서버 사용 시 상대 경로로 변경
-    window.location.href = '/oauth2/authorization/kakao';
+    // 백엔드 서버로 OAuth2 요청
+    window.location.href = 'http://localhost:8080/oauth2/authorization/kakao';
   };
 
   return (

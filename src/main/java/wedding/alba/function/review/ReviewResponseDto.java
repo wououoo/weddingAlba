@@ -18,10 +18,10 @@ public class ReviewResponseDto {
 
     // 게스트 리뷰 필드
     private Long guestReviewId;
-    
-    // 호스트 리뷰 필드  
+
+    // 호스트 리뷰 필드
     private Long hostReviewId;
-    
+
     // 공통 필드
     private Long applyId;
     private Long postingId;
@@ -30,16 +30,16 @@ public class ReviewResponseDto {
     private Integer score;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    
+
     // 게스트 정보 (게스트 리뷰에서 사용)
     private GuestInfo guestInfo;
-    
+
     // 호스트 정보 (호스트 리뷰에서 사용)
     private HostInfo hostInfo;
-    
+
     // 모집글 정보
     private PostingInfo postingInfo;
-    
+
     /**
      * 게스트 정보 내부 클래스
      */
@@ -52,7 +52,7 @@ public class ReviewResponseDto {
         private String profileImageUrl;
         private Integer guestPower; // 게스트 평점/레벨
     }
-    
+
     /**
      * 호스트 정보 내부 클래스
      */
@@ -65,7 +65,7 @@ public class ReviewResponseDto {
         private String profileImageUrl;
         private Integer hostPower; // 호스트 평점/레벨
     }
-    
+
     /**
      * 모집글 정보 내부 클래스
      */
@@ -82,9 +82,9 @@ public class ReviewResponseDto {
     /**
      * 게스트 리뷰 응답 생성 메서드
      */
-    public static ReviewResponseDto forGuestReview(Long guestReviewId, Long applyId, Long postingId, 
-            Long userId, String content, Integer score, LocalDateTime createdAt, LocalDateTime updatedAt,
-            GuestInfo guestInfo, PostingInfo postingInfo) {
+    public static ReviewResponseDto forGuestReview(Long guestReviewId, Long applyId, Long postingId,
+                                                   Long userId, String content, Integer score, LocalDateTime createdAt, LocalDateTime updatedAt,
+                                                   GuestInfo guestInfo, PostingInfo postingInfo) {
         return ReviewResponseDto.builder()
                 .guestReviewId(guestReviewId)
                 .applyId(applyId)
@@ -102,9 +102,9 @@ public class ReviewResponseDto {
     /**
      * 호스트 리뷰 응답 생성 메서드
      */
-    public static ReviewResponseDto forHostReview(Long hostReviewId, Long applyId, Long postingId, 
-            Long userId, String content, Integer score, LocalDateTime createdAt, LocalDateTime updatedAt,
-            HostInfo hostInfo, PostingInfo postingInfo) {
+    public static ReviewResponseDto forHostReview(Long hostReviewId, Long applyId, Long postingId,
+                                                  Long userId, String content, Integer score, LocalDateTime createdAt, LocalDateTime updatedAt,
+                                                  HostInfo hostInfo, PostingInfo postingInfo) {
         return ReviewResponseDto.builder()
                 .hostReviewId(hostReviewId)
                 .applyId(applyId)

@@ -51,22 +51,46 @@ class HttpClient {
       (response) => {
         return response;
       },
-      (error) => {
+      async (error) => {
         // 401 에러 처리 (인증 만료)
         if (error.response && error.response.status === 401) {
-        // 리프레시 토큰으로 새 액세스 토큰 요청 또는 로그인 페이지로 리다이렉트
-        localStorage.removeItem('accessToken');
-        window.location.href = '/login';
+          try {
+            // 리프레시 토큰으로 새 액세스 토큰 요청
+            const refreshResponse = await fetch('/auth/refresh', {
+              method: 'POST',
+              credentials: 'include',  // 쿠키 포함
+              headers: {
+                'Content-Type': 'application/json'
+              }
+            });
+            
+            if (refreshResponse.ok) {
+              const data = await refreshResponse.json();
+              if (data.success && data.token) {
+                // 새 토큰 저장
+                localStorage.setItem('accessToken', data.token);
+                // 원래 요청을 새 토큰으로 재시도
+                error.config.headers['Authorization'] = `Bearer ${data.token}`;
+                return this.instance.request(error.config);
+              }
+            }
+          } catch (refreshError) {
+            console.error('토큰 갱신 실패:', refreshError);
+          }
+          
+          // 리프레시 실패 시 로그아웃 처리
+          localStorage.removeItem('accessToken');
+          window.location.href = '/login';
         }
       
-      // 디버깅을 위한 로그 추가
-      console.error('HTTP Error:', {
-        status: error.response?.status,
-        data: error.response?.data,
-        url: error.config?.url,
-        method: error.config?.method,
-        headers: error.config?.headers
-      });
+        // 디버깅을 위한 로그 추가
+        console.error('HTTP Error:', {
+          status: error.response?.status,
+          data: error.response?.data,
+          url: error.config?.url,
+          method: error.config?.method,
+          headers: error.config?.headers
+        });
         return Promise.reject(error);
       }
     );
@@ -77,8 +101,18 @@ class HttpClient {
     try {
       const response = await this.instance.get<ApiResponse<T>>(url, config);
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       console.error('GET 요청 오류:', error);
+      
+      // 서버에서 응답이 있는 경우 해당 메시지 사용
+      if (error.response?.data?.message) {
+        return {
+          success: false,
+          data: null,
+          message: error.response.data.message
+        };
+      }
+      
       return {
         success: false,
         data: null,
@@ -92,8 +126,18 @@ class HttpClient {
     try {
       const response = await this.instance.post<ApiResponse<T>>(url, data, config);
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       console.error('POST 요청 오류:', error);
+      
+      // 서버에서 응답이 있는 경우 해당 메시지 사용
+      if (error.response?.data?.message) {
+        return {
+          success: false,
+          data: null,
+          message: error.response.data.message
+        };
+      }
+      
       return {
         success: false,
         data: null,
@@ -107,8 +151,18 @@ class HttpClient {
     try {
       const response = await this.instance.put<ApiResponse<T>>(url, data, config);
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       console.error('PUT 요청 오류:', error);
+      
+      // 서버에서 응답이 있는 경우 해당 메시지 사용
+      if (error.response?.data?.message) {
+        return {
+          success: false,
+          data: null,
+          message: error.response.data.message
+        };
+      }
+      
       return {
         success: false,
         data: null,
@@ -122,8 +176,18 @@ class HttpClient {
     try {
       const response = await this.instance.delete<ApiResponse<T>>(url, config);
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       console.error('DELETE 요청 오류:', error);
+      
+      // 서버에서 응답이 있는 경우 해당 메시지 사용
+      if (error.response?.data?.message) {
+        return {
+          success: false,
+          data: null,
+          message: error.response.data.message
+        };
+      }
+      
       return {
         success: false,
         data: null,

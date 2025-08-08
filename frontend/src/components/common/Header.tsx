@@ -5,7 +5,9 @@ const Header: React.FC = () => {
   const navigate = useNavigate();
   return (
     <header className="flex justify-between items-center p-4 border-b border-gray-200">
-      <div className="text-lg font-bold">하객알바</div>
+      <Link to="/" className="text-lg font-bold">
+        하객알바
+      </Link>
       <div className="flex items-center space-x-2">
         <button className="p-1">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">

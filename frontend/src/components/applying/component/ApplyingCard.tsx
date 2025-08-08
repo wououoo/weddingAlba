@@ -1,9 +1,10 @@
 import React from "react";
 import { ApplyingResponseDTO } from "../dto/ApplyingResponseDTO";
 import { useNavigate } from "react-router-dom";
+import { convertDatetime } from "../../common/base";
 
 const ApplyingCard: React.FC<ApplyingResponseDTO> = ({
-    applyId,
+    applyingId,
     status,
     applyDatetime,
     prContent,
@@ -27,14 +28,14 @@ const ApplyingCard: React.FC<ApplyingResponseDTO> = ({
 
     return (
         <div 
-            onClick={() => navigate(`/applying/${applyId}`)}
+            onClick={() => navigate(`/applying/${applyingId}`)}
             className="bg-white rounded-xl p-4 mb-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
         >
             {/* 상단 정보 */}
             <div className="flex items-start justify-between mb-3">
                 <div className="flex-1">
                     <div className="flex items-center space-x-2 mb-1">
-                        <span className="text-xs text-gray-500">신청 ID: {applyId}</span>
+                        <span className="text-xs text-gray-500">신청 ID: {applyingId}</span>
                     </div>
                     <h3 className="font-semibold text-gray-900 mb-1">하객 신청서</h3>
                 </div>
@@ -52,7 +53,7 @@ const ApplyingCard: React.FC<ApplyingResponseDTO> = ({
                     <svg className="w-4 h-4 mr-2 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
                     </svg>
-                    <span className="text-sm">신청일: {applyDatetime}</span>
+                    <span className="text-sm">신청일: {convertDatetime(applyDatetime)}</span>
                 </div>
 
                 {/* PR 내용 */}

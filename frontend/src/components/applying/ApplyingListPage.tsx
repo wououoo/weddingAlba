@@ -1,26 +1,9 @@
-import React, { useState } from "react";
+import React from "react";
 import ApplyingCard from "./component/ApplyingCard";
-import { sampleApplyingList } from "./dto/ApplyingResponseDTO";
+import { useApplyingList } from "./hooks/useApplyingList";
 
 const ApplyingListPage: React.FC = () => {
-    const [selectedStatus, setSelectedStatus] = useState("전체");
-
-    // 상태별 필터링
-    const getFilteredApplyings = () => {
-        if (selectedStatus === "전체") {
-            return sampleApplyingList;
-        }
-        
-        const statusMap: { [key: string]: number } = {
-            "대기": 0,
-            "승인": 1,
-            "거절": -1
-        };
-        
-        return sampleApplyingList.filter(applying => 
-            applying.status === statusMap[selectedStatus]
-        );
-    };
+    const { applyings, isLoading, error, selectedStatus, handleStatusChange, hasMore } = useApplyingList();
 
     return (
         <div className="bg-gray-50 min-h-screen">
@@ -35,13 +18,13 @@ const ApplyingListPage: React.FC = () => {
                     <div className="relative w-48">
                         <select 
                             value={selectedStatus}
-                            onChange={(e) => setSelectedStatus(e.target.value)}
+                            onChange={(e) => handleStatusChange(e.target.value)}
                             className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
                         >
                             <option value="전체">전체 상태</option>
-                            <option value="대기">대기</option>
-                            <option value="승인">승인</option>
-                            <option value="거절">거절</option>
+                            <option value="0">대기</option>
+                            <option value="1">승인</option>
+                            <option value="-1">거절</option>
                         </select>
                         <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
                             <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -54,10 +37,14 @@ const ApplyingListPage: React.FC = () => {
 
             {/* 신청 리스트 */}
             <div className="px-4 py-2">
-                {getFilteredApplyings().length > 0 ? (
-                    getFilteredApplyings().map((applying) => (
+                {isLoading && applyings.length === 0 ? (
+                    <div className="text-center py-12 text-gray-500">신청 목록을 불러오는 중...</div>
+                ) : error ? (
+                    <div className="text-center py-12 text-red-500">오류: {error}</div>
+                ) : applyings.length > 0 ? (
+                    applyings.map((applying) => (
                         <ApplyingCard
-                            key={applying.applyId}
+                            key={applying.applyingId}
                             {...applying}
                         />
                     ))
@@ -71,12 +58,18 @@ const ApplyingListPage: React.FC = () => {
                         <p className="text-gray-500">해당 상태의 신청이 없습니다.</p>
                     </div>
                 )}
+                {isLoading && applyings.length > 0 && (
+                    <div className="text-center py-4 text-gray-500">더 많은 신청 목록을 불러오는 중...</div>
+                )}
+                {!hasMore && applyings.length > 0 && (
+                    <div className="text-center py-4 text-gray-500">모든 신청 목록을 불러왔습니다.</div>
+                )}
             </div>
 
             {/* 하단 여백 */}
             <div className="h-20"></div>
         </div>
     );
-}
+};
 
 export default ApplyingListPage;

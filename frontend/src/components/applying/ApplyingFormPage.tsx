@@ -1,45 +1,84 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { useApplyingForm } from "./hooks/useApplyingForm";
+import { getUserIdFromToken, isAuthenticated } from "../../OAuth2/authUtils";
+import { Toast } from "../common/toast";
 
 const ApplyingFormPage: React.FC = () => {
     const navigate = useNavigate();
-    const [prContent, setPrContent] = useState<string>('');
-    const [isEditMode, setIsEditMode] = useState<boolean>(false);
+    const { postingId: postingIdParam, applyingId: applyingIdParam } = useParams<{ 
+        postingId?: string; 
+        applyingId?: string; 
+    }>();
+    
+    // URL에서 파라미터 가져오기
+    const postingId = postingIdParam ? parseInt(postingIdParam, 10) : undefined;
+    const applyingId = applyingIdParam ? parseInt(applyingIdParam, 10) : undefined;
+    
+    // 토큰에서 사용자 ID 가져오기
+    const userId = getUserIdFromToken();
+    
+    const {
+        isLoading,
+        error,
+        prContent,
+        handlePrContentChange,
+        handleSubmit,
+        handleCancel,
+        toastState,
+        showToast,
+        hideToast,
+        isEditMode,
+    } = useApplyingForm({
+        postingId,
+        applyingId,
+        userId: userId || undefined,
+        initialPrContent: ''
+    });
 
-    const handlePrContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        setPrContent(e.target.value);
-    };
+    // 로그인하지 않은 사용자 처리
+    if (!isAuthenticated() || !userId) {
+        return (
+            <div className="bg-gray-50 min-h-screen flex items-center justify-center">
+                <div className="bg-white rounded-xl shadow-sm p-6 text-center">
+                    <h2 className="text-lg font-bold text-gray-900 mb-2">로그인이 필요합니다</h2>
+                    <p className="text-gray-600 mb-4">신청하기 위해서는 먼저 로그인해주세요.</p>
+                    <div className="flex space-x-3">
+                        <button
+                            onClick={() => navigate(-1)}
+                            className="flex-1 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors"
+                        >
+                            이전 페이지로
+                        </button>
+                        <button
+                            onClick={() => navigate('/login')}
+                            className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+                        >
+                            로그인하기
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
-    const handleSubmit = () => {
-        // 폼 유효성 검사
-        if (!prContent.trim()) {
-            alert('자기소개 내용을 입력해주세요.');
-            return;
-        }
-
-        if (prContent.length < 50) {
-            alert('자기소개는 최소 50자 이상 입력해주세요.');
-            return;
-        }
-
-        // 신청 등록 혹은 수정 함수 작성
-        if (isEditMode) {
-            // 수정 함수 (예: 신청 ID와 prContent를 포함하여 API 호출)
-            console.log("신청 수정: ", prContent);
-        } else {
-            // 등록 함수 (예: postingId, userId, prContent를 포함하여 API 호출)
-            console.log("신청 등록: ", prContent);
-        }
-        
-        // 성공 후 페이지 이동
-        navigate(-1);
-    };
-
-    const handleCancel = () => {
-        // 취소 로직 (이전 페이지로 이동 등)
-        console.log("신청 취소");
-        navigate(-1);
-    };
+    // 필수 ID 검증
+    if ((!postingId && !applyingId) || (postingId && isNaN(postingId)) || (applyingId && isNaN(applyingId))) {
+        return (
+            <div className="bg-gray-50 min-h-screen flex items-center justify-center">
+                <div className="bg-white rounded-xl shadow-sm p-6 text-center">
+                    <h2 className="text-lg font-bold text-gray-900 mb-2">잘못된 접근입니다</h2>
+                    <p className="text-gray-600 mb-4">유효하지 않은 {isEditMode ? '신청' : '공고'}입니다.</p>
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+                    >
+                        이전 페이지로
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="bg-gray-50 min-h-screen">
@@ -63,7 +102,9 @@ const ApplyingFormPage: React.FC = () => {
             <div className="px-4 py-6 space-y-4">
                 {/* 신청서 정보 */}
                 <div className="bg-white rounded-xl shadow-sm p-6">
-                    <h2 className="text-lg font-bold text-gray-900 mb-4">신청서 작성</h2>
+                    <h2 className="text-lg font-bold text-gray-900 mb-4">
+                        {isEditMode ? '신청서 수정' : '신청서 작성'}
+                    </h2>
 
                     {/* 자기소개 (PR 내용) */}
                     <div className="mb-4">
@@ -78,6 +119,7 @@ const ApplyingFormPage: React.FC = () => {
                                 value={prContent}
                                 onChange={handlePrContentChange}
                                 rows={12}
+                                disabled={isLoading}
                             />
                             <div className="absolute bottom-3 right-3 text-xs text-gray-400">
                                 {prContent.length}/1000자
@@ -93,6 +135,13 @@ const ApplyingFormPage: React.FC = () => {
                                 {prContent.length >= 50 ? '✓ 조건 충족' : `${50 - prContent.length}자 더 입력해주세요`}
                             </div>
                         </div>
+
+                        {/* 에러 메시지 표시 */}
+                        {error && (
+                            <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+                                <p className="text-sm text-red-600">{error}</p>
+                            </div>
+                        )}
 
                         {/* 작성 팁 */}
                         <div className="mt-4 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-400">
@@ -116,25 +165,46 @@ const ApplyingFormPage: React.FC = () => {
 
                 {/* 신청 안내사항 */}
                 <div className="bg-white rounded-xl shadow-sm p-6">
-                    <h2 className="text-lg font-bold text-gray-900 mb-4">신청 안내사항</h2>
+                    <h2 className="text-lg font-bold text-gray-900 mb-4">
+                        {isEditMode ? '수정 안내사항' : '신청 안내사항'}
+                    </h2>
                     
                     <div className="space-y-3 text-sm text-gray-600">
-                        <div className="flex items-start">
-                            <span className="inline-block w-2 h-2 bg-blue-400 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                            <span>신청서 제출 후 모집자가 검토하여 개별 연락드립니다.</span>
-                        </div>
-                        <div className="flex items-start">
-                            <span className="inline-block w-2 h-2 bg-blue-400 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                            <span>신청서는 제출 후 24시간 내에 수정 가능합니다.</span>
-                        </div>
-                        <div className="flex items-start">
-                            <span className="inline-block w-2 h-2 bg-blue-400 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                            <span>허위 정보 기재 시 신청이 취소될 수 있습니다.</span>
-                        </div>
-                        <div className="flex items-start">
-                            <span className="inline-block w-2 h-2 bg-blue-400 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                            <span>선정 결과는 마이페이지에서 확인할 수 있습니다.</span>
-                        </div>
+                        {isEditMode ? (
+                            <>
+                                <div className="flex items-start">
+                                    <span className="inline-block w-2 h-2 bg-blue-400 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                                    <span>신청서 수정 후 다시 검토가 진행됩니다.</span>
+                                </div>
+                                <div className="flex items-start">
+                                    <span className="inline-block w-2 h-2 bg-blue-400 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                                    <span>승인/거절된 신청서는 수정할 수 없습니다.</span>
+                                </div>
+                                <div className="flex items-start">
+                                    <span className="inline-block w-2 h-2 bg-blue-400 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                                    <span>수정 내용은 즉시 반영됩니다.</span>
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                <div className="flex items-start">
+                                    <span className="inline-block w-2 h-2 bg-blue-400 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                                    <span>신청서 제출 후 모집자가 검토하여 개별 연락드립니다.</span>
+                                </div>
+                                <div className="flex items-start">
+                                    <span className="inline-block w-2 h-2 bg-blue-400 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                                    <span>신청서는 제출 후 24시간 내에 수정 가능합니다.</span>
+                                </div>
+                                <div className="flex items-start">
+                                    <span className="inline-block w-2 h-2 bg-blue-400 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                                    <span>허위 정보 기재 시 신청이 취소될 수 있습니다.</span>
+                                </div>
+                                <div className="flex items-start">
+                                    <span className="inline-block w-2 h-2 bg-blue-400 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                                    <span>선정 결과는 마이페이지에서 확인할 수 있습니다.</span>
+                                </div>
+                            </>
+                        )}
                     </div>
                 </div>
 
@@ -147,25 +217,49 @@ const ApplyingFormPage: React.FC = () => {
                 <div className="flex space-x-3">
                     <button
                         onClick={handleCancel}
-                        className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-200 transition-colors"
+                        disabled={isLoading}
+                        className={`flex-1 py-3 rounded-xl font-medium transition-colors ${
+                            isLoading 
+                                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
                     >
                         취소
                     </button>
                     <button
                         onClick={handleSubmit}
-                        disabled={!prContent.trim() || prContent.length < 50}
+                        disabled={!prContent.trim() || prContent.length < 50 || isLoading}
                         className={`flex-1 py-3 rounded-xl font-semibold transition-all ${
-                            !prContent.trim() || prContent.length < 50
+                            !prContent.trim() || prContent.length < 50 || isLoading
                                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                                 : 'bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:shadow-lg'
                         }`}
                     >
-                        {isEditMode ? '수정하기' : '신청하기'}
+                        {isLoading ? (
+                            <div className="flex items-center justify-center">
+                                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                처리중...
+                            </div>
+                        ) : (
+                            isEditMode ? '수정하기' : '신청하기'
+                        )}
                     </button>
                 </div>
             </div>
+
+            {/* 토스트 */}
+            <Toast
+                isVisible={toastState.isVisible}
+                message={toastState.message}
+                actionText={toastState.actionText}
+                onAction={toastState.onAction}
+                onClose={hideToast}
+            />
         </div>
     );
 }
 
-export default ApplyingFormPage; 
+export default ApplyingFormPage;

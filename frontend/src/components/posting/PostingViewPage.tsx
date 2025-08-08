@@ -1,35 +1,36 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { postingApi } from "./api/postingApi";
-import { PostingResponseDTO } from "./dto";
+import React from "react";
+import { convertDatetime, convertTime } from "../common/base";
+import { usePostingView } from "./hooks/usePostingView";
+import Toast from "../profile/toast/Toast";
+
+
 
 const PostingViewPage: React.FC = () => {
-    const navigate = useNavigate();
-    const { id } = useParams<{ id: string }>();
-    const [isFavorite, setIsFavorite] = useState(false);
-    const [showFullDescription, setShowFullDescription] = useState(false);
-    const [postingData, setPostingData] = useState<PostingResponseDTO | null>(null);
+    const {
+        postingData,
+        isBookmarked,
+        isBookmarkLoading,
+        showFullDescription,
+        isLoading,
+        isAuthor,
+        hasApplied,
+        isHistoryType,
+        toastState,
+        hideToast,
+        toggleBookmark,
+        toggleDescription,
+        goBack,
+        goToUserProfile,
+        goToApplyPage,
+        goToApplyingDetail,
+        goToEditPage,
+        goToApplicantManage,
+        cancelPosting,
+    } = usePostingView();
 
-    useEffect(() => {
-        if (id) {
-            const fetchPosting = async () => {
-                try {
-                    const response = await postingApi.getPostingDetail(id);
-                    console.log(response.data);
-                    if (response.success && response.data) {
-                        setPostingData(response.data as PostingResponseDTO);
-                    } else {
-                        console.error("Failed to fetch posting detail:", response.message);
-                        setPostingData(null);
-                    }
-                } catch (error) {
-                    console.error("Error fetching posting data:", error);
-                    setPostingData(null);
-                } 
-            };
-            fetchPosting();
-        }
-    }, [id]);
+    if (isLoading) {
+        return <div className="flex justify-center items-center h-screen">로딩 중...</div>;
+    }
 
     if (!postingData) {
         return <div className="flex justify-center items-center h-screen">게시물을 찾을 수 없습니다.</div>;
@@ -42,21 +43,20 @@ const PostingViewPage: React.FC = () => {
         buildingName,
         sidoSigungu,
         appointmentDatetime,
+        startTime,
+        endTime,    
         workingHours,
         payAmount,
         nickname,
-        postingHistoryCount,
         hasMobileInvitation,
         guestMainRole,
         detailContent,
         tags,
         userId,
-        payTypeStr
+        payTypeText,
+        targetPersonnel,
+        status
     } = postingData;
-
-    const toggleFavorite = () => {
-        setIsFavorite(!isFavorite);
-    };
 
     return (
         <div className="bg-gray-50 min-h-screen">
@@ -64,28 +64,58 @@ const PostingViewPage: React.FC = () => {
             <div className="bg-white shadow-sm sticky top-0 z-10">
                 <div className="flex items-center justify-between p-4">
                     <button 
-                        onClick={() => navigate(-1)}
+                        onClick={goBack}
                         className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                     >
                         <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path>
                         </svg>
                     </button>
-                    <h1 className="text-lg font-semibold text-gray-900">하객알바 모집</h1>
-                    <button 
-                        onClick={toggleFavorite}
-                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                    >
-                        {isFavorite ? (
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#000000" className="w-6 h-6">
-                                <path fillRule="evenodd" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" clipRule="evenodd" />
-                            </svg>
-                        ) : (
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-6 h-6 text-gray-400">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
-                            </svg>
+                    <h1 className="text-lg font-semibold text-gray-900 flex-1 text-center">
+                        {isHistoryType ? '하객알바 모집이력' : '하객알바 모집'}
+                    </h1>
+                    <div className="flex items-center gap-2">
+                        {isAuthor && !isHistoryType && (
+                            postingData && (postingData.applyCount || 0) > 0 ? (
+                                // 신청자가 있는 경우: 신청자 관리 버튼
+                                <button
+                                    onClick={goToApplicantManage}
+                                    className="p-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition-colors"
+                                    title={`신청자 관리 (${postingData.applyCount || 0}명)`}
+                                >
+                                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"></path>
+                                    </svg>
+                                </button>
+                            ) : (
+                                // 신청자가 없는 경우: 수정 버튼
+                                <button
+                                    onClick={goToEditPage}
+                                    className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"
+                                    title="모집글 수정"
+                                >
+                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                </button>
+                            )
                         )}
-                    </button>
+                        {!isAuthor && !isHistoryType && (
+                            <button 
+                                onClick={toggleBookmark}
+                                disabled={isBookmarkLoading}
+                                className={`p-2 hover:bg-gray-100 rounded-lg transition-colors ${
+                                    isBookmarkLoading ? 'opacity-50 cursor-not-allowed' : ''
+                                }`}
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" className={`h-6 w-6 ${
+                                    isBookmarked ? 'text-red-500' : 'text-gray-400'
+                                }`} fill={isBookmarked ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                </svg>
+                            </button>
+                        )}
+                    </div>
                 </div>
             </div>
 
@@ -93,7 +123,29 @@ const PostingViewPage: React.FC = () => {
             <div className="px-4 py-6">
                 {/* 제목 및 위치 */}
                 <div className="bg-white rounded-xl shadow-sm p-6 mb-4">
-                    <h1 className="text-2xl font-bold text-gray-900 mb-2">{title}</h1>
+                    <div className="flex items-start justify-between mb-2">
+                        <h1 className="text-2xl font-bold text-gray-900 flex-1 pr-3">{title}</h1>
+                        {/* 모집이력 상태 배지 */}
+                        {isHistoryType && status !== undefined && (
+                            <div className="flex-shrink-0">
+                                {status === 1 && (
+                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 border border-green-200">
+                                        ✅ 모집확정
+                                    </span>
+                                )}
+                                {status === -1 && (
+                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800 border border-red-200">
+                                        ❌ 모집취소
+                                    </span>
+                                )}
+                                {status === 0 && (
+                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800 border border-yellow-200">
+                                        📝 모집중
+                                    </span>
+                                )}
+                            </div>
+                        )}
+                    </div>
                     <div className="flex items-center text-gray-600 mb-4">
                         <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
@@ -103,7 +155,8 @@ const PostingViewPage: React.FC = () => {
                 </div>
 
                 {/* 모집자 정보 */}
-                <div className="bg-white rounded-xl shadow-sm p-6 mb-4">
+                {/* 해당 모집자 프로필로 이동하게 */}
+                <div className="bg-white rounded-xl shadow-sm p-6 mb-4" onClick={() => userId && goToUserProfile(userId)}>
                     <h3 className="text-lg font-bold text-gray-900 mb-4">모집자 정보</h3>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
@@ -115,15 +168,21 @@ const PostingViewPage: React.FC = () => {
                             <div>
                                 <h4 className="font-semibold text-gray-900">{nickname}</h4>
                                 <div className="flex items-center space-x-2 mt-1">
-                                    {hasMobileInvitation && (
+                                    {hasMobileInvitation ? (
                                         <div className="flex items-center space-x-1">
                                             <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                                                 <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                                             </svg>
                                             <span className="text-xs text-green-600 font-medium">모바일 청첩장 인증</span>
                                         </div>
+                                    ) : (
+                                        <div className="flex items-center space-x-1">
+                                            <svg className="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                            </svg>
+                                            <span className="text-xs text-gray-500 font-medium">모바일 청첩장 미인증</span>
+                                        </div>
                                     )}
-                                    <span className="text-xs text-gray-500">누적 모집 {postingHistoryCount || 0}회</span>
                                 </div>
                             </div>
                         </div>
@@ -144,7 +203,7 @@ const PostingViewPage: React.FC = () => {
                             </div>
                             <div>
                                 <h4 className="font-medium text-gray-900">날짜</h4>
-                                <p className="text-gray-600 text-sm">{appointmentDatetime}</p>
+                                <p className="text-gray-600 text-sm">{convertDatetime(appointmentDatetime || '')}</p>
                             </div>
                         </div>
 
@@ -157,7 +216,7 @@ const PostingViewPage: React.FC = () => {
                             </div>
                             <div>
                                 <h4 className="font-medium text-gray-900">시간</h4>
-                                <p className="text-gray-600 text-sm">{workingHours}</p>
+                                <p className="text-gray-600 text-sm">{convertTime(startTime || '')} 부터 {convertTime(endTime || '')}, {Math.floor(Number(workingHours))}시간</p>
                             </div>
                         </div>
 
@@ -171,7 +230,7 @@ const PostingViewPage: React.FC = () => {
                             </div>
                             <div>
                                 <h4 className="font-medium text-gray-900">임금</h4>
-                                <p className="text-green-600 font-semibold">{payTypeStr} {payAmount}</p>
+                                <p className="text-green-600 font-semibold">{payTypeText} {Number(payAmount).toLocaleString()}원</p>
                             </div>
                         </div>
 
@@ -185,6 +244,19 @@ const PostingViewPage: React.FC = () => {
                             <div>
                                 <h4 className="font-medium text-gray-900">업무</h4>
                                 <p className="text-gray-600 text-sm">{guestMainRole}</p>
+                            </div>
+                        </div>
+
+                        {/* 모집인원 */}
+                        <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                            <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <svg className="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 className="font-medium text-gray-900">모집인원</h4>
+                                <p className="text-gray-600 text-sm">{targetPersonnel}명</p>
                             </div>
                         </div>
 
@@ -213,7 +285,7 @@ const PostingViewPage: React.FC = () => {
                             </p>
                             {detailContent.length > 100 && (
                                 <button 
-                                    onClick={() => setShowFullDescription(!showFullDescription)}
+                                    onClick={toggleDescription}
                                     className="mt-2 text-blue-500 text-sm font-medium hover:text-blue-600 transition-colors"
                                 >
                                     {showFullDescription ? '접기' : '더보기'}
@@ -240,6 +312,8 @@ const PostingViewPage: React.FC = () => {
                     </div>
                 )}
 
+
+
                 {/* 지도 영역 */}
                 <div className="bg-white rounded-xl shadow-sm p-6 mb-20">
                     <h3 className="text-lg font-bold text-gray-900 mb-3">위치</h3>
@@ -256,26 +330,100 @@ const PostingViewPage: React.FC = () => {
             </div>
 
             {/* 하단 고정 버튼 */}
-            <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-20">
-                <div className="flex space-x-3">
-                    <button
-                        onClick={toggleFavorite}
-                        className={`flex-1 py-4 rounded-xl font-semibold text-lg transition-all
-                            ${isFavorite
-                                ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                                : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}
-                        `}
-                    >
-                        찜하기
-                    </button>
-                    <button
-                        onClick={() => navigate('/applying/create')}
-                        className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white py-4 rounded-xl font-semibold text-lg hover:shadow-lg transition-all"
-                    >
-                        신청하기
-                    </button>
+            {!isHistoryType && (
+                <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-20">
+                    <div className="flex space-x-3">
+                        {isAuthor ? (
+                            // 작성자인 경우
+                            <>
+                                {postingData && (postingData.applyCount || 0) > 0 ? (
+                                    // 신청자가 있는 경우: 신청자 관리 + 모집 취소만
+                                    <>
+                                        <button
+                                            onClick={goToApplicantManage}
+                                            className="flex-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white py-4 rounded-xl font-semibold text-lg hover:shadow-lg transition-all flex items-center justify-center space-x-2"
+                                        >
+                                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                                <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"></path>
+                                            </svg>
+                                            <span>신청자 관리 ({postingData.applyCount || 0}명)</span>
+                                        </button>
+                                        <button
+                                            onClick={cancelPosting}
+                                            className="flex-1 bg-gray-200 text-gray-700 py-4 rounded-xl font-semibold text-lg hover:bg-gray-300 transition-all"
+                                        >
+                                            모집 취소
+                                        </button>
+                                    </>
+                                ) : (
+                                    // 신청자가 없는 경우: 수정하기 + 모집 취소
+                                    <>
+                                        <button
+                                            onClick={goToEditPage}
+                                            className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white py-4 rounded-xl font-semibold text-lg hover:shadow-lg transition-all flex items-center justify-center space-x-2"
+                                        >
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                            </svg>
+                                            <span>수정하기</span>
+                                        </button>
+                                        <button
+                                            onClick={cancelPosting}
+                                            className="flex-1 bg-gray-200 text-gray-700 py-4 rounded-xl font-semibold text-lg hover:bg-gray-300 transition-all"
+                                        >
+                                            모집 취소
+                                        </button>
+                                    </>
+                                )}
+                            </>
+                        ) : (
+                            // 일반 사용자인 경우: 북마크, 신청하기/신청글 확인하기
+                            <>
+                                <button
+                                    onClick={toggleBookmark}
+                                    disabled={isBookmarkLoading}
+                                    className={`flex-1 py-4 rounded-xl font-semibold text-lg transition-all flex items-center justify-center space-x-2 
+                                        ${isBookmarkLoading 
+                                            ? 'opacity-50 cursor-not-allowed bg-gray-200 text-gray-500'
+                                            : isBookmarked
+                                            ? 'bg-red-100 text-red-600 hover:bg-red-200'
+                                            : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}
+                                    `}
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill={isBookmarked ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                    </svg>
+                                    <span>{isBookmarkLoading ? '처리중...' : '찜하기'}</span>
+                                </button>
+                                {hasApplied ? (
+                                    <button
+                                        onClick={goToApplyingDetail}
+                                        className="flex-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white py-4 rounded-xl font-semibold text-lg hover:shadow-lg transition-all"
+                                    >
+                                        신청글 확인하기
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={goToApplyPage}
+                                        className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white py-4 rounded-xl font-semibold text-lg hover:shadow-lg transition-all"
+                                    >
+                                        신청하기
+                                    </button>
+                                )}
+                            </>
+                        )}
+                    </div>
                 </div>
-            </div>
+            )}
+
+            {/* Toast 컴포넌트 */}
+            <Toast
+                isVisible={toastState.isVisible}
+                message={toastState.message}
+                actionText={toastState.actionText}
+                onAction={toastState.onAction}
+                onClose={hideToast}
+            />
         </div>
     );
 };

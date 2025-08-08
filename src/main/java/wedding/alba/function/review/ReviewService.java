@@ -9,6 +9,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import wedding.alba.entity.*;
+import wedding.alba.function.applying.ApplyingRepository;
+import wedding.alba.function.posting.PostingRepository;
 import wedding.alba.repository.*;
 
 import java.util.List;

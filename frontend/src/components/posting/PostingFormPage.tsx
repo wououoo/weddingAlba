@@ -1,7 +1,9 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from "react-router-dom";
 import { usePostingForm } from './hooks/usePostingForm';
 import AddressSearch from '../common/AddressSearch';
+import Toast from '../common/toast/Toast';
+import { convertDatetime } from '../common/base';
 
 const PostingFormPage: React.FC = () => {
     const navigate = useNavigate();
@@ -28,23 +30,13 @@ const PostingFormPage: React.FC = () => {
         isAddressSearchOpen,
         openAddressSearch,
         closeAddressSearch,
-        handleAddressComplete
+        handleAddressComplete,
+        isEditMode,
+        toastState,
+        hideToast,
     } = usePostingForm();
 
-    // 토큰 설정 (이 부분은 폼 로직과 독립적이므로 PostingFormPage에 유지됩니다.)
-    useEffect(() => {
-        const localToken = localStorage.getItem('authToken');
-        const sessionToken = sessionStorage.getItem('authToken');
-        const accessToken = localStorage.getItem('accessToken');
-        const jwtToken = localStorage.getItem('jwtToken');
-        
-        const token = localToken || sessionToken || jwtToken;
-        if (token && !accessToken) {
-            localStorage.setItem('accessToken', token);
-        }
-    }, []);
-
-    // 폼 제출 핸들러 (커스텀 훅의 handleSubmit을 사용하고, 추가적인 navigation 로직을 여기에 둡니다)
+    // 폼 제출 핸들
     const handleFormSubmit = () => {
         handleSubmit(); // 커스텀 훅의 handleSubmit 호출
     };
@@ -62,7 +54,11 @@ const PostingFormPage: React.FC = () => {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path>
                         </svg>
                     </button>
-                    <h1 className="text-lg font-semibold text-gray-900 flex-1 text-center">하객알바 모집글 작성</h1>
+                    {isEditMode ? (
+                        <h1 className="text-lg font-semibold text-gray-900 flex-1 text-center">하객알바 모집글 수정</h1>
+                    ) : (
+                        <h1 className="text-lg font-semibold text-gray-900 flex-1 text-center">하객알바 모집글 작성</h1>
+                    )}
                 </div>
             </div>
 
@@ -158,6 +154,11 @@ const PostingFormPage: React.FC = () => {
                             onChange={(e) => handleInputChange('appointmentDatetime', e.target.value)}
                             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
+                        {formData.appointmentDatetime && (
+                            <p className="mt-2 text-sm text-gray-600">
+                                선택된 일시: {convertDatetime(formData.appointmentDatetime)}
+                            </p>
+                        )}
                     </div>
 
                     {/* 결혼식장 주소 */}
@@ -412,6 +413,32 @@ const PostingFormPage: React.FC = () => {
                         />
                     </div>
 
+                    {/* 모집인원 */}
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            모집인원 <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                            <select
+                                value={formData.targetPersonnel || 1}
+                                onChange={(e) => handleInputChange('targetPersonnel', Number(e.target.value))}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
+                            >
+                                {Array.from({ length: 20 }, (_, i) => i + 1).map(num => (
+                                    <option key={num} value={num}>
+                                        {num}명
+                                    </option>
+                                ))}
+                            </select>
+                            <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <p className="mt-1 text-sm text-gray-500">1~20명까지 모집 가능합니다.</p>
+                    </div>
+
                     {/* 상세 내용 */}
                     <div className="mb-4">
                         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -478,16 +505,46 @@ const PostingFormPage: React.FC = () => {
                         onClick={() => navigate(-1)}
                         className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-200 transition-colors"
                     >
-                        취소
+                        뒤로가기
                     </button>
-                    <button
-                        onClick={handleFormSubmit}
-                        className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all"
-                    >
-                        등록하기
-                    </button>
+                    {isEditMode ? (
+                        // 수정하기인 경우: 뒤로가기, 수정하기
+                        <>
+                            <button
+                                onClick={handleFormSubmit}
+                                className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white py-4 rounded-xl font-semibold text-lg hover:shadow-lg transition-all">
+                                수정하기
+                            </button>
+                        </>
+                    ) : (
+                        // 등록하기의 경우 : 취소, 등록하기
+                        <>
+                            <button
+                                onClick={handleFormSubmit}
+                                className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all">
+                                등록하기
+                            </button>
+                        </>
+                    )}
                 </div>
             </div>
+
+            {/* Toast 컴포넌트 */}
+            <Toast
+                isVisible={toastState.isVisible}
+                message={toastState.message}
+                onClose={hideToast}
+                actionText={toastState.actionText}
+                onAction={toastState.onAction}
+            />
+
+            {/* 주소 검색 모달 */}
+            {isAddressSearchOpen && (
+                <AddressSearch
+                    onComplete={handleAddressComplete}
+                    onClose={closeAddressSearch}
+                />
+            )}
         </div>
     );
 };

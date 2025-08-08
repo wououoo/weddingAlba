@@ -54,11 +54,11 @@ spring:
         max-idle: 8
         min-idle: 0
 
-  # PostgreSQL 데이터베이스 설정
+  # PostgreSQL 데이터베이스 설정 (Docker Compose용)
   datasource:
-    url: jdbc:postgresql://localhost:5432/postgres
-    username: postgres
-    password: asd25825@@
+    url: jdbc:postgresql://localhost:5433/wedding_alba
+    username: alba_user
+    password: alba_password
     driver-class-name: org.postgresql.Driver
     hikari:
       connection-timeout: 20000

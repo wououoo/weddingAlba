@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import wedding.alba.dto.ApiResponse;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -65,13 +66,13 @@ public class BookmarkController {
      * @return 생성된 북마크 정보
      */
     @PostMapping
-    public ResponseEntity<BookmarkResponseDto> addBookmark(@RequestBody BookmarkRequestDto requestDto) {
+    public ResponseEntity<ApiResponse<BookmarkResponseDto>> addBookmark(@RequestBody BookmarkRequestDto requestDto) {
 
         Long userId = getCurrentUserId();
 
         BookmarkResponseDto savedBookmark = bookmarkService.addBookmark(userId, requestDto);
 
-        return ResponseEntity.ok(savedBookmark);
+        return ResponseEntity.ok(ApiResponse.success(savedBookmark));
     }
 
     /**
@@ -81,13 +82,13 @@ public class BookmarkController {
      * @return 성공 응답
      */
     @DeleteMapping("/{bookmarkId}")
-    public ResponseEntity<Void> deleteBookmark(@PathVariable Long bookmarkId) {
+    public ResponseEntity<ApiResponse<Void>> deleteBookmark(@PathVariable Long bookmarkId) {
 
         Long userId = getCurrentUserId();
 
         bookmarkService.deleteBookmark(bookmarkId, userId);
 
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(ApiResponse.success());
     }
 
     /**

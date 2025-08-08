@@ -28,17 +28,23 @@ public class Applying {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "apply_id")
-    private Long applyId;                // 신청 고유 식별자
+    @Column(name = "applying_id")
+    private Long applyingId;                // 신청 고유 식별자
     
     @Column(name = "user_id")
     private Long userId;                 // 신청자 ID
-    
-    @Column(name = "posting_id")
-    private Long postingId;              // 신청한 모집글 ID
-    
-    @Column(name = "status")
-    private Integer status;              // 신청 상태 (0: 대기, 1: 승인, -1: 거절)
+
+    // Profile과의 관계 추가 (자주 사용되므로 연결)
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", referencedColumnName = "user_id", insertable = false, updatable = false)
+    private Profile profile;
+
+    @Column(name = "posting_id", nullable = false)
+    private Long postingId;
+
+    @Column(name = "status", nullable = false)
+    @Builder.Default
+    private Integer status = 0;              // 신청 상태 (0: 대기, 1: 승인, -1: 거절)
     
     @CreationTimestamp
     @Column(name = "apply_datetime", updatable = false)
@@ -49,4 +55,11 @@ public class Applying {
     
     @Column(name = "confirmation_datetime")
     private LocalDateTime confirmationDatetime;  // 확정 일시 (승인 혹은 거절 일시)
+
+    // 게시글과의 연관관계 (조회 전용, 삭제 연쇄 없음)
+    // optional = true: 게시글이 삭제되어도 신청글은 유지됨
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "posting_id", insertable = false, updatable = false,
+                foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
+    private Posting posting;
 }

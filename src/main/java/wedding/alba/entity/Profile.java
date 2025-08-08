@@ -40,7 +40,7 @@ public class Profile {
     
     @Column(name = "participation_count")
     private Integer participationCount; // 결혼식 참여 횟수
-    
+
     @Column(name = "profile_image_url")
     private String profileImageUrl;    // 프로필 이미지 URL
     

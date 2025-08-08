@@ -1,13 +1,51 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import PostingCard from "./component/PostingCard";
+import { PostingCard } from "./component";
 import { PostingResponseDTO } from "./dto/PostingResponseDTO";
+import { usePostingList } from "./hooks/usePostingList";
+import { useInfiniteScroll } from "../common/infiniteScroll/useInfiniteScroll";
 
 const PostingListPage: React.FC = () => {
     const navigate = useNavigate();
     const [selectedCity, setSelectedCity] = useState("전체");
     const [selectedDistrict, setSelectedDistrict] = useState("전체");
     const [selectedRole, setSelectedRole] = useState("전체");
+
+    const { 
+        postingList, 
+        loading, 
+        hasMore, 
+        error, 
+        loadMorePostings, 
+        loadFirstPage,
+        setAddress,
+        setGuestMainRole
+    } = usePostingList();
+
+    // 무한스크롤 훅 사용
+    useInfiniteScroll({
+        hasMore,
+        loading,
+        loadMore: loadMorePostings,
+        threshold: 200
+    });
+
+    // 선택된 지역이나 역할이 변경될 때마다 게시글 다시 불러오기
+    useEffect(() => {
+        // '전체'가 아닌 경우에만 address 설정 (구/군이 선택된 경우 우선)
+        let fullAddress = '';
+        if (selectedDistrict !== "전체" && selectedDistrict !== "시/도 먼저 선택") {
+            fullAddress = selectedDistrict;
+        } else if (selectedCity !== "전체") {
+            fullAddress = selectedCity;
+        }
+
+        setAddress(fullAddress);
+        setGuestMainRole(selectedRole === "전체" ? '' : selectedRole);
+        
+        // 필터 변경 시 첫 페이지부터 다시 로드
+        loadFirstPage();
+    }, [selectedCity, selectedDistrict, selectedRole, setAddress, setGuestMainRole, loadFirstPage]);
 
     // 지역 데이터
     const districtData: { [key: string]: string[] } = {
@@ -30,137 +68,9 @@ const PostingListPage: React.FC = () => {
         setSelectedDistrict("전체");
     };
 
-    // 하객알바 모집글 샘플 데이터
-    const postings: PostingResponseDTO[] = [
-        {
-            postingId: 1,
-            userId: 101,
-            title: '친구 결혼식 도우미 모집',
-            sidoSigungu: '서울 강남',
-            appointmentDatetime: '2025년 06월 20일 15시',
-            registrationDatetime: '2025년 05월 18일 10시 30분',
-            workingHours: '최소 2시간 이상',
-            address: '서울시 강남구 예식홀 1층',
-            isSelf: false,
-            personName: '이민수',
-            personPhoneNumber: '010-1234-5678',
-            hasMobileInvitation: true,
-            payTypeStr : '일급',
-            payAmount: '50,000원',
-            tags: [
-                '친구대행',
-                '당일지급',
-                '식비지급'
-            ],
-            guestMainRole: '고등학교 동창',
-            detailContent: '90년대 초반 여성, MBTI가 E였으면 좋겠습니다.',
-            nickname: '포효하는 고라니123',
-            postingHistoryCount: 3
-        },
-        {
-            postingId: 2,
-            userId: 102,
-            title: '내 결혼식 도와주실 분 구해요!',
-            sidoSigungu: '부산 해운대',
-            appointmentDatetime: '2025년 07월 10일 11시',
-            registrationDatetime: '2025년 05월 17일 14시 20분',
-            workingHours: '3시간 정도',
-            address: '부산 해운대 더베이 101',
-            isSelf: true,
-            personName: '정윤아',
-            personPhoneNumber: '010-9876-5432',
-            hasMobileInvitation: false,
-            payTypeStr: '시급',
-            payAmount: '15,000원',
-            tags: [
-                '급구',
-                '당일지급',
-                '친구대행'
-            ],
-            guestMainRole: '대학교 친구',
-            detailContent: '밝고 활발한 성격이신 분을 찾습니다.',
-            nickname: '행복한신부',
-            postingHistoryCount: 1
-        },
-        {
-            postingId: 3,
-            userId: 103,
-            title: '사촌 결혼식 도와주실 분 구합니다',
-            sidoSigungu: '대전 중구',
-            appointmentDatetime: '2025년 08월 05일 13시 30분',
-            registrationDatetime: '2025년 05월 15일 09시 00분',
-            workingHours: '4시간 이상',
-            address: '대전 중구 사랑웨딩홀',
-            isSelf: false,
-            personName: '최현우',
-            personPhoneNumber: '010-5555-6666',
-            hasMobileInvitation: true,
-            payTypeStr: '일급',
-            payAmount: '60,000원',
-            tags: [
-                '급구',
-                '교통비지원'
-            ],
-            guestMainRole: '직장동료',
-            detailContent: '조용하고 차분한 성격의 분을 선호합니다.',
-            nickname: '대전거주자',
-            postingHistoryCount: 5
-        },
-        {
-            postingId: 4,
-            userId: 104,
-            title: '동생 결혼식 축하해주실 분',
-            sidoSigungu: '인천 연수구',
-            appointmentDatetime: '2025년 09월 15일 14시',
-            registrationDatetime: '2025년 05월 20일 16시 45분',
-            workingHours: '2시간 반',
-            address: '인천 연수구 그랜드웨딩홀',
-            isSelf: false,
-            personName: '김서연',
-            personPhoneNumber: '010-7777-8888',
-            hasMobileInvitation: true,
-            payTypeStr: '일급',
-            payAmount: '45,000원',
-            tags: [
-                '친구대행',
-                '식비지급',
-                '주차지원'
-            ],
-            guestMainRole: '회사 후배',
-            detailContent: '20대 후반~30대 초반 여성분을 찾고 있습니다.',
-            nickname: '착한언니',
-            postingHistoryCount: 2
-        },
-        {
-            postingId: 5,
-            userId: 105,
-            title: '지인 결혼식 참석 도우미',
-            sidoSigungu: '경기 수원',
-            appointmentDatetime: '2025년 10월 01일 12시',
-            registrationDatetime: '2025년 05월 22일 11시 15분',
-            workingHours: '최소 3시간',
-            address: '경기도 수원시 팔달구 로얄웨딩홀',
-            isSelf: false,
-            personName: '박지민',
-            personPhoneNumber: '010-2222-3333',
-            hasMobileInvitation: false,
-            payTypeStr: '시급',
-            payAmount: '18,000원',
-            tags: [
-                '당일지급',
-                '교통비지원',
-                '선물준비'
-            ],
-            guestMainRole: '동네친구',
-            detailContent: '밝고 사교적인 성격의 분이면 좋겠어요.',
-            nickname: '수원토박이',
-            postingHistoryCount: 7
-        }
-    ];
-
     return (
         <div className="bg-gray-50 min-h-screen">
-                        {/* 헤더 */}
+            {/* 헤더 */}
             <div className="bg-white px-4 py-6">
                 <h1 className="text-center text-xl font-bold text-gray-900 mb-4">
                     원하는 지역과 역할 선택해보세요.
@@ -238,14 +148,45 @@ const PostingListPage: React.FC = () => {
                 </div>
             </div>
 
+            {/* 에러 메시지 */}
+            {error && (
+                <div className="px-4 py-2">
+                    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                        {error}
+                    </div>
+                </div>
+            )}
+
             {/* 모집글 리스트 */}
             <div className="px-4 py-2">
-                {postings.map((posting) => (
+                {postingList.map((posting: PostingResponseDTO) => (
                     <PostingCard
                         key={posting.postingId}
                         {...posting}
                     />
                 ))}
+                
+                {/* 로딩 인디케이터 */}
+                {loading && (
+                    <div className="flex justify-center items-center py-8">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                        <span className="ml-2 text-gray-600">게시글을 불러오는 중...</span>
+                    </div>
+                )}
+                
+                {/* 더 이상 데이터가 없을 때 */}
+                {!hasMore && postingList.length > 0 && (
+                    <div className="text-center py-8 text-gray-500">
+                        모든 게시글을 불러왔습니다.
+                    </div>
+                )}
+                
+                {/* 게시글이 없을 때 */}
+                {!loading && postingList.length === 0 && !error && (
+                    <div className="text-center py-8 text-gray-500">
+                        등록된 게시글이 없습니다.
+                    </div>
+                )}
             </div>
 
             {/* 하단 여백 */}

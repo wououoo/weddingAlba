@@ -19,13 +19,11 @@ import GroupChatRoom from './components/chat/GroupChatRoom';
 import PrivateChatRoom from './components/chat/PrivateChatRoom';
 import { ApplyingListPage, ApplyingFormPage } from './components/applying';
 import ApplyingViewPage from './components/applying/ApplyingViewPage';
-import { PostingFormPage,  PostingListByHost,  PostingListPage,  PostingViewPage} from './components/posting';
+import { PostingFormPage,  MyPostingListPage,  PostingListPage,  PostingViewPage} from './components/posting';
+import ApplicantManagePage from './components/posting/ApplicantManagePage';
 import MainPage from './components/main/MainPage';
 import SockJSIframe from './components/sockjs/SockJSIframe';
 import ErrorBoundary from './components/errorBoundary/ErrorBoundary';
-
-
-
 // import { useAuthStore } from './stores/authStore'; // 주석 처리
 
 // 간단한 인증 확인 함수 (authUtils의 isAuthenticated 사용)
@@ -89,7 +87,7 @@ const App: React.FC = () => {
         <Route path="/posting/list/:hostId" element={
           <SimplePrivateRoute>
             <WithLayout>
-              <PostingListByHost />
+              <MyPostingListPage />
             </WithLayout>
           </SimplePrivateRoute>
         } />
@@ -103,8 +101,45 @@ const App: React.FC = () => {
           </SimplePrivateRoute>
         } />
 
+        {/* 모집 이력 상세보기 */}
+        <Route path="/post/history/:id" element={
+          <SimplePrivateRoute>
+            <WithLayout>
+              <PostingViewPage />
+            </WithLayout>
+          </SimplePrivateRoute>
+        } />
+
+        {/* 모집 중 : 신청자 관리 페이지 */}
+        <Route path="/posting/:id/applicants" element={
+          <SimplePrivateRoute>
+            <WithLayout>
+              <ApplicantManagePage />
+            </WithLayout>
+          </SimplePrivateRoute>
+        } />
+
+        {/* 이력 : 신청자 관리 페이지 */}
+        <Route path="/post/history/:id/applicants" element={
+          <SimplePrivateRoute>
+            <WithLayout>
+              <ApplicantManagePage />
+            </WithLayout>
+          </SimplePrivateRoute>
+        } />
+
         {/* 모집글 작성 */}
         <Route path="/posting/create" element={
+          <SimplePrivateRoute>
+            <WithLayout>
+              <PostingFormPage />
+            </WithLayout>
+          </SimplePrivateRoute>
+        } />
+
+        
+        {/* 모집글 수정 */}
+        <Route path="/posting/edit/:postingId" element={
           <SimplePrivateRoute>
             <WithLayout>
               <PostingFormPage />
@@ -122,7 +157,16 @@ const App: React.FC = () => {
         } />
 
         {/*  신청글 상세보기 */}
-        <Route path="/applying/:id" element={
+        <Route path="/applying/:applyingId" element={
+          <SimplePrivateRoute>
+          <WithLayout>
+            <ApplyingViewPage />
+          </WithLayout>
+        </SimplePrivateRoute>
+        } />
+        
+        {/*  신청이력 상세보기 */}
+        <Route path="/apply/history/:applyHistoryId" element={
           <SimplePrivateRoute>
           <WithLayout>
             <ApplyingViewPage />
@@ -131,7 +175,16 @@ const App: React.FC = () => {
         } />
 
         {/* 신청글 작성하기 */}
-        <Route path="/applying/create" element={
+        <Route path="/applying/create/:postingId" element={
+          <SimplePrivateRoute>
+          <WithLayout>
+            <ApplyingFormPage />
+          </WithLayout>
+        </SimplePrivateRoute>
+        } />
+
+        {/* 신청글 작성하기 */}
+        <Route path="/applying/edit/:applyingId" element={
           <SimplePrivateRoute>
           <WithLayout>
             <ApplyingFormPage />
@@ -236,101 +289,6 @@ const App: React.FC = () => {
             <ReviewListPage />
           </SimplePrivateRoute>
         } />
-
-        <Route path="/posting/list"
-          element={
-            <SimplePrivateRoute>
-              <WithLayout>
-                <PostingListPage />
-              </WithLayout>
-            </SimplePrivateRoute>
-          }>
-        </Route>
-
-        {/*<Route path="/posting/:id" element={*/}
-        {/*  <SimplePrivateRoute>*/}
-        {/*    <WithLayout>*/}
-        {/*      <div className="p-4">*/}
-        {/*        <h1 className="text-xl font-bold mb-4">게시글 상세 페이지</h1>*/}
-        {/*        <p>현재 구현 중입니다.</p>*/}
-        {/*        <button */}
-        {/*          className="mt-4 px-4 py-2 bg-purple-600 text-white rounded"*/}
-        {/*          onClick={() => window.history.back()}*/}
-        {/*        >*/}
-        {/*          뒤로가기*/}
-        {/*        </button>*/}
-        {/*      </div>*/}
-        {/*    </WithLayout>*/}
-        {/*  </SimplePrivateRoute>*/}
-        {/*} />*/}
-
-        {/*<Route path="/posting/create" element={*/}
-        {/*  <SimplePrivateRoute>*/}
-        {/*    <WithLayout>*/}
-        {/*      <div className="p-4">*/}
-        {/*        <h1 className="text-xl font-bold mb-4">게시글 작성</h1>*/}
-        {/*        <p>현재 구현 중입니다.</p>*/}
-        {/*        <button */}
-        {/*          className="mt-4 px-4 py-2 bg-purple-600 text-white rounded"*/}
-        {/*          onClick={() => window.history.back()}*/}
-        {/*        >*/}
-        {/*          뒤로가기*/}
-        {/*        </button>*/}
-        {/*      </div>*/}
-        {/*    </WithLayout>*/}
-        {/*  </SimplePrivateRoute>*/}
-        {/*} />*/}
-
-        {/*<Route path="/apply/:id" element={*/}
-        {/*  <SimplePrivateRoute>*/}
-        {/*    <WithLayout>*/}
-        {/*      <div className="p-4">*/}
-        {/*        <h1 className="text-xl font-bold mb-4">하객 신청</h1>*/}
-        {/*        <p>현재 구현 중입니다.</p>*/}
-        {/*        <button*/}
-        {/*          className="mt-4 px-4 py-2 bg-purple-600 text-white rounded"*/}
-        {/*          onClick={() => window.history.back()}*/}
-        {/*        >*/}
-        {/*          뒤로가기*/}
-        {/*        </button>*/}
-        {/*      </div>*/}
-        {/*    </WithLayout>*/}
-        {/*  </SimplePrivateRoute>*/}
-        {/*} />*/}
-
-        {/* 추가 페이지들 */}
-        {/*<Route path="/postings" element={*/}
-        {/*  <SimplePrivateRoute>*/}
-        {/*    <WithLayout>*/}
-        {/*      <div className="p-4">*/}
-        {/*        <h1 className="text-xl font-bold mb-4">예정된 공고</h1>*/}
-        {/*        <p>현재 구현 중입니다.</p>*/}
-        {/*      </div>*/}
-        {/*    </WithLayout>*/}
-        {/*  </SimplePrivateRoute>*/}
-        {/*} />*/}
-
-        {/*<Route path="/chat" element={*/}
-        {/*  <SimplePrivateRoute>*/}
-        {/*    <WithLayout>*/}
-        {/*      <div className="p-4">*/}
-        {/*        <h1 className="text-xl font-bold mb-4">채팅</h1>*/}
-        {/*        <p>현재 구현 중입니다.</p>*/}
-        {/*      </div>*/}
-        {/*    </WithLayout>*/}
-        {/*  </SimplePrivateRoute>*/}
-        {/*} />*/}
-
-        {/*<Route path="/mypage" element={*/}
-        {/*  <SimplePrivateRoute>*/}
-        {/*    <WithLayout>*/}
-        {/*      <div className="p-4">*/}
-        {/*        <h1 className="text-xl font-bold mb-4">마이페이지</h1>*/}
-        {/*        <p>현재 구현 중입니다.</p>*/}
-        {/*      </div>*/}
-        {/*    </WithLayout>*/}
-        {/*  </SimplePrivateRoute>*/}
-        {/*} />*/}
       </Routes>
     </Router>
   );
